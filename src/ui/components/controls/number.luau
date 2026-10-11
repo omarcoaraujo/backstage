@@ -49,7 +49,7 @@ return function(props: props)
 			AnchorPoint = Vector2.new(1, 0),
 
 			Position = UDim2.fromScale(1, 0),
-			Size = if min and max then px.udim2(0, theme.input_width, 1, 0) else UDim2.fromScale(1, 1),
+			Size = px.udim2(0, theme.input_width, 1, 0),
 
 			BackgroundTransparency = 1,
 			number_input { value = props.value, on_change = props.on_change },
