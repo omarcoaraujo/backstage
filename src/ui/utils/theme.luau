@@ -2,6 +2,7 @@
 return table.freeze {
 	background = Color3.fromRGB(22, 22, 24),
 	title_background = Color3.fromRGB(32, 32, 36),
+	field = Color3.fromRGB(36, 36, 40),
 	hover = Color3.fromRGB(52, 52, 58),
 	divider = Color3.fromRGB(64, 64, 70),
 
@@ -18,6 +19,11 @@ return table.freeze {
 	row_height = 26,
 	footer_height = 18,
 	footer_text_size = 11,
+
+	field_height = 20,
+	input_width = 56,
+
 	padding = 10,
 	indent = 12,
+	gap = 6,
 }
