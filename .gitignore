@@ -1,7 +1,16 @@
-build/
-luau_packages/
-sourcemap.json
+# Pesde
+/roblox_packages/
+
+# Lock Files
+**/*.lock*
+
+# Build
+/build/
+/sourcemap.json
+
+# luau-lsp definitions (downloaded)
+/roblox.d.luau
+
+# Claude
 CLAUDE.md
 TODO.md
-roblox.d.luau
-roblox_packages/
