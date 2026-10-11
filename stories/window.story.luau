@@ -6,13 +6,13 @@ const vide = require(ReplicatedStorage.roblox_packages.vide)
 
 --// Utils
 const px = require(ReplicatedStorage.backstage.ui.utils.px)
-const theme = require(ReplicatedStorage.backstage.ui.utils.theme)
 
 --// Modules
 const version = require(ReplicatedStorage.backstage.version)
 
 --// Components
 const number = require(ReplicatedStorage.backstage.ui.components.controls.number)
+const choice = require(ReplicatedStorage.backstage.ui.components.controls.choice)
 const text = require(ReplicatedStorage.backstage.ui.components.controls.text)
 const toggle = require(ReplicatedStorage.backstage.ui.components.controls.toggle)
 const group = require(ReplicatedStorage.backstage.ui.components.group)
@@ -21,27 +21,6 @@ const row = require(ReplicatedStorage.backstage.ui.components.row)
 const window = require(ReplicatedStorage.backstage.ui.components.window)
 
 --// Functions
-const function value_text(text: string)
-	return vide.create "TextLabel" {
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
-
-		FontFace = theme.font,
-		Text = text,
-
-		TextColor3 = theme.text,
-		TextSize = px(theme.text_size),
-		TextXAlignment = Enum.TextXAlignment.Right,
-	}
-end
-
-const function value_row(label: string, text: string)
-	return row {
-		label = label,
-		content = value_text(text),
-	}
-end
-
 const function number_row(label: string, value: vide.Source<number>, min: number?, max: number?, step: number?)
 	const function on_change(next_value: number)
 		value(math.clamp(next_value, min or -math.huge, max or math.huge))
@@ -70,6 +49,17 @@ const function toggle_row(label: string, value: vide.Source<boolean>)
 	}
 end
 
+const function choice_row(label: string, value: vide.Source<string>, choices: { string })
+	const function on_change(next_value: string)
+		value(next_value)
+	end
+
+	return row {
+		label = label,
+		content = choice { value = value, on_change = on_change, choices = choices },
+	}
+end
+
 const function text_row(label: string, value: vide.Source<string>)
 	const function on_change(next_value: string)
 		value(next_value)
@@ -93,6 +83,7 @@ return function(target: Instance)
 		const length = vide.source(1.5)
 		const slots = vide.source(3)
 		const nickname = vide.source "Bacon"
+		const mode = vide.source "follow"
 		const trail_enabled = vide.source(true)
 		const inventory_open = vide.source(false)
 
@@ -115,7 +106,7 @@ return function(target: Instance)
 							number_row("distance", distance, 0, 30, 0.1),
 							number_row("height", height, 0, 15, 0.1),
 							number_row("speed", speed, 0.5, 40),
-							value_row("mode", "follow"),
+							choice_row("mode", mode, { "follow", "orbit", "cloud" }),
 							text_row("nickname", nickname),
 							group {
 								name = "trail",
