@@ -2,6 +2,7 @@
 const vide = require "../../../../roblox_packages/vide"
 
 --// Utils
+const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
 const theme = require "../../utils/theme"
 
@@ -35,6 +36,7 @@ return function(props: props)
 	end
 
 	const function stroke_transparency()
+		if overlay.active() then return IDLE_TRANSPARENCY end
 		if hovered() then return HOVER_TRANSPARENCY end
 		return IDLE_TRANSPARENCY
 	end

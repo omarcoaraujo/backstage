@@ -2,6 +2,7 @@
 const vide = require "../../../roblox_packages/vide"
 
 --// Utils
+const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../utils/theme"
 
@@ -34,7 +35,9 @@ return function(props: props)
 	end
 
 	const function header_color()
-		return if hovered() then theme.hover else theme.title_background
+		if overlay.active() then return theme.title_background end
+		if hovered() then return theme.hover end
+		return theme.title_background
 	end
 
 	return vide.create "Frame" {

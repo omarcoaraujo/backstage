@@ -2,6 +2,7 @@
 const vide = require "../../../../roblox_packages/vide"
 
 --// Utils
+const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
 const theme = require "../../utils/theme"
 
@@ -27,7 +28,9 @@ return function(props: props)
 	end
 
 	const function close_transparency()
-		return if close_hovered() then 0 else 1
+		if overlay.active() then return 1 end
+		if close_hovered() then return 0 end
+		return 1
 	end
 
 	return vide.create "Frame" {

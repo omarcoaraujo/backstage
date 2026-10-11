@@ -5,6 +5,7 @@ const RunService = game:GetService "RunService"
 const vide = require "../../../../roblox_packages/vide"
 
 --// Utils
+const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
 const theme = require "../../utils/theme"
 
@@ -145,6 +146,7 @@ return function(props: props)
 	const hovered = vide.source(nil :: side?)
 
 	const function current(): side?
+		if overlay.active() then return props.dragging() end
 		return props.dragging() or hovered()
 	end
 
