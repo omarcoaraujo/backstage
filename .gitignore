@@ -3,3 +3,5 @@ luau_packages/
 sourcemap.json
 CLAUDE.md
 TODO.md
+roblox.d.luau
+roblox_packages/

@@ -1,0 +1,32 @@
+{
+  "name": "backstage_dev",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "backstage": { "$path": "src" },
+      "roblox_packages": { "$path": "roblox_packages" },
+      "shared": { "$path": "example/shared" },
+      "stories": { "$path": "stories" }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "Size": [512, 4, 512],
+          "Position": [0, -2, 0]
+        }
+      }
+    },
+    "ServerScriptService": {
+      "server": { "$path": "example/server" }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "client": { "$path": "example/client" }
+      }
+    }
+  }
+}
