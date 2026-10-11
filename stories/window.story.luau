@@ -15,6 +15,7 @@ const number = require(ReplicatedStorage.backstage.ui.components.controls.number
 const choice = require(ReplicatedStorage.backstage.ui.components.controls.choice)
 const text = require(ReplicatedStorage.backstage.ui.components.controls.text)
 const toggle = require(ReplicatedStorage.backstage.ui.components.controls.toggle)
+const vector3 = require(ReplicatedStorage.backstage.ui.components.controls.vector3)
 const buttons = require(ReplicatedStorage.backstage.ui.components.buttons)
 const group = require(ReplicatedStorage.backstage.ui.components.group)
 const list = require(ReplicatedStorage.backstage.ui.components.list)
@@ -69,6 +70,17 @@ const function choice_row(label: string, value: vide.Source<string>, choices: { 
 	}
 end
 
+const function vector3_row(label: string, value: vide.Source<Vector3>)
+	const function on_change(next_value: Vector3)
+		value(next_value)
+	end
+
+	return row {
+		label = label,
+		content = vector3 { value = value, on_change = on_change },
+	}
+end
+
 const function text_row(label: string, value: vide.Source<string>)
 	const function on_change(next_value: string)
 		value(next_value)
@@ -93,6 +105,7 @@ return function(target: Instance)
 		const slots = vide.source(3)
 		const nickname = vide.source "Bacon"
 		const mode = vide.source "follow"
+		const offset = vide.source(Vector3.new(0, 2, -1.5))
 		const trail_enabled = vide.source(true)
 		const inventory_open = vide.source(false)
 
@@ -117,6 +130,7 @@ return function(target: Instance)
 							number_row("speed", speed, 0.5, 40),
 							choice_row("mode", mode, { "follow", "orbit", "cloud" }),
 							text_row("nickname", nickname),
+							vector3_row("offset", offset),
 							buttons {
 								items = {
 									action "respawn",
