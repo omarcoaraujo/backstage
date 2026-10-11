@@ -1,0 +1,169 @@
+--// Packages
+const vide = require "../../../../roblox_packages/vide"
+
+--// Utils
+const overlay = require "../../utils/overlay"
+const px = require "../../utils/px"
+const theme = require "../../utils/theme"
+
+--// Components
+const menu = require "@self/menu"
+
+--// Constants
+const MAX_VISIBLE = 8
+const PADDING = 4
+const FOCUS_TRANSPARENCY = 0.4
+
+--// Types
+type props = {
+	value: () -> string,
+	on_change: (value: string) -> (),
+	choices: { string },
+}
+
+--// Functions
+const function place(origin: Vector2, size: Vector2, height: number, gap: number, bounds: Vector2): Vector2
+	const below = origin.Y + size.Y + gap
+	if below + height <= bounds.Y then return Vector2.new(origin.X, below) end
+
+	const above = origin.Y - gap - height
+	if above >= 0 then return Vector2.new(origin.X, above) end
+
+	return Vector2.new(origin.X, math.max(0, bounds.Y - height))
+end
+
+--// Component
+return function(props: props)
+	const opened = vide.source(false)
+	local field = nil :: TextButton?
+	local destroy_menu = nil :: (() -> ())?
+
+	const function capture(instance: Instance)
+		field = instance :: TextButton
+	end
+
+	const function close()
+		if not destroy_menu then return end
+
+		destroy_menu()
+		destroy_menu = nil
+
+		opened(false)
+		overlay.leave()
+	end
+
+	const function on_pick(choice: string)
+		props.on_change(choice)
+		close()
+	end
+
+	const function open()
+		if destroy_menu or not field then return end
+
+		const layer = field:FindFirstAncestorWhichIsA "LayerCollector"
+		if not layer then return end
+
+		const height = math.min(#props.choices, MAX_VISIBLE) * px(theme.field_height)()
+		const origin = field.AbsolutePosition - layer.AbsolutePosition
+
+		const left = math.round(origin.X)
+		const top = math.round(origin.Y)
+
+		const width = math.round(origin.X + field.AbsoluteSize.X) - left
+		const field_height = math.round(origin.Y + field.AbsoluteSize.Y) - top
+		const position =
+			place(Vector2.new(left, top), Vector2.new(width, field_height), height, px(1)(), layer.AbsoluteSize)
+
+		destroy_menu = vide.root(function()
+			vide.cleanup(menu {
+				layer = layer,
+				choices = props.choices,
+				value = props.value(),
+
+				position = position,
+				width = width,
+				height = height,
+
+				on_pick = on_pick,
+				on_dismiss = close,
+			})
+		end)
+
+		opened(true)
+		overlay.enter()
+	end
+
+	const function on_activated()
+		if opened() then
+			close()
+			return
+		end
+
+		open()
+	end
+
+	const function caret()
+		if opened() then return "^" end
+		return "v"
+	end
+
+	const function stroke_transparency()
+		if opened() then return FOCUS_TRANSPARENCY end
+		return 1
+	end
+
+	vide.cleanup(close)
+	return vide.create "TextButton" {
+		Name = "choice",
+		AnchorPoint = Vector2.new(0, 0.5),
+
+		Position = UDim2.fromScale(0, 0.5),
+		Size = px.udim2(1, 0, 0, theme.field_height),
+
+		AutoButtonColor = false,
+		BackgroundColor3 = theme.field,
+
+		BorderSizePixel = 0,
+		ClipsDescendants = true,
+
+		FontFace = theme.font,
+		Text = props.value,
+		TextColor3 = theme.text,
+
+		TextSize = px(theme.text_size),
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		TextXAlignment = Enum.TextXAlignment.Left,
+
+		vide.create "UIPadding" {
+			PaddingLeft = px.udim(0, PADDING),
+			PaddingRight = px.udim(0, theme.field_height),
+		},
+
+		vide.create "UIStroke" {
+			Color = theme.stroke,
+			Transparency = stroke_transparency,
+
+			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+			Thickness = px(1),
+		},
+
+		vide.create "TextLabel" {
+			Name = "caret",
+			AnchorPoint = Vector2.new(1, 0),
+
+			Position = px.udim2(1, theme.field_height, 0, 0),
+			Size = px.udim2(0, theme.field_height, 1, 0),
+
+			BackgroundTransparency = 1,
+			FontFace = theme.font,
+			Text = caret,
+
+			TextColor3 = theme.text_muted,
+			TextSize = px(theme.text_size),
+		},
+
+		Activated = on_activated,
+		vide.action(capture),
+	}
+end
