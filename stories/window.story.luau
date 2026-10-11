@@ -13,6 +13,7 @@ const version = require(ReplicatedStorage.backstage.version)
 
 --// Components
 const number = require(ReplicatedStorage.backstage.ui.components.controls.number)
+const toggle = require(ReplicatedStorage.backstage.ui.components.controls.toggle)
 const group = require(ReplicatedStorage.backstage.ui.components.group)
 const list = require(ReplicatedStorage.backstage.ui.components.list)
 const row = require(ReplicatedStorage.backstage.ui.components.row)
@@ -57,6 +58,17 @@ const function number_row(label: string, value: vide.Source<number>, min: number
 	}
 end
 
+const function toggle_row(label: string, value: vide.Source<boolean>)
+	const function on_change(next_value: boolean)
+		value(next_value)
+	end
+
+	return row {
+		label = label,
+		content = toggle { value = value, on_change = on_change },
+	}
+end
+
 --// Story
 return function(target: Instance)
 	return vide.mount(function()
@@ -68,6 +80,8 @@ return function(target: Instance)
 		const speed = vide.source(8)
 		const length = vide.source(1.5)
 		const slots = vide.source(3)
+		const trail_enabled = vide.source(true)
+		const inventory_open = vide.source(false)
 
 		const function close()
 			visible(false)
@@ -92,7 +106,7 @@ return function(target: Instance)
 							group {
 								name = "trail",
 								content = {
-									value_row("enabled", "true"),
+									toggle_row("enabled", trail_enabled),
 									number_row("length", length, 0.1, 6, 0.1),
 								},
 							},
@@ -105,7 +119,7 @@ return function(target: Instance)
 								name = "inventory",
 								content = {
 									number_row("slots", slots),
-									value_row("open", "false"),
+									toggle_row("open", inventory_open),
 								},
 							},
 						},
