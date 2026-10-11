@@ -12,6 +12,7 @@ const theme = require(ReplicatedStorage.backstage.ui.utils.theme)
 const version = require(ReplicatedStorage.backstage.version)
 
 --// Components
+const number = require(ReplicatedStorage.backstage.ui.components.controls.number)
 const group = require(ReplicatedStorage.backstage.ui.components.group)
 const list = require(ReplicatedStorage.backstage.ui.components.list)
 const row = require(ReplicatedStorage.backstage.ui.components.row)
@@ -39,11 +40,34 @@ const function value_row(label: string, text: string)
 	}
 end
 
+const function number_row(label: string, value: vide.Source<number>, min: number?, max: number?, step: number?)
+	const function on_change(next_value: number)
+		value(math.clamp(next_value, min or -math.huge, max or math.huge))
+	end
+
+	return row {
+		label = label,
+		content = number {
+			value = value,
+			on_change = on_change,
+			min = min,
+			max = max,
+			step = step,
+		},
+	}
+end
+
 --// Story
 return function(target: Instance)
 	return vide.mount(function()
 		px.use_px()
 		const visible = vide.source(true)
+
+		const distance = vide.source(6)
+		const height = vide.source(3)
+		const speed = vide.source(8)
+		const length = vide.source(1.5)
+		const slots = vide.source(3)
 
 		const function close()
 			visible(false)
@@ -61,15 +85,15 @@ return function(target: Instance)
 					group {
 						name = "pets",
 						content = {
-							value_row("distance", "6"),
-							value_row("height", "3"),
-							value_row("speed", "8"),
+							number_row("distance", distance, 0, 30, 0.1),
+							number_row("height", height, 0, 15, 0.1),
+							number_row("speed", speed, 0.5, 40),
 							value_row("mode", "follow"),
 							group {
 								name = "trail",
 								content = {
 									value_row("enabled", "true"),
-									value_row("length", "1.5"),
+									number_row("length", length, 0.1, 6, 0.1),
 								},
 							},
 						},
@@ -80,7 +104,7 @@ return function(target: Instance)
 							group {
 								name = "inventory",
 								content = {
-									value_row("slots", "3"),
+									number_row("slots", slots),
 									value_row("open", "false"),
 								},
 							},
