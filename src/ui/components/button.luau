@@ -53,14 +53,18 @@ return function(props: props)
 		return 1
 	end
 
+	const function content_width(width: number): number
+		return math.max(0, width - px(PADDING)() * 2)
+	end
+
 	const function min_size()
 		if not props.min_width then return Vector2.zero end
-		return Vector2.new(props.min_width(), 0)
+		return Vector2.new(content_width(props.min_width()), 0)
 	end
 
 	const function max_size()
 		if not props.max_width then return Vector2.new(math.huge, math.huge) end
-		return Vector2.new(props.max_width(), math.huge)
+		return Vector2.new(content_width(props.max_width()), math.huge)
 	end
 
 	return vide.create "TextButton" {
