@@ -16,7 +16,7 @@ const title_bar = require "@self/title_bar"
 
 --// Constants
 const DEFAULT_SIZE = Vector2.new(360, 480)
-const DEFAULT_MIN_SIZE = Vector2.new(240, 160)
+const DEFAULT_MIN_SIZE = Vector2.new(330, 160)
 
 const KEEP_VISIBLE = 48
 const CAPTURE_SPAN = 20000
