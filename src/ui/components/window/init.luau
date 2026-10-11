@@ -5,6 +5,7 @@ const UserInputService = game:GetService "UserInputService"
 const vide = require "../../../roblox_packages/vide"
 
 --// Utils
+const pointer = require "../utils/pointer"
 const px = require "../utils/px"
 const theme = require "../utils/theme"
 
@@ -45,18 +46,6 @@ type props = {
 }
 
 --// Functions
-const function is_press(input: InputObject): boolean
-	return input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch
-end
-
-const function is_motion(input: InputObject): boolean
-	return input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch
-end
-
-const function pointer_position(input: InputObject): Vector2
-	return Vector2.new(input.Position.X, input.Position.Y)
-end
-
 const function clamp_position(position: Vector2, size: Vector2, bounds: Vector2): Vector2
 	const x = math.clamp(position.X, KEEP_VISIBLE - size.X, bounds.X - KEEP_VISIBLE)
 	const y = math.clamp(position.Y, 0, bounds.Y - px(theme.title_height)())
@@ -116,30 +105,29 @@ return function(props: props)
 	end
 
 	const function begin_move(input: InputObject)
-		if not is_press(input) then return end
-
-		drag { kind = "move", origin = pointer_position(input), position = settled_position(), size = size() }
+		if not pointer.is_press(input) then return end
+		drag { kind = "move", origin = pointer.position(input), position = settled_position(), size = size() }
 	end
 
 	const function begin_resize(side: handles.side, input: InputObject)
-		if not is_press(input) then return end
+		if not pointer.is_press(input) then return end
 
 		drag {
 			kind = "resize",
 			side = side,
-			origin = pointer_position(input),
+
+			origin = pointer.position(input),
 			position = settled_position(),
 			size = size(),
 		}
 	end
 
 	const function release(input: InputObject)
-		if is_press(input) then drag(nil) end
+		if pointer.is_press(input) then drag(nil) end
 	end
 
 	const function resizing(): handles.side?
 		const current = drag()
-
 		return if current and current.kind == "resize" then current.side else nil
 	end
 
@@ -150,7 +138,6 @@ return function(props: props)
 		end
 
 		if not current.side then return end
-
 		const next_position, next_size =
 			resize_rect(current.side, delta, current.position, current.size, min_size, bounds())
 
@@ -160,7 +147,7 @@ return function(props: props)
 
 	const function on_capture_changed(input: InputObject)
 		const current = drag()
-		if not current or not is_motion(input) then return end
+		if not current or not pointer.is_motion(input) then return end
 
 		if
 			input.UserInputType == Enum.UserInputType.MouseMovement
@@ -170,7 +157,7 @@ return function(props: props)
 			return
 		end
 
-		follow(current, pointer_position(input) - current.origin)
+		follow(current, pointer.position(input) - current.origin)
 	end
 
 	const footer_height = if props.footer then theme.footer_height else 0
@@ -182,7 +169,6 @@ return function(props: props)
 	const function root_position()
 		const placed = position()
 		if not placed then return UDim2.new(0.5, -size().X / 2, 0.5, -size().Y / 2) end
-
 		return UDim2.fromOffset(placed.X, placed.Y)
 	end
 
