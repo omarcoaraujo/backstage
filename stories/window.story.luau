@@ -15,12 +15,21 @@ const number = require(ReplicatedStorage.backstage.ui.components.controls.number
 const choice = require(ReplicatedStorage.backstage.ui.components.controls.choice)
 const text = require(ReplicatedStorage.backstage.ui.components.controls.text)
 const toggle = require(ReplicatedStorage.backstage.ui.components.controls.toggle)
+const buttons = require(ReplicatedStorage.backstage.ui.components.buttons)
 const group = require(ReplicatedStorage.backstage.ui.components.group)
 const list = require(ReplicatedStorage.backstage.ui.components.list)
 const row = require(ReplicatedStorage.backstage.ui.components.row)
 const window = require(ReplicatedStorage.backstage.ui.components.window)
 
 --// Functions
+const function action(text: string): buttons.item
+	const function on_press()
+		print(text)
+	end
+
+	return { text = text, on_press = on_press }
+end
+
 const function number_row(label: string, value: vide.Source<number>, min: number?, max: number?, step: number?)
 	const function on_change(next_value: number)
 		value(math.clamp(next_value, min or -math.huge, max or math.huge))
@@ -108,6 +117,16 @@ return function(target: Instance)
 							number_row("speed", speed, 0.5, 40),
 							choice_row("mode", mode, { "follow", "orbit", "cloud" }),
 							text_row("nickname", nickname),
+							buttons {
+								items = {
+									action "respawn",
+									action "resettttttttttttt",
+									action "heal",
+									action "clear",
+									action "save",
+								},
+							},
+
 							group {
 								name = "trail",
 								content = {
