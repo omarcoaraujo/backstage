@@ -18,8 +18,11 @@ type props = {
 
 --// Component
 return function(props: props)
-	const focused = vide.source(false)
 	local box = nil :: TextBox?
+	const focused = vide.source(false)
+
+	const size = vide.source(Vector2.zero)
+	const bounds = vide.source(Vector2.zero)
 
 	const function capture(instance: Instance)
 		box = instance :: TextBox
@@ -42,6 +45,12 @@ return function(props: props)
 		return 1
 	end
 
+	const function alignment()
+		const available = size().X - px(PADDING)() * 2
+		if bounds().X > available then return Enum.TextXAlignment.Left end
+		return props.alignment or Enum.TextXAlignment.Center
+	end
+
 	return vide.create "TextBox" {
 		Name = "field",
 		AnchorPoint = Vector2.new(0, 0.5),
@@ -60,7 +69,7 @@ return function(props: props)
 		TextColor3 = theme.text,
 
 		TextSize = px(theme.text_size),
-		TextXAlignment = props.alignment or Enum.TextXAlignment.Center,
+		TextXAlignment = alignment,
 
 		Focused = on_focused,
 		FocusLost = on_focus_lost,
@@ -79,6 +88,8 @@ return function(props: props)
 			Thickness = px(1),
 		},
 
+		vide.changed("AbsoluteSize", size),
+		vide.changed("TextBounds", bounds),
 		vide.action(capture),
 	}
 end

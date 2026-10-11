@@ -1,16 +1,27 @@
 --// Components
 const field = require "./field"
 
+--// Constants
+const DECIMALS = 3
+const DECIMAL_SCALE = 10 ^ DECIMALS
+
 --// Types
 type props = {
 	value: () -> number,
 	on_change: (value: number) -> (),
 }
 
+--// Functions
+const function format(value: number): string
+	const rounded = math.round(value * DECIMAL_SCALE) / DECIMAL_SCALE
+	if rounded == 0 then return "0" end
+	return (string.gsub(string.format(`%.{DECIMALS}f`, rounded), "%.?0+$", ""))
+end
+
 --// Component
 return function(props: props)
 	const function text()
-		return string.format("%.4g", props.value())
+		return format(props.value())
 	end
 
 	const function on_commit(typed: string)
