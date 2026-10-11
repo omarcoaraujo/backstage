@@ -13,6 +13,7 @@ const version = require(ReplicatedStorage.backstage.version)
 --// Components
 const number = require(ReplicatedStorage.backstage.ui.components.controls.number)
 const choice = require(ReplicatedStorage.backstage.ui.components.controls.choice)
+const color = require(ReplicatedStorage.backstage.ui.components.controls.color)
 const text = require(ReplicatedStorage.backstage.ui.components.controls.text)
 const toggle = require(ReplicatedStorage.backstage.ui.components.controls.toggle)
 const vector3 = require(ReplicatedStorage.backstage.ui.components.controls.vector3)
@@ -70,6 +71,17 @@ const function choice_row(label: string, value: vide.Source<string>, choices: { 
 	}
 end
 
+const function color_row(label: string, value: vide.Source<Color3>)
+	const function on_change(next_value: Color3)
+		value(next_value)
+	end
+
+	return row {
+		label = label,
+		content = color { value = value, on_change = on_change },
+	}
+end
+
 const function vector3_row(label: string, value: vide.Source<Vector3>)
 	const function on_change(next_value: Vector3)
 		value(next_value)
@@ -106,6 +118,7 @@ return function(target: Instance)
 		const nickname = vide.source "Bacon"
 		const mode = vide.source "follow"
 		const offset = vide.source(Vector3.new(0, 2, -1.5))
+		const tint = vide.source(Color3.fromRGB(255, 200, 80))
 		const trail_enabled = vide.source(true)
 		const inventory_open = vide.source(false)
 
@@ -131,6 +144,7 @@ return function(target: Instance)
 							choice_row("mode", mode, { "follow", "orbit", "cloud" }),
 							text_row("nickname", nickname),
 							vector3_row("offset", offset),
+							color_row("tint", tint),
 							buttons {
 								items = {
 									action "respawn",
