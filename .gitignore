@@ -1,0 +1,5 @@
+build/
+luau_packages/
+sourcemap.json
+CLAUDE.md
+TODO.md

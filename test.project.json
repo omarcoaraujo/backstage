@@ -1,0 +1,10 @@
+{
+  "name": "backstage_tests",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "backstage": { "$path": "src" },
+      "tests": { "$path": "tests/lib" }
+    }
+  }
+}

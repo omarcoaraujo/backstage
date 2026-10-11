@@ -1,0 +1,7 @@
+[tools]
+rojo = "rojo-rbx/rojo@7.7.0"
+stylua = "JohnnyMorganz/StyLua@2.5.2"
+luau-lsp = "JohnnyMorganz/luau-lsp@1.68.1"
+run-in-roblox = "rojo-rbx/run-in-roblox@0.3.0"
+lune = "lune-org/lune@0.10.5"
+darklua = "seaofvoices/darklua@0.19.0"

@@ -1,0 +1,6 @@
+{
+  "name": "backstage",
+  "tree": {
+    "$path": "src"
+  }
+}

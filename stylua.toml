@@ -1,0 +1,8 @@
+call_parentheses = "None"
+collapse_simple_statement = "ConditionalOnly"
+syntax = "Luau"
+line_endings = "Unix"
+quote_style = "AutoPreferDouble"
+
+[sort_requires]
+enabled = true

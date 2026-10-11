@@ -1,0 +1,15 @@
+name = "omarcoaraujo/backstage"
+version = "0.1.0"
+description = "Live tuning panel for Roblox Studio: edit game values in real time"
+license = "MIT"
+authors = ["omarcoaraujo <omarcoaraujo@outlook.com>"]
+repository = "https://github.com/omarcoaraujo/backstage"
+includes = ["pesde.toml", "README.md", "LICENSE", "src/**/*"]
+
+[target]
+environment = "roblox"
+lib = "src/init.luau"
+build_files = ["src"]
+
+[indices]
+default = "https://github.com/pesde-pkg/index"
