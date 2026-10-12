@@ -76,7 +76,16 @@ const function config_names(source: string): { string }
 end
 
 const function find_entry(table_node, key: string)
+	const position = tonumber(key)
+	local items = 0
+
 	for _, entry in table_node.entries do
+		if entry.kind == "list" then
+			items += 1
+			if items == position then return entry end
+			continue
+		end
+
 		if entry.key and entry.key.text == key then return entry end
 	end
 

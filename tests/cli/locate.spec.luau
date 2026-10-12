@@ -11,6 +11,8 @@ const pets = backstage.config("pets", {
 	color = Color3.fromRGB(1, 2, 3),
 	trail = { length = 8 },
 	dynamic = compute(),
+	waves = { 10, 20, 30 },
+	mixed = { 1, label = true, "two" },
 })
 ]]
 
@@ -47,6 +49,22 @@ return {
 	accepts_a_negative_number = function()
 		const found = locate.locate(SOURCE, "pets.offset")
 		assert(found and found.tag == "unary")
+	end,
+
+	finds_an_item_of_a_list_by_position = function()
+		const found = locate.locate(SOURCE, "pets.waves.2")
+		assert(found and found.tag == "number")
+		assert(found.range.begin_line == 9)
+	end,
+
+	counts_only_list_items_by_position = function()
+		const found = locate.locate(SOURCE, "pets.mixed.2")
+		assert(found and found.tag == "string")
+	end,
+
+	refuses_a_position_past_the_list = function()
+		const found = locate.locate(SOURCE, "pets.waves.4")
+		assert(found == nil)
 	end,
 
 	refuses_a_value_that_is_not_a_literal = function()
