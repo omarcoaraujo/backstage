@@ -2,7 +2,8 @@
 const parser = require "@std/syntax/parser"
 
 --// Constants
-const LITERAL_TAGS = { number = true, string = true, boolean = true, call = true }
+const LITERAL_TAGS = { number = true, string = true, boolean = true }
+const CONSTRUCTOR_TYPES = { Color3 = true, Vector3 = true }
 
 --// Types
 export type range = {
@@ -86,6 +87,16 @@ const function is_negative_number(node)
 	return node.tag == "unary" and node.operand.tag == "number"
 end
 
+const function is_constructor(node)
+	if node.tag ~= "call" or node.func.tag ~= "indexname" then return false end
+	const target = node.func.expression
+	return target.tag == "global" and CONSTRUCTOR_TYPES[target.name.text] == true
+end
+
+const function is_literal(node)
+	return LITERAL_TAGS[node.tag] == true or is_negative_number(node) or is_constructor(node)
+end
+
 const function locate(source: string, path: string): (found?, string?)
 	const segments = string.split(path, ".")
 	const name = table.remove(segments, 1) :: string
@@ -105,9 +116,7 @@ const function locate(source: string, path: string): (found?, string?)
 		current = entry.value
 	end
 
-	if not LITERAL_TAGS[current.tag] and not is_negative_number(current) then
-		return nil, `"{path}" is not a literal`
-	end
+	if not is_literal(current) then return nil, `"{path}" is not a literal` end
 
 	return { tag = current.tag, range = to_range(current.location) }
 end
