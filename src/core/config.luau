@@ -107,7 +107,10 @@ end
 const function config<settings, limits>(name: string, defaults: settings, options: options<limits>?): settings
 	if not mode.active() then return freeze_copy(defaults) end
 	const given = if options then options.limits else nil :: any
-	return build_group(defaults :: any, given :: limit_tree?, name) :: any
+	const group = build_group(defaults :: any, given :: limit_tree?, name)
+
+	registry.announce()
+	return group :: any
 end
 
 --// End

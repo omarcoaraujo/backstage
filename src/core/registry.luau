@@ -27,8 +27,15 @@ type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
 const entries = {} :: { [string]: entry }
 const buttons = {} :: { [string]: button_entry }
 const listeners = {} :: { listener }
+const register_listeners = {} :: { () -> () }
 
 --// Functions
+const function announce()
+	for _, listener in table.clone(register_listeners) do
+		listener()
+	end
+end
+
 const function add(path: string, name: string, group: string, descriptor: kinds.descriptor, default: kinds.value)
 	entries[path] = {
 		path = path,
@@ -87,6 +94,15 @@ const function on_change(listener: listener)
 	end
 end
 
+const function on_register(listener: () -> ())
+	table.insert(register_listeners, listener)
+
+	return function()
+		const index = table.find(register_listeners, listener)
+		if index then table.remove(register_listeners, index) end
+	end
+end
+
 const function sorted_paths(source: { [string]: unknown })
 	const paths = {}
 
@@ -122,6 +138,7 @@ const function reset()
 	table.clear(entries)
 	table.clear(buttons)
 	table.clear(listeners)
+	table.clear(register_listeners)
 end
 
 --// End
@@ -133,7 +150,10 @@ return table.freeze {
 	set = set,
 	press = press,
 
+	announce = announce,
+
 	on_change = on_change,
+	on_register = on_register,
 	list = list,
 
 	list_buttons = list_buttons,

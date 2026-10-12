@@ -82,8 +82,6 @@ end
 return function(props: props)
 	px.use_px()
 
-	const root = collect()
-	const content = {}
 	const appliers = {} :: { [string]: (value: kinds.value) -> () }
 
 	const function bind(path: string, apply: (value: kinds.value) -> ())
@@ -202,17 +200,52 @@ return function(props: props)
 		return group { name = name, content = content }
 	end
 
-	for _, name in sorted_names(root.groups) do
-		table.insert(content, build_branch(root.groups[name], name))
+	const function tree()
+		const root = collect()
+		const content = {} :: { Instance }
+
+		for _, name in sorted_names(root.groups) do
+			table.insert(content, build_branch(root.groups[name], name))
+		end
+
+		return content
 	end
 
+	const frame = list {}
+	local destroy_tree = nil :: (() -> ())?
+
+	const function rebuild()
+		if destroy_tree then destroy_tree() end
+		table.clear(appliers)
+
+		const destroy, content = vide.root(tree)
+		destroy_tree = destroy
+
+		for _, item in content do
+			item.Parent = frame
+		end
+	end
+
+	const function on_registered()
+		rebuild()
+	end
+
+	const function dispose()
+		if destroy_tree then destroy_tree() end
+	end
+
+	rebuild()
+
 	vide.cleanup(registry.on_change(on_value_changed))
+	vide.cleanup(registry.on_register(on_registered))
+	vide.cleanup(dispose)
+
 	return window {
 		title = props.title,
 		footer = props.footer,
 
 		visible = props.visible,
 		on_close = props.on_close,
-		content = list { content = content },
+		content = frame,
 	}
 end
