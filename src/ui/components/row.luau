@@ -38,10 +38,16 @@ return function(props: props)
 	local pending = nil :: thread?
 
 	local shown = nil :: Frame?
+	local following = nil :: RBXScriptConnection?
 	local visit = 0
 
 	const function hide_hint()
 		visit += 1
+
+		if following then
+			following:Disconnect()
+			following = nil
+		end
 
 		if pending then
 			task.cancel(pending)
@@ -70,10 +76,12 @@ return function(props: props)
 	end
 
 	const function on_row_enter()
-		if not props.hint then return end
+		if not props.hint or not root then return end
 		hide_hint()
 
+		following = root:GetPropertyChangedSignal("AbsolutePosition"):Connect(hide_hint)
 		const mine = visit
+
 		pending = task.delay(HINT_DELAY, function()
 			reveal_hint(mine)
 		end)
