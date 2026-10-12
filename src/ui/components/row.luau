@@ -4,10 +4,15 @@ const vide = require "../../../roblox_packages/vide"
 --// Utils
 const filter = require "../utils/filter"
 const overlay = require "../utils/overlay"
+const pointer = require "../utils/pointer"
 const px = require "../utils/px"
 const theme = require "../utils/theme"
 
+--// Components
+const tooltip = require "./tooltip"
+
 --// Constants
+const HINT_DELAY = 0.5
 const LABEL_SHARE = 0.45
 const RESET_WIDTH = 18
 
@@ -18,6 +23,7 @@ const RESET_ICON = "rbxasset://textures/StudioSharedUI/Undo.png"
 type props = {
 	label: string,
 	content: unknown?,
+	hint: string?,
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
@@ -27,6 +33,55 @@ type props = {
 return function(props: props)
 	const node = filter.leaf { props.label }
 	const hovered = vide.source(false)
+
+	local root = nil :: Frame?
+	local pending = nil :: thread?
+
+	local shown = nil :: Frame?
+	local visit = 0
+
+	const function hide_hint()
+		visit += 1
+
+		if pending then
+			task.cancel(pending)
+			pending = nil
+		end
+
+		if shown then
+			shown:Destroy()
+			shown = nil
+		end
+	end
+
+	const function reveal_hint(mine: number)
+		pending = nil
+
+		if not root or not props.hint or overlay.active() then return end
+		const created = tooltip { anchor = root, text = props.hint }
+
+		if not created then return end
+		if mine ~= visit then
+			created:Destroy()
+			return
+		end
+
+		shown = created
+	end
+
+	const function on_row_enter()
+		if not props.hint then return end
+		hide_hint()
+
+		const mine = visit
+		pending = task.delay(HINT_DELAY, function()
+			reveal_hint(mine)
+		end)
+	end
+
+	const function on_row_input(input: InputObject)
+		if pointer.is_press(input) then hide_hint() end
+	end
 
 	const function on_enter()
 		hovered(true)
@@ -50,12 +105,22 @@ return function(props: props)
 		return props.dirty ~= nil and props.dirty()
 	end
 
+	vide.effect(function()
+		if overlay.active() then hide_hint() end
+	end)
+
+	vide.cleanup(hide_hint)
+
 	const frame = vide.create "Frame" {
 		Name = props.label,
 		BackgroundTransparency = 1,
 
 		Visible = node.shown,
 		Size = px.udim2(1, 0, 0, theme.row_height),
+
+		MouseEnter = on_row_enter,
+		MouseLeave = hide_hint,
+		InputBegan = on_row_input,
 
 		vide.create "TextLabel" {
 			Name = "label",
@@ -120,6 +185,8 @@ return function(props: props)
 		},
 	}
 
+	root = frame
 	filter.track(frame, node)
+
 	return frame
 end

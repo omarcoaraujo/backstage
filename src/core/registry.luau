@@ -12,6 +12,7 @@ export type entry = {
 	descriptor: kinds.descriptor,
 	default: kinds.value,
 
+	hint: string?,
 	value: kinds.value,
 	remote: boolean,
 }
@@ -34,6 +35,7 @@ export type snapshot_entry = {
 	descriptor: kinds.descriptor,
 
 	default: kinds.value,
+	hint: string?,
 	value: kinds.value,
 }
 
@@ -64,7 +66,16 @@ const function announce()
 	end
 end
 
-const function add(path: string, name: string, group: string, descriptor: kinds.descriptor, default: kinds.value)
+const function add(
+	path: string,
+	name: string,
+
+	group: string,
+	descriptor: kinds.descriptor,
+
+	default: kinds.value,
+	hint: string?
+)
 	const existing = entries[path]
 	const synced = existing ~= nil and existing.remote
 
@@ -76,6 +87,7 @@ const function add(path: string, name: string, group: string, descriptor: kinds.
 		descriptor = descriptor,
 		default = default,
 
+		hint = hint,
 		value = if synced then existing.value else default,
 		remote = synced,
 	}
@@ -174,6 +186,7 @@ const function snapshot(): snapshot
 			descriptor = found.descriptor,
 
 			default = found.default,
+			hint = found.hint,
 			value = found.value,
 		})
 	end
@@ -191,7 +204,7 @@ const function import(source: snapshot)
 		const existing = entries[incoming.path]
 
 		if not existing then
-			add(incoming.path, incoming.name, incoming.group, incoming.descriptor, incoming.default)
+			add(incoming.path, incoming.name, incoming.group, incoming.descriptor, incoming.default, incoming.hint)
 			entries[incoming.path].value = incoming.value
 
 			entries[incoming.path].remote = true
@@ -200,6 +213,8 @@ const function import(source: snapshot)
 
 		existing.remote = true
 		existing.default = incoming.default
+
+		existing.hint = incoming.hint
 		apply(incoming.path, incoming.value)
 	end
 
@@ -259,11 +274,11 @@ end
 const function reset()
 	table.clear(entries)
 	table.clear(buttons)
+
 	table.clear(listeners)
-
 	table.clear(register_listeners)
-	tracker.reset()
 
+	tracker.reset()
 	remote = nil
 end
 

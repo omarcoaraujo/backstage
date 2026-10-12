@@ -30,4 +30,12 @@ return backstage.config("pets", {
 			length = { min = 0.1, max = 6, step = 0.1 },
 		},
 	},
+
+	hints = {
+		distance = "How far behind the player the pet stays",
+		speed = "Higher snaps to the target, lower drifts",
+
+		mode = "Follow trails the player, orbit circles around",
+		trail = { length = "Seconds the trail takes to fade" },
+	},
 })

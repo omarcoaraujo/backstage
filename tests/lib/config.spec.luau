@@ -28,6 +28,8 @@ const function options()
 			mode = { choices = { "follow", "orbit" } },
 			trail = { length = { min = 0.1, max = 6 } },
 		},
+
+		hints = {},
 	}
 end
 
@@ -70,6 +72,36 @@ return {
 
 		assert(table.concat(paths, ",") == "pets.distance,pets.mode,pets.trail.enabled,pets.trail.length")
 		assert(#registry.list_buttons() == 1)
+	end,
+
+	studio_keeps_hints_by_path = function()
+		fresh()
+
+		backstage.config("pets", defaults(), {
+			hints = {
+				distance = "How far behind",
+				trail = { length = "Seconds to fade" },
+			},
+		})
+
+		const hints = {}
+
+		for _, entry in registry.list() do
+			hints[entry.path] = entry.hint
+		end
+
+		assert(hints["pets.distance"] == "How far behind")
+		assert(hints["pets.trail.length"] == "Seconds to fade")
+		assert(hints["pets.mode"] == nil)
+	end,
+
+	studio_ignores_a_hint_that_is_not_text = function()
+		fresh()
+		backstage.config("pets", defaults(), { hints = { distance = 5 } })
+
+		for _, entry in registry.list() do
+			assert(entry.hint == nil)
+		end
 	end,
 
 	studio_applies_limits = function()

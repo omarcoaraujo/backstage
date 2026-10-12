@@ -6,8 +6,8 @@ const registry = require "./registry"
 const tracker = require "./tracker"
 
 --// Types
-type limit_tree = { [string]: unknown }
-export type options<limits> = { limits: limits? }
+type tree = { [string]: unknown }
+export type options<limits> = { limits: limits?, hints: { [string]: any }? }
 type node = { [string]: kinds.value | button.button | node }
 
 type member =
@@ -45,12 +45,13 @@ const function resolve(members: { [string]: member }, key: string): (kinds.value
 	return value
 end
 
-const function build_group(source: node, limits: limit_tree?, path: string)
+const function build_group(source: node, limits: tree?, hints: tree?, path: string)
 	const members = {} :: { [string]: member }
 
 	for key, value in source do
 		const member_path = `{path}.{key}`
 		const limit = if limits then limits[key] else nil
+		const hint = if hints then hints[key] else nil
 
 		if type(value) == "table" and button.is_button(value) then
 			const pressable = value :: button.button
@@ -61,14 +62,19 @@ const function build_group(source: node, limits: limit_tree?, path: string)
 		end
 
 		if type(value) == "table" then
-			members[key] = { kind = "group", proxy = build_group(value :: node, limit :: limit_tree?, member_path) }
+			members[key] = {
+				kind = "group",
+				proxy = build_group(value :: node, limit :: tree?, hint :: tree?, member_path),
+			}
+
 			continue
 		end
 
 		const descriptor = kinds.infer(value, limit :: kinds.limit?)
 		if not descriptor then error(`backstage: unsupported value for {member_path}`, 0) end
 
-		registry.add(member_path, key, path, descriptor, value :: kinds.value)
+		registry.add(member_path, key, path, descriptor, value :: kinds.value, if type(hint) == "string" then hint else nil)
+
 		members[key] = { kind = "entry", path = member_path }
 	end
 
@@ -111,8 +117,10 @@ end
 
 const function config<settings, limits>(name: string, defaults: settings, options: options<limits>?): settings
 	if not mode.active() then return freeze_copy(defaults) end
-	const given = if options then options.limits else nil :: any
-	const group = build_group(defaults :: any, given :: limit_tree?, name)
+	const given_limits = if options then options.limits else nil :: any
+
+	const given_hints = if options then options.hints else nil :: any
+	const group = build_group(defaults :: any, given_limits :: tree?, given_hints :: tree?, name)
 
 	registry.announce()
 	return group :: any

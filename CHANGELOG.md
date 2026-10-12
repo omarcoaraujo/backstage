@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Each value can now have a short explanation that shows when you hover its row.
 - Values you read from your config now update live in Vide and Charm code while you tune them in the window.
 
 ## 0.3.0

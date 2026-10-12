@@ -101,6 +101,7 @@ return function(props: props)
 		return row {
 			label = entry.name,
 			content = content,
+			hint = entry.hint,
 
 			dirty = function()
 				return value() ~= entry.default

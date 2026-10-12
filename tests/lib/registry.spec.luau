@@ -56,6 +56,18 @@ return {
 		assert(#edits == 0)
 	end,
 
+	a_hint_travels_in_the_snapshot = function()
+		fresh()
+		registry.add("pets.speed", "speed", "pets", kinds.infer(1) :: kinds.descriptor, 1, "How fast")
+
+		const snapshot = registry.snapshot()
+		assert(snapshot.entries[1].hint == "How fast")
+
+		fresh()
+		registry.import(snapshot)
+		assert(registry.list()[1].hint == "How fast")
+	end,
+
 	imported_entries_forward_user_edits = function()
 		const edits = fresh()
 		registry.import(incoming(1))
