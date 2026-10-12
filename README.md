@@ -4,7 +4,13 @@ Live tuning panel for Roblox Studio: edit game values in real time.
 
 [![Check](https://github.com/omarcoaraujo/backstage/actions/workflows/check.yml/badge.svg)](https://github.com/omarcoaraujo/backstage/actions/workflows/check.yml) [![Release](https://github.com/omarcoaraujo/backstage/actions/workflows/release.yml/badge.svg)](https://github.com/omarcoaraujo/backstage/actions/workflows/release.yml)
 
-![The Backstage window tuning a pet config](docs/window.png)
+<p align="center">
+  <img src="docs/window.png" alt="The Backstage window tuning a pet config" width="32%">
+  <img src="docs/color-picker.png" alt="The color picker open on a color value" width="32%">
+  <img src="docs/readonly.png" alt="Read-only values and expandable tables" width="32%">
+</p>
+
+The read-only rows and expandable tables are built and shown in the UI stories, but `config` does not produce them yet. They arrive with store support.
 
 ---
 
