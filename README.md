@@ -4,6 +4,8 @@ Live tuning panel for Roblox Studio: edit game values in real time.
 
 [![Check](https://github.com/omarcoaraujo/backstage/actions/workflows/check.yml/badge.svg)](https://github.com/omarcoaraujo/backstage/actions/workflows/check.yml) [![Release](https://github.com/omarcoaraujo/backstage/actions/workflows/release.yml/badge.svg)](https://github.com/omarcoaraujo/backstage/actions/workflows/release.yml)
 
+![The Backstage window tuning a pet config](docs/window.png)
+
 ---
 
 ## Features
