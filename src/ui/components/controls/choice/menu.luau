@@ -1,3 +1,6 @@
+--// Services
+const UserInputService = game:GetService "UserInputService"
+
 --// Packages
 const vide = require "../../../../../roblox_packages/vide"
 
@@ -31,10 +34,89 @@ type props = {
 --// Component
 return function(props: props)
 	const options = {} :: { unknown }
+	local scroller = nil :: ScrollingFrame?
 	local pressed = false
 
-	for _, choice in props.choices do
-		table.insert(options, option { text = choice, selected = choice == props.value, on_press = props.on_pick })
+	const active = vide.source(table.find(props.choices, props.value))
+
+	const function reveal()
+		const index = active()
+		if not index or not scroller then return end
+
+		const row_height = px(theme.field_height)()
+		const top = (index - 1) * row_height
+
+		const bottom = top + row_height
+		const view = scroller.AbsoluteSize.Y
+		const offset = scroller.CanvasPosition.Y
+
+		if top < offset then
+			scroller.CanvasPosition = Vector2.new(0, top)
+		elseif bottom > offset + view then
+			scroller.CanvasPosition = Vector2.new(0, bottom - view)
+		end
+	end
+
+	const function capture(instance: Instance)
+		scroller = instance :: ScrollingFrame
+		reveal()
+	end
+
+	const function move(step: number)
+		const count = #props.choices
+		if count == 0 then return end
+
+		const current = active()
+		if not current then
+			active(if step > 0 then 1 else count)
+			return
+		end
+
+		active(math.clamp(current + step, 1, count))
+	end
+
+	const function pick_active()
+		const index = active()
+		if not index then return end
+		props.on_pick(props.choices[index])
+	end
+
+	const function on_key(input: InputObject)
+		if input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+
+		const code = input.KeyCode
+		if code == Enum.KeyCode.Escape then
+			props.on_dismiss()
+		elseif code == Enum.KeyCode.Down then
+			move(1)
+		elseif code == Enum.KeyCode.Up then
+			move(-1)
+		elseif code == Enum.KeyCode.Return or code == Enum.KeyCode.KeypadEnter then
+			pick_active()
+		end
+	end
+
+	const function build(index: number, choice: string)
+		const function highlighted()
+			return active() == index
+		end
+
+		const function on_hover()
+			active(index)
+		end
+
+		return option {
+			text = choice,
+			selected = choice == props.value,
+			highlighted = highlighted,
+
+			on_press = props.on_pick,
+			on_hover = on_hover,
+		}
+	end
+
+	for index, choice in props.choices do
+		table.insert(options, build(index, choice))
 	end
 
 	const function on_backdrop_press(input: InputObject)
@@ -45,6 +127,9 @@ return function(props: props)
 		if not pressed or not pointer.is_press(input) then return end
 		props.on_dismiss()
 	end
+
+	vide.effect(reveal)
+	vide.cleanup(UserInputService.InputBegan:Connect(on_key))
 
 	return vide.create "Frame" {
 		Name = "backstage_dropdown",
@@ -88,6 +173,7 @@ return function(props: props)
 			},
 
 			options,
+			vide.action(capture),
 		},
 	}
 end

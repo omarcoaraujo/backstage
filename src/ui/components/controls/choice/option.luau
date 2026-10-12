@@ -12,32 +12,25 @@ const PADDING = 4
 type props = {
 	text: string,
 	selected: boolean,
+	highlighted: () -> boolean,
+
 	on_press: (text: string) -> (),
+	on_hover: () -> (),
 }
 
 --// Component
 return function(props: props)
-	const hovered = vide.source(false)
-
 	const function on_activated()
 		props.on_press(props.text)
 	end
 
-	const function on_enter()
-		hovered(true)
-	end
-
-	const function on_leave()
-		hovered(false)
-	end
-
 	const function background_transparency()
-		if hovered() then return 0 end
+		if props.highlighted() then return 0 end
 		return 1
 	end
 
 	const function text_color()
-		if hovered() or props.selected then return theme.text end
+		if props.highlighted() or props.selected then return theme.text end
 		return theme.text_muted
 	end
 
@@ -59,8 +52,7 @@ return function(props: props)
 		TextXAlignment = Enum.TextXAlignment.Left,
 
 		Activated = on_activated,
-		MouseEnter = on_enter,
-		MouseLeave = on_leave,
+		MouseEnter = props.on_hover,
 
 		vide.create "UIPadding" {
 			PaddingLeft = px.udim(0, PADDING),

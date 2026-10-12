@@ -99,6 +99,11 @@ return function(props: props)
 		return "v"
 	end
 
+	const function text_color()
+		if table.find(props.choices, props.value()) then return theme.text end
+		return theme.text_muted
+	end
+
 	const function stroke_transparency()
 		if opened() then return FOCUS_TRANSPARENCY end
 		return 1
@@ -120,7 +125,7 @@ return function(props: props)
 
 		FontFace = theme.font,
 		Text = props.value,
-		TextColor3 = theme.text,
+		TextColor3 = text_color,
 
 		TextSize = px(theme.text_size),
 		TextTruncate = Enum.TextTruncate.AtEnd,
