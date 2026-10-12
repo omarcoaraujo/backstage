@@ -12,6 +12,15 @@ const BRANCH_TRANSPARENCY = 0.5
 const BRANCH_OFFSET = 4
 const TICK_REACH = 4
 
+const ARROW_IMAGE = "rbxasset://textures/StudioSharedUI/arrowSpritesheet.png"
+const ARROW_FRAME = 12
+
+const ARROW_SIZE = 6
+const ARROW_GAP = 6
+
+const ARROW_RIGHT = Vector2.new(ARROW_FRAME, 0)
+const ARROW_DOWN = Vector2.new(ARROW_FRAME * 2, 0)
+
 --// Types
 type props = {
 	name: string,
@@ -85,8 +94,8 @@ return function(props: props)
 		hovered(false)
 	end
 
-	const function header_text()
-		return `{if expanded() then "[-]" else "[+]"} {props.name}`
+	const function arrow_frame()
+		return if expanded() then ARROW_DOWN else ARROW_RIGHT
 	end
 
 	const function header_color()
@@ -118,7 +127,7 @@ return function(props: props)
 			BorderSizePixel = 0,
 
 			FontFace = theme.font,
-			Text = header_text,
+			Text = props.name,
 			TextColor3 = theme.text,
 
 			TextSize = px(theme.text_size),
@@ -129,7 +138,22 @@ return function(props: props)
 			MouseLeave = on_leave,
 
 			vide.create "UIPadding" {
-				PaddingLeft = px.udim(0, theme.padding),
+				PaddingLeft = px.udim(0, theme.padding + ARROW_SIZE + ARROW_GAP),
+			},
+
+			vide.create "ImageLabel" {
+				Name = "arrow",
+				AnchorPoint = Vector2.new(0, 0.5),
+
+				Position = px.udim2(0, -(ARROW_SIZE + ARROW_GAP), 0.5, 0),
+				Size = px.udim2(0, ARROW_SIZE, 0, ARROW_SIZE),
+
+				BackgroundTransparency = 1,
+				Image = ARROW_IMAGE,
+
+				ImageColor3 = theme.text,
+				ImageRectSize = Vector2.new(ARROW_FRAME, ARROW_FRAME),
+				ImageRectOffset = arrow_frame,
 			},
 		},
 
