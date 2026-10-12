@@ -9,7 +9,7 @@ const function run(folder: Instance): (number, number)
 		if not module:IsA "ModuleScript" or not string.match(module.Name, "%.spec$") then continue end
 
 		const names = {} :: { string }
-		const suite = require(module) :: { [string]: () -> () }
+		const suite = require(module) :: { [string]: () -> any }
 
 		for name in suite do
 			table.insert(names, name)
