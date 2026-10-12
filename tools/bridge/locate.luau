@@ -8,6 +8,7 @@ const LITERAL_TAGS = { number = true, string = true, boolean = true, call = true
 export type range = {
 	begin_line: number,
 	begin_column: number,
+
 	end_line: number,
 	end_column: number,
 }
@@ -15,10 +16,11 @@ export type range = {
 export type found = { tag: string, range: range }
 
 --// Functions
-const function to_range(location): range
+const function to_range(location)
 	return {
 		begin_line = location.beginLine,
 		begin_column = location.beginColumn,
+
 		end_line = location.endLine,
 		end_column = location.endColumn,
 	}
@@ -26,7 +28,6 @@ end
 
 const function string_text(node): string?
 	if node.tag ~= "string" then return nil end
-
 	return node.token.text
 end
 
@@ -36,7 +37,6 @@ const function is_config_call(node, name: string)
 
 	const first = node.arguments[1]
 	if not first then return false end
-
 	return string_text(first.node) == name
 end
 
@@ -46,7 +46,6 @@ const function find_config_call(node, name: string)
 
 	for key, child in node do
 		if key == "location" or key == "leadingTrivia" or key == "trailingTrivia" then continue end
-
 		const found = find_config_call(child, name)
 		if found then return found end
 	end
@@ -70,7 +69,7 @@ const function locate(source: string, path: string): (found?, string?)
 	const segments = string.split(path, ".")
 	const name = table.remove(segments, 1) :: string
 
-	const call = find_config_call(parser.parse(source).root, name)
+	const call = find_config_call(parser.parse(source).root, `"{name}"`)
 	if not call then return nil, `config "{name}" not found` end
 
 	const defaults = call.arguments[2]
@@ -79,10 +78,9 @@ const function locate(source: string, path: string): (found?, string?)
 	local current = defaults.node
 	for _, segment in segments do
 		if current.tag ~= "table" then return nil, `"{segment}" is inside a value that is not a table` end
-
 		const entry = find_entry(current, segment)
-		if not entry then return nil, `"{segment}" not found in the defaults` end
 
+		if not entry then return nil, `"{segment}" not found in the defaults` end
 		current = entry.value
 	end
 
