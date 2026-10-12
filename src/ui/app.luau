@@ -83,6 +83,10 @@ return function(props: props)
 	px.use_px()
 
 	const appliers = {} :: { [string]: (value: kinds.value) -> () }
+	const frame = list {}
+
+	local destroy_tree = nil :: (() -> ())?
+	local items = {} :: { Instance }
 
 	const function bind(path: string, apply: (value: kinds.value) -> ())
 		appliers[path] = apply
@@ -211,35 +215,34 @@ return function(props: props)
 		return content
 	end
 
-	const frame = list {}
-	local destroy_tree = nil :: (() -> ())?
+	const function clear()
+		if destroy_tree then destroy_tree() end
+
+		for _, item in items do
+			item:Destroy()
+		end
+
+		table.clear(items)
+	end
 
 	const function rebuild()
-		if destroy_tree then destroy_tree() end
+		clear()
 		table.clear(appliers)
 
 		const destroy, content = vide.root(tree)
 		destroy_tree = destroy
+		items = content
 
 		for _, item in content do
 			item.Parent = frame
 		end
 	end
 
-	const function on_registered()
-		rebuild()
-	end
-
-	const function dispose()
-		if destroy_tree then destroy_tree() end
-	end
+	vide.cleanup(registry.on_change(on_value_changed))
+	vide.cleanup(registry.on_register(rebuild))
+	vide.cleanup(clear)
 
 	rebuild()
-
-	vide.cleanup(registry.on_change(on_value_changed))
-	vide.cleanup(registry.on_register(on_registered))
-	vide.cleanup(dispose)
-
 	return window {
 		title = props.title,
 		footer = props.footer,
