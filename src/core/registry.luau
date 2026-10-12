@@ -1,6 +1,7 @@
 --// Modules
 const button = require "./button"
 const kinds = require "./kinds"
+const tracker = require "./tracker"
 
 --// Types
 export type entry = {
@@ -126,6 +127,8 @@ const function write(path: string, value: unknown, forward: boolean)
 	end
 
 	if forward and found.remote and remote then remote.edit(path, coerced) end
+	tracker.write(path, coerced)
+
 	return true
 end
 
@@ -259,6 +262,8 @@ const function reset()
 	table.clear(listeners)
 
 	table.clear(register_listeners)
+	tracker.reset()
+
 	remote = nil
 end
 

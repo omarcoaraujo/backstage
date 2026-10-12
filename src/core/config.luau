@@ -3,6 +3,7 @@ const button = require "./button"
 const kinds = require "./kinds"
 const mode = require "./mode"
 const registry = require "./registry"
+const tracker = require "./tracker"
 
 --// Types
 type limit_tree = { [string]: unknown }
@@ -37,7 +38,11 @@ const function resolve(members: { [string]: member }, key: string): (kinds.value
 	if found.kind == "group" then return found.proxy end
 	if found.kind == "button" then return found.button end
 
-	return registry.get(found.path)
+	const value = registry.get(found.path)
+	if value == nil then return nil end
+
+	tracker.read(found.path, value)
+	return value
 end
 
 const function build_group(source: node, limits: limit_tree?, path: string)

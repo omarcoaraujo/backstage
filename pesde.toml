@@ -14,5 +14,11 @@ build_files = ["src"]
 [indices]
 default = "https://github.com/pesde-pkg/index"
 
+[wally_indices]
+default = "https://github.com/UpliftGames/wally-index"
+
 [dependencies]
 vide = { name = "centau/vide", version = "^0.4.0" }
+
+[dev_dependencies]
+charm = { wally = "littensy/charm", version = "^0.11.1" }

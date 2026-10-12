@@ -4,6 +4,7 @@
     "$className": "DataModel",
     "ReplicatedStorage": {
       "backstage": { "$path": "src" },
+      "roblox_packages": { "$path": "roblox_packages" },
       "tests": { "$path": "tests/lib" }
     }
   }

@@ -11,6 +11,15 @@ export type config_options<limits> = config.options<limits>
 export type start_options = start.options
 
 --// Functions
+const function create_config<settings, limits>(name: string, defaults: settings, options: config_options<limits>?): settings
+	if mode.active() then
+		const install = require "@self/reactive/install"
+		install()
+	end
+
+	return config(name, defaults, options)
+end
+
 const function create_button()
 	if not mode.active() then return button.create_inert() end
 	return button.create()
@@ -18,7 +27,7 @@ end
 
 --// End
 return table.freeze {
-	config = config,
+	config = create_config,
 	button = create_button,
 	start = start,
 

@@ -16,8 +16,10 @@ const DISPLAY_ORDER = 1000
 export type options = {
 	key: Enum.KeyCode?,
 	ctrl: boolean?,
-
 	port: number?,
+
+	vide: unknown?,
+	charm: unknown?,
 }
 
 --// Variables
@@ -31,6 +33,9 @@ end
 const function start(options: options?)
 	if started or not mode.active() then return end
 	started = true
+
+	const install = require "../reactive/install"
+	install(options)
 
 	if RunService:IsServer() then
 		sync.serve()

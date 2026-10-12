@@ -75,6 +75,30 @@ end)
 
 The game cannot write to the config. Only the window does, and writing from code raises an error.
 
+### Reactive reads
+
+A read inside a Vide scope or a Charm effect is tracked, so it runs again when the window changes the value:
+
+```lua
+vide.create "Part" {
+	Size = function()
+		return Vector3.one * config.size
+	end,
+}
+
+charm.effect(function()
+	print(config.size)
+end)
+```
+
+Vide works with the copy Backstage installs. If your game uses another copy of Vide, or uses Charm, hand them to `start` so the copy that tracks is the one your code uses:
+
+```lua
+backstage.start { vide = vide, charm = charm }
+```
+
+Charm is never required: without it a read inside a Charm effect is a plain read. Fusion does not track plain reads.
+
 ### Opening the window
 
 Call `start` on the client, and on the server if you want to tune server values too:

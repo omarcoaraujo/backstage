@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Values you read from your config now update live in Vide and Charm code while you tune them in the window.
+
 ## 0.3.0
 
 - A small reset button shows up next to a value you changed, and one click puts it back to how it was when you pressed play.
