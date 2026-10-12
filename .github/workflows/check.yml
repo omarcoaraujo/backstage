@@ -1,0 +1,50 @@
+name: Check
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+  pull_request:
+jobs:
+  style:
+    name: Style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check formatting
+        run: stylua --check src example stories tests
+
+  analyze:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install pesde
+        uses: axiom-co/setup-pesde@b690699ace34169731b6b2a1c93b2008472038a7
+        with:
+          token: ${{ github.token }}
+
+      - name: Install packages
+        run: pesde install
+
+      - name: Generate the sourcemap
+        run: rojo sourcemap dev.project.json --output sourcemap.json
+
+      - name: Download the Roblox definitions
+        run: curl -sL https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau -o roblox.d.luau
+
+      - name: Type check
+        run: luau-lsp analyze --definitions=roblox.d.luau --sourcemap=sourcemap.json --ignore "**/roblox_packages/**" src example stories tests
