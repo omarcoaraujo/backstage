@@ -23,6 +23,7 @@ The read-only rows and expandable tables are built and shown in the UI stories, 
 - One declaration per value, and the kind comes from its default: number, boolean, string, `Color3` or `Vector3`
 - Sliders, toggles, text boxes, choices, a color picker, vector fields and buttons
 - Limits per value: `min`, `max`, `step` and a list of `choices`, enforced on every edit
+- Hints: a tooltip on hover that explains what a value does
 - Nested tables become collapsible groups with a line showing the nesting
 - Search bar that filters the tree by name
 - A reset button on every changed value
@@ -35,9 +36,10 @@ The read-only rows and expandable tables are built and shown in the UI stories, 
 - Works across the network: a value on the server is tuned from the same window, validated by the server and sent to every player
 - Buttons you press in the window and listen to in code
 
-**Keeps what you tuned**
+**Keeps what you tuned: the Backstage tool**
 
-- An optional tool writes every change back into the default of its `backstage.config` call, in place, so the next session starts from what you tuned
+- Tuning is only half of it. The tool writes every change back into the default of its `backstage.config` call, in place, so the next session starts from what you tuned and you never copy a number by hand
+- It is part of Backstage, not an add-on: install it once with Rokit and keep it running while you work. Without it, everything you tune is lost when the play session ends
 
 **Costs nothing in production**
 
@@ -88,6 +90,13 @@ Start the window, once on the client:
 backstage.start()
 ```
 
+Install the tool and leave it running next to Studio, so what you tune is saved into your scripts:
+
+```sh
+rokit add omarcoaraujo/backstage
+backstage .
+```
+
 Press play and open the window with `Ctrl + B`. Everything below goes deeper.
 
 ## Usage
@@ -118,6 +127,18 @@ return backstage.config("pets", {
 ```
 
 The kind of each value comes from its default: number, boolean, string, `Color3` or `Vector3`. A `choices` limit turns a string into a choice. Nested tables become groups.
+
+Add a `hints` table, shaped like `limits`, to explain a value. The text shows as a tooltip when you hover the row:
+
+```lua
+{
+	limits = { distance = { min = 0, max = 30, step = 0.1 } },
+	hints = {
+		distance = "How far behind the player the pet stays",
+		trail = { length = "Seconds the trail takes to fade" },
+	},
+}
+```
 
 Read the values as plain fields, always through the returned table, so you see the latest edit:
 
@@ -183,9 +204,11 @@ backstage.start { key = Enum.KeyCode.F4, ctrl = false }
 
 A complete project is in [`example/`](example).
 
-### Saving values into your scripts
+### The Backstage tool
 
-Without the tool, edits live in the play session and are lost when it ends. With it, every change is written back into the default of the matching `backstage.config` call, in place, so the next session starts from what you tuned.
+This is where Backstage pays off. Every change you make in the window is written back into the default of the matching `backstage.config` call, in place, so you tune by feel, close Studio and the numbers are already in your code. No export button, no JSON, no copying values.
+
+Without it, edits live in the play session and are lost when it ends. Treat it as a required part of the workflow and keep it running whenever you tune.
 
 Install it with [Rokit](https://github.com/rojo-rbx/rokit) and point it at your project folder while Studio is open:
 
@@ -199,7 +222,7 @@ Enable **Allow HTTP Requests** in the game settings of the place. The tool liste
 ## Limitations
 
 - Backstage is pre-1.0, so the API can still change between minor versions.
-- Without the tool, edits are lost when the play session ends. Values declared only on the client stay local to that client.
+- Edits are lost when the play session ends unless the Backstage tool is running. Values declared only on the client stay local to that client.
 - Editing values of stores you already have (Vide, Charm) is not there yet.
 
 ## Contributing
