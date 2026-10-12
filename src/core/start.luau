@@ -7,8 +7,14 @@ const UserInputService = game:GetService "UserInputService"
 const mode = require "./mode"
 
 --// Constants
-const TOGGLE_KEY = Enum.KeyCode.B
+const DEFAULT_KEY = Enum.KeyCode.B
 const DISPLAY_ORDER = 1000
+
+--// Types
+export type options = {
+	key: Enum.KeyCode?,
+	ctrl: boolean?,
+}
 
 --// Variables
 local started = false
@@ -18,9 +24,12 @@ const function holding_control()
 	return UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
 end
 
-const function start()
+const function start(options: options?)
 	if started or not mode.active() or not RunService:IsClient() then return end
 	started = true
+
+	const key = if options and options.key then options.key else DEFAULT_KEY
+	const needs_control = not options or options.ctrl ~= false
 
 	const vide = require "../../roblox_packages/vide"
 	const app = require "../ui/app"
@@ -34,7 +43,9 @@ const function start()
 	end
 
 	const function on_input(input: InputObject)
-		if input.KeyCode ~= TOGGLE_KEY or not holding_control() then return end
+		if input.KeyCode ~= key then return end
+		if needs_control and not holding_control() then return end
+
 		visible(not visible())
 	end
 

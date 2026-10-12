@@ -7,7 +7,8 @@ const start = require "@self/core/start"
 
 --// Types
 export type limit = kinds.limit
-export type options<limits> = config.options<limits>
+export type config_options<limits> = config.options<limits>
+export type start_options = start.options
 
 --// Functions
 const function create_button()
