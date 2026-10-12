@@ -69,7 +69,7 @@ const function locate(source: string, path: string): (found?, string?)
 	const segments = string.split(path, ".")
 	const name = table.remove(segments, 1) :: string
 
-	const call = find_config_call(parser.parse(source).root, `"{name}"`)
+	const call = find_config_call(parser.parse(source).root, name)
 	if not call then return nil, `config "{name}" not found` end
 
 	const defaults = call.arguments[2]
