@@ -10,14 +10,14 @@ run = "stylua src example stories tests cli"
 [tasks.analyze]
 shell = "bash -c"
 run = """
-stylua src example stories tests
+stylua src example stories tests cli
 rojo sourcemap dev.project.json --output sourcemap.json
 [ -f roblox.d.luau ] || curl -L https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/refs/heads/main/scripts/globalTypes.d.luau -o roblox.d.luau
 luau-lsp analyze \
 	--sourcemap=sourcemap.json \
 	--definitions=roblox.d.luau \
 	--ignore="**/roblox_packages/**" \
-	src example stories tests
+	src example stories tests/lib
 """
 
 [tasks.test]
@@ -27,6 +27,9 @@ mkdir -p build
 rojo build test.project.json --output build/tests.rbxl
 run-in-roblox --place build/tests.rbxl --script tests/lib/run.server.luau
 """
+
+[tasks."test:cli"]
+run = "lute run tests/cli/run.luau"
 
 [tasks.rojo]
 run = "rojo serve dev.project.json --port 34890"
