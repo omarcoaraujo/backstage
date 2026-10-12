@@ -115,7 +115,7 @@ return function(props: props)
 	const function entry_row(entry: registry.entry)
 		const path = entry.path
 		const kind = entry.descriptor.kind
-		const value = vide.source(entry.value :: string)
+		const text_value = vide.source(entry.value :: string)
 
 		const function on_change(value: unknown)
 			registry.set(path, value)
@@ -173,18 +173,18 @@ return function(props: props)
 		end
 
 		bind(path, function(next_value)
-			value(next_value :: string)
+			text_value(next_value :: string)
 		end)
 
 		if kind == "choice" then
 			return restorable(
 				entry,
-				value,
-				choice { value = value, on_change = on_change, choices = entry.descriptor.choices or {} }
+				text_value,
+				choice { value = text_value, on_change = on_change, choices = entry.descriptor.choices or {} }
 			)
 		end
 
-		return restorable(entry, value, text { value = value, on_change = on_change })
+		return restorable(entry, text_value, text { value = text_value, on_change = on_change })
 	end
 
 	const function build_buttons(entries: { registry.button_entry })
