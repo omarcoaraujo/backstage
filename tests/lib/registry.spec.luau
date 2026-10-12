@@ -102,7 +102,12 @@ return {
 	snapshot_lists_entries_and_buttons = function()
 		fresh()
 		declare_speed(2)
-		registry.add_button("pets.respawn", "respawn", "pets", { connect = function() end, fire = function() end } :: any)
+		registry.add_button(
+			"pets.respawn",
+			"respawn",
+			"pets",
+			{ connect = function() end, fire = function() end } :: any
+		)
 
 		const shot = registry.snapshot()
 		assert(#shot.entries == 1 and shot.entries[1].value == 2)
