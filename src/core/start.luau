@@ -4,6 +4,7 @@ const RunService = game:GetService "RunService"
 const UserInputService = game:GetService "UserInputService"
 
 --// Modules
+const bridge = require "./bridge"
 const mode = require "./mode"
 const sync = require "./sync"
 
@@ -15,6 +16,8 @@ const DISPLAY_ORDER = 1000
 export type options = {
 	key: Enum.KeyCode?,
 	ctrl: boolean?,
+
+	port: number?,
 }
 
 --// Variables
@@ -31,6 +34,7 @@ const function start(options: options?)
 
 	if RunService:IsServer() then
 		sync.serve()
+		bridge.serve(if options then options.port else nil)
 		return
 	end
 
