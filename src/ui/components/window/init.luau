@@ -160,6 +160,11 @@ return function(props: props)
 		follow(current, pointer.position(input) - current.origin)
 	end
 
+	const function close()
+		position(props.position)
+		props.on_close()
+	end
+
 	const footer_height = if props.footer then theme.footer_height else 0
 
 	const function is_dragging(): boolean
@@ -217,7 +222,7 @@ return function(props: props)
 			on_press = begin_move,
 
 			on_release = release,
-			on_close = props.on_close,
+			on_close = close,
 		},
 
 		handles {
