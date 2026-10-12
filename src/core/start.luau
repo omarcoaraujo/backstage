@@ -5,6 +5,7 @@ const UserInputService = game:GetService "UserInputService"
 
 --// Modules
 const mode = require "./mode"
+const sync = require "./sync"
 
 --// Constants
 const DEFAULT_KEY = Enum.KeyCode.B
@@ -25,8 +26,16 @@ const function holding_control()
 end
 
 const function start(options: options?)
-	if started or not mode.active() or not RunService:IsClient() then return end
+	if started or not mode.active() then return end
 	started = true
+
+	if RunService:IsServer() then
+		sync.serve()
+		return
+	end
+
+	if not RunService:IsClient() then return end
+	sync.connect()
 
 	const key = if options and options.key then options.key else DEFAULT_KEY
 	const needs_control = not options or options.ctrl ~= false

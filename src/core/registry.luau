@@ -10,7 +10,9 @@ export type entry = {
 
 	descriptor: kinds.descriptor,
 	default: kinds.value,
+
 	value: kinds.value,
+	remote: boolean,
 }
 
 export type button_entry = {
@@ -19,6 +21,18 @@ export type button_entry = {
 
 	group: string,
 	button: button.button,
+
+	remote: boolean,
+}
+
+export type snapshot = {
+	entries: { { path: string, name: string, group: string, descriptor: kinds.descriptor, value: kinds.value } },
+	buttons: { { path: string, name: string, group: string } },
+}
+
+export type remote = {
+	edit: (path: string, value: kinds.value) -> (),
+	press: (path: string) -> (),
 }
 
 type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
@@ -27,7 +41,9 @@ type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
 const entries = {} :: { [string]: entry }
 const buttons = {} :: { [string]: button_entry }
 const listeners = {} :: { listener }
+
 const register_listeners = {} :: { () -> () }
+local remote = nil :: remote?
 
 --// Functions
 const function announce()
@@ -37,20 +53,34 @@ const function announce()
 end
 
 const function add(path: string, name: string, group: string, descriptor: kinds.descriptor, default: kinds.value)
+	const existing = entries[path]
+	const synced = existing ~= nil and existing.remote
+
 	entries[path] = {
 		path = path,
 		name = name,
 
 		group = group,
 		descriptor = descriptor,
-
 		default = default,
-		value = default,
+
+		value = if synced then existing.value else default,
+		remote = synced,
 	}
 end
 
 const function add_button(path: string, name: string, group: string, source: button.button)
-	buttons[path] = { path = path, name = name, group = group, button = source }
+	const existing = buttons[path]
+
+	buttons[path] = {
+		path = path,
+		name = name,
+
+		group = group,
+		button = source,
+
+		remote = existing ~= nil and existing.remote,
+	}
 end
 
 const function get(path: string): kinds.value?
@@ -59,7 +89,18 @@ const function get(path: string): kinds.value?
 	return found.value
 end
 
-const function set(path: string, value: unknown)
+const function sorted_paths(source: { [string]: unknown })
+	const paths = {}
+
+	for path in source do
+		table.insert(paths, path)
+	end
+
+	table.sort(paths)
+	return paths
+end
+
+const function write(path: string, value: unknown, forward: boolean)
 	const found = entries[path]
 	if not found then return false end
 
@@ -74,7 +115,16 @@ const function set(path: string, value: unknown)
 		listener(path, coerced, previous)
 	end
 
+	if forward and found.remote and remote then remote.edit(path, coerced) end
 	return true
+end
+
+const function set(path: string, value: unknown)
+	return write(path, value, true)
+end
+
+const function apply(path: string, value: unknown)
+	return write(path, value, false)
 end
 
 const function press(path: string)
@@ -82,7 +132,66 @@ const function press(path: string)
 	if not found then return false end
 
 	found.button:fire()
+	if found.remote and remote then remote.press(path) end
+
 	return true
+end
+
+const function connect_remote(handler: remote?)
+	remote = handler
+end
+
+const function snapshot(): snapshot
+	const result = { entries = {}, buttons = {} } :: snapshot
+
+	for _, path in sorted_paths(entries) do
+		const found = entries[path]
+
+		table.insert(result.entries, {
+			path = found.path,
+			name = found.name,
+
+			group = found.group,
+			descriptor = found.descriptor,
+			value = found.value,
+		})
+	end
+
+	for _, path in sorted_paths(buttons) do
+		const found = buttons[path]
+		table.insert(result.buttons, { path = found.path, name = found.name, group = found.group })
+	end
+
+	return result
+end
+
+const function import(source: snapshot)
+	for _, incoming in source.entries do
+		const existing = entries[incoming.path]
+
+		if not existing then
+			add(incoming.path, incoming.name, incoming.group, incoming.descriptor, incoming.value)
+			entries[incoming.path].remote = true
+			continue
+		end
+
+		existing.remote = true
+		apply(incoming.path, incoming.value)
+	end
+
+	for _, incoming in source.buttons do
+		const existing = buttons[incoming.path]
+
+		if not existing then
+			add_button(incoming.path, incoming.name, incoming.group, button.create())
+			buttons[incoming.path].remote = true
+			continue
+		end
+
+		existing.remote = true
+	end
+
+	announce()
 end
 
 const function on_change(listener: listener)
@@ -101,17 +210,6 @@ const function on_register(listener: () -> ())
 		const index = table.find(register_listeners, listener)
 		if index then table.remove(register_listeners, index) end
 	end
-end
-
-const function sorted_paths(source: { [string]: unknown })
-	const paths = {}
-
-	for path in source do
-		table.insert(paths, path)
-	end
-
-	table.sort(paths)
-	return paths
 end
 
 const function list()
@@ -138,7 +236,9 @@ const function reset()
 	table.clear(entries)
 	table.clear(buttons)
 	table.clear(listeners)
+
 	table.clear(register_listeners)
+	remote = nil
 end
 
 --// End
@@ -148,11 +248,16 @@ return table.freeze {
 
 	get = get,
 	set = set,
+	apply = apply,
 	press = press,
 
-	announce = announce,
+	snapshot = snapshot,
+	import = import,
+	connect_remote = connect_remote,
 
+	announce = announce,
 	on_change = on_change,
+
 	on_register = on_register,
 	list = list,
 
