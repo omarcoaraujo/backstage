@@ -43,12 +43,11 @@ end
 return function(props: props)
 	const node = filter.branch(props.name, props.content :: { Instance }?)
 	const children = (props.content or {}) :: { Instance }
+	local last = nil :: Instance?
 
 	const open = vide.source(props.open ~= false)
 	const hovered = vide.source(false)
 	const last_height = vide.source(0)
-
-	local last = nil :: Instance?
 
 	for _, child in children do
 		if child.Name == "buttons" then continue end
