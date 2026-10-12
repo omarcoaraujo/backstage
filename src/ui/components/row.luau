@@ -11,6 +11,9 @@ const theme = require "../utils/theme"
 const LABEL_SHARE = 0.45
 const RESET_WIDTH = 18
 
+const RESET_ICON_SIZE = 12
+const RESET_ICON = "rbxasset://textures/StudioSharedUI/Undo.png"
+
 --// Types
 type props = {
 	label: string,
@@ -91,16 +94,29 @@ return function(props: props)
 			AutoButtonColor = false,
 			Active = true,
 
-			FontFace = theme.font,
-			Text = "↺",
-
-			TextColor3 = reset_color,
-			TextSize = px(theme.text_size),
+			Text = "",
 			Visible = reset_visible,
 
 			Activated = overlay.guard(on_activated),
 			MouseEnter = on_enter,
 			MouseLeave = on_leave,
+
+			vide.create "ImageLabel" {
+				Name = "icon",
+				AnchorPoint = Vector2.new(0.5, 0.5),
+
+				Position = UDim2.fromScale(0.5, 0.5),
+				Size = px.udim2(0, RESET_ICON_SIZE, 1, 0),
+
+				BackgroundTransparency = 1,
+				Image = RESET_ICON,
+				ImageColor3 = reset_color,
+
+				vide.create "UIAspectRatioConstraint" {
+					AspectRatio = 1,
+					DominantAxis = Enum.DominantAxis.Width,
+				},
+			},
 		},
 	}
 
