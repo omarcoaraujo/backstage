@@ -3,6 +3,7 @@ const vide = require "../../../../roblox_packages/vide"
 
 --// Utils
 const overlay = require "../../utils/overlay"
+const place = require "../../utils/place"
 const px = require "../../utils/px"
 const theme = require "../../utils/theme"
 
@@ -20,17 +21,6 @@ type props = {
 	on_change: (value: string) -> (),
 	choices: { string },
 }
-
---// Functions
-const function place(origin: Vector2, size: Vector2, height: number, gap: number, bounds: Vector2): Vector2
-	const below = origin.Y + size.Y + gap
-	if below + height <= bounds.Y then return Vector2.new(origin.X, below) end
-
-	const above = origin.Y - gap - height
-	if above >= 0 then return Vector2.new(origin.X, above) end
-
-	return Vector2.new(origin.X, math.max(0, bounds.Y - height))
-end
 
 --// Component
 return function(props: props)
@@ -94,6 +84,8 @@ return function(props: props)
 	end
 
 	const function on_activated()
+		if overlay.active() and not opened() then return end
+
 		if opened() then
 			close()
 			return

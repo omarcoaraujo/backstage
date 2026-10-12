@@ -25,7 +25,7 @@ const function from_hex(text: string): Color3?
 	const red = tonumber(string.sub(digits, 1, 2), 16)
 	const green = tonumber(string.sub(digits, 3, 4), 16)
 	const blue = tonumber(string.sub(digits, 5, 6), 16)
-	
+
 	if not red or not green or not blue then return nil end
 	return Color3.fromRGB(red, green, blue)
 end
