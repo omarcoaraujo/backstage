@@ -5,7 +5,7 @@
 run = "rojo sourcemap dev.project.json --output sourcemap.json"
 
 [tasks.format]
-run = "stylua src example stories tests tools"
+run = "stylua src example stories tests cli"
 
 [tasks.analyze]
 shell = "bash -c"
