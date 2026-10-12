@@ -97,9 +97,25 @@ return function(props: props)
 		if apply then apply(value) end
 	end
 
+	const function restorable(entry: registry.entry, value: () -> unknown, content: unknown)
+		return row {
+			label = entry.name,
+			content = content,
+
+			dirty = function()
+				return value() ~= entry.default
+			end,
+
+			on_reset = function()
+				registry.restore(entry.path)
+			end,
+		}
+	end
+
 	const function entry_row(entry: registry.entry)
 		const path = entry.path
 		const kind = entry.descriptor.kind
+		const value = vide.source(entry.value :: string)
 
 		const function on_change(value: unknown)
 			registry.set(path, value)
@@ -112,17 +128,18 @@ return function(props: props)
 				value(next_value :: number)
 			end)
 
-			return row {
-				label = entry.name,
-				content = number {
+			return restorable(
+				entry,
+				value,
+				number {
 					value = value,
 					on_change = on_change,
 
 					min = entry.descriptor.min,
 					max = entry.descriptor.max,
 					step = entry.descriptor.step,
-				},
-			}
+				}
+			)
 		end
 
 		if kind == "boolean" then
@@ -132,7 +149,7 @@ return function(props: props)
 				value(next_value :: boolean)
 			end)
 
-			return row { label = entry.name, content = toggle { value = value, on_change = on_change } }
+			return restorable(entry, value, toggle { value = value, on_change = on_change })
 		end
 
 		if kind == "color" then
@@ -142,7 +159,7 @@ return function(props: props)
 				value(next_value :: Color3)
 			end)
 
-			return row { label = entry.name, content = color { value = value, on_change = on_change } }
+			return restorable(entry, value, color { value = value, on_change = on_change })
 		end
 
 		if kind == "vector3" then
@@ -152,23 +169,22 @@ return function(props: props)
 				value(next_value :: Vector3)
 			end)
 
-			return row { label = entry.name, content = vector3 { value = value, on_change = on_change } }
+			return restorable(entry, value, vector3 { value = value, on_change = on_change })
 		end
-
-		const value = vide.source(entry.value :: string)
 
 		bind(path, function(next_value)
 			value(next_value :: string)
 		end)
 
 		if kind == "choice" then
-			return row {
-				label = entry.name,
-				content = choice { value = value, on_change = on_change, choices = entry.descriptor.choices or {} },
-			}
+			return restorable(
+				entry,
+				value,
+				choice { value = value, on_change = on_change, choices = entry.descriptor.choices or {} }
+			)
 		end
 
-		return row { label = entry.name, content = text { value = value, on_change = on_change } }
+		return restorable(entry, value, text { value = value, on_change = on_change })
 	end
 
 	const function build_buttons(entries: { registry.button_entry })

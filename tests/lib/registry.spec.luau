@@ -28,7 +28,7 @@ const function declare_speed(default: number)
 	registry.add("pets.speed", "speed", "pets", kinds.infer(default) :: kinds.descriptor, default)
 end
 
-const function incoming(value: number): registry.snapshot
+const function incoming(value: number, default: number?): registry.snapshot
 	return {
 		entries = {
 			{
@@ -37,6 +37,7 @@ const function incoming(value: number): registry.snapshot
 				group = "pets",
 
 				descriptor = kinds.infer(value) :: kinds.descriptor,
+				default = default or value,
 				value = value,
 			},
 		},
@@ -89,6 +90,24 @@ return {
 
 		assert(registry.set("pets.speed", 3))
 		assert(#edits == 1)
+	end,
+
+	restore_goes_back_to_the_declared_default = function()
+		fresh()
+		declare_speed(1)
+
+		assert(registry.set("pets.speed", 5))
+		assert(registry.restore "pets.speed")
+		assert(registry.get "pets.speed" == 1)
+	end,
+
+	restore_forwards_to_the_server_with_the_server_default = function()
+		const edits = fresh()
+		registry.import(incoming(9, 4))
+
+		assert(registry.restore "pets.speed")
+		assert(registry.get "pets.speed" == 4)
+		assert(#edits == 1 and edits[1].value == 4)
 	end,
 
 	imported_buttons_forward_presses = function()

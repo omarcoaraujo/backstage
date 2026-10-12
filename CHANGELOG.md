@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- A small reset button shows up next to a value you changed, and one click puts it back to how it was when you pressed play.
+- Values you change in the window can now be saved straight into your config script while Studio is open.
+
 ## 0.2.0
 
 - Tune values and press buttons that live on the server, from the same window.

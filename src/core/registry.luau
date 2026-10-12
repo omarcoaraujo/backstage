@@ -25,8 +25,19 @@ export type button_entry = {
 	remote: boolean,
 }
 
+export type snapshot_entry = {
+	path: string,
+	name: string,
+
+	group: string,
+	descriptor: kinds.descriptor,
+
+	default: kinds.value,
+	value: kinds.value,
+}
+
 export type snapshot = {
-	entries: { { path: string, name: string, group: string, descriptor: kinds.descriptor, value: kinds.value } },
+	entries: { snapshot_entry },
 	buttons: { { path: string, name: string, group: string } },
 }
 
@@ -75,10 +86,9 @@ const function add_button(path: string, name: string, group: string, source: but
 	buttons[path] = {
 		path = path,
 		name = name,
-
 		group = group,
-		button = source,
 
+		button = source,
 		remote = existing ~= nil and existing.remote,
 	}
 end
@@ -127,6 +137,12 @@ const function apply(path: string, value: unknown)
 	return write(path, value, false)
 end
 
+const function restore(path: string)
+	const found = entries[path]
+	if not found then return false end
+	return write(path, found.default, true)
+end
+
 const function press(path: string)
 	const found = buttons[path]
 	if not found then return false end
@@ -153,6 +169,8 @@ const function snapshot(): snapshot
 
 			group = found.group,
 			descriptor = found.descriptor,
+
+			default = found.default,
 			value = found.value,
 		})
 	end
@@ -170,12 +188,15 @@ const function import(source: snapshot)
 		const existing = entries[incoming.path]
 
 		if not existing then
-			add(incoming.path, incoming.name, incoming.group, incoming.descriptor, incoming.value)
+			add(incoming.path, incoming.name, incoming.group, incoming.descriptor, incoming.default)
+			entries[incoming.path].value = incoming.value
+
 			entries[incoming.path].remote = true
 			continue
 		end
 
 		existing.remote = true
+		existing.default = incoming.default
 		apply(incoming.path, incoming.value)
 	end
 
@@ -248,7 +269,9 @@ return table.freeze {
 
 	get = get,
 	set = set,
+
 	apply = apply,
+	restore = restore,
 	press = press,
 
 	snapshot = snapshot,
