@@ -68,7 +68,7 @@ return function(props: props)
 			TextSize = px(theme.text_size),
 			TextXAlignment = Enum.TextXAlignment.Left,
 
-			Activated = toggle,
+			Activated = overlay.guard(toggle),
 			MouseEnter = on_enter,
 			MouseLeave = on_leave,
 

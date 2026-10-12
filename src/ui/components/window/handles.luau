@@ -73,6 +73,7 @@ end
 --// Components
 const function hit(side: side, hovered: vide.Source<side?>, props: props)
 	const function on_press(input: InputObject)
+		if overlay.active() then return end
 		props.on_press(side, input)
 	end
 

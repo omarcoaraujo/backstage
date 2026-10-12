@@ -41,7 +41,7 @@ return function(props: props)
 		Active = true,
 
 		Size = px.udim2(1, 0, 0, theme.title_height),
-		InputBegan = props.on_press,
+		InputBegan = overlay.guard(props.on_press),
 		InputEnded = props.on_release,
 
 		vide.create "TextLabel" {
@@ -86,7 +86,7 @@ return function(props: props)
 			TextColor3 = theme.text,
 
 			TextSize = px(theme.text_size),
-			Activated = props.on_close,
+			Activated = overlay.guard(props.on_close),
 
 			MouseEnter = on_close_enter,
 			MouseLeave = on_close_leave,

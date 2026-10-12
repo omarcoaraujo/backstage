@@ -49,7 +49,7 @@ return function(props: props)
 		AutoButtonColor = false,
 		Text = "",
 
-		Activated = on_activated,
+		Activated = overlay.guard(on_activated),
 		MouseEnter = on_enter,
 		MouseLeave = on_leave,
 

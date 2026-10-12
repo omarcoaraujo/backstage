@@ -34,6 +34,7 @@ return function(props: props)
 	end
 
 	const function on_down()
+		if overlay.active() then return end
 		pressed(true)
 	end
 
@@ -64,7 +65,7 @@ return function(props: props)
 
 	const function max_size()
 		if not props.max_width then return Vector2.new(math.huge, math.huge) end
-		return Vector2.new(content_width(props.max_width()), math.huge)
+		return Vector2.new(props.max_width(), math.huge)
 	end
 
 	return vide.create "TextButton" {
@@ -83,7 +84,7 @@ return function(props: props)
 		TextSize = px(theme.text_size),
 		TextTruncate = Enum.TextTruncate.AtEnd,
 
-		Activated = props.on_press,
+		Activated = overlay.guard(props.on_press),
 		MouseEnter = on_enter,
 		MouseLeave = on_leave,
 

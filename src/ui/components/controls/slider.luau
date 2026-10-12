@@ -5,6 +5,7 @@ const UserInputService = game:GetService "UserInputService"
 const vide = require "../../../../roblox_packages/vide"
 
 --// Utils
+const overlay = require "../../utils/overlay"
 const pointer = require "../../utils/pointer"
 const px = require "../../utils/px"
 const theme = require "../../utils/theme"
@@ -52,7 +53,7 @@ return function(props: props)
 	end
 
 	const function on_press(input: InputObject)
-		if not pointer.is_press(input) then return end
+		if overlay.active() or not pointer.is_press(input) then return end
 		dragging(true)
 		seek(input)
 	end
