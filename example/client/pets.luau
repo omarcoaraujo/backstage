@@ -17,10 +17,10 @@ local angle = 0
 --// Functions
 const function get_root(): BasePart?
 	const character = Players.LocalPlayer.Character
-	return character and character:FindFirstChild "HumanoidRootPart" :: BasePart?
+	return character and character:FindFirstChild "HumanoidRootPart"
 end
 
-const function resolve_target(root: BasePart, dt: number): Vector3
+const function resolve_target(root: BasePart, dt: number)
 	if config.mode == "orbit" then
 		angle += dt * ORBIT_SPEED
 		return root.Position
@@ -31,12 +31,14 @@ const function resolve_target(root: BasePart, dt: number): Vector3
 	return root.Position - root.CFrame.LookVector * config.distance + Vector3.yAxis * config.height
 end
 
-const function build_pet(): Part
+const function build_pet()
 	const part = Instance.new "Part"
 	part.Name = "pet"
 	part.Shape = Enum.PartType.Ball
+
 	part.Anchored = true
 	part.CanCollide = false
+
 	part.Material = Enum.Material.Neon
 	part.Parent = workspace
 
@@ -51,8 +53,8 @@ const function build_pet(): Part
 	const created = Instance.new "Trail"
 	created.Attachment0 = first
 	created.Attachment1 = second
-	created.Parent = part
 
+	created.Parent = part
 	trail = created
 
 	return part
@@ -60,7 +62,6 @@ end
 
 const function destroy()
 	if pet then pet:Destroy() end
-
 	pet = nil
 	trail = nil
 end
@@ -75,10 +76,11 @@ const function step(dt: number)
 	if not pet or not trail or not root then return end
 
 	const alpha = math.min(config.speed * dt, 1)
-
 	pet.Size = Vector3.one * config.size
+
 	pet.Color = config.tint
 	pet.Position = pet.Position:Lerp(resolve_target(root, dt), alpha)
+
 	trail.Enabled = config.trail.enabled
 	trail.Lifetime = config.trail.length
 	trail.Color = ColorSequence.new(config.tint)
