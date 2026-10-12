@@ -30,7 +30,7 @@ const function tick(child: Instance)
 		Parent = parent,
 		AnchorPoint = Vector2.new(0, 0.5),
 
-		Position = px.udim2(0, BRANCH_OFFSET - theme.indent - shift, 0.5, 0),
+		Position = px.udim2(0, BRANCH_OFFSET - theme.indent - shift, 0, theme.row_height / 2),
 		Size = px.udim2(0, theme.indent - BRANCH_OFFSET + TICK_REACH, 0, 1),
 
 		BackgroundColor3 = theme.divider,
@@ -41,17 +41,22 @@ end
 
 --// Component
 return function(props: props)
-	const open = vide.source(props.open ~= false)
-	const hovered = vide.source(false)
 	const node = filter.branch(props.name, props.content :: { Instance }?)
 	const children = (props.content or {}) :: { Instance }
+
+	const open = vide.source(props.open ~= false)
+	const hovered = vide.source(false)
 	const last_height = vide.source(0)
 
+	local last = nil :: Instance?
+
 	for _, child in children do
+		if child.Name == "buttons" then continue end
+
 		tick(child)
+		last = child
 	end
 
-	const last = children[#children]
 	if last and last:IsA "GuiObject" then
 		const function update()
 			last_height(last.AbsoluteSize.Y)
