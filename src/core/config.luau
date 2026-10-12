@@ -1,0 +1,114 @@
+--// Modules
+const button = require "./button"
+const kinds = require "./kinds"
+const mode = require "./mode"
+const registry = require "./registry"
+
+--// Types
+type limit_tree = { [string]: unknown }
+export type options<limits> = { limits: limits? }
+type node = { [string]: kinds.value | button.button | node }
+
+type member =
+	{ kind: "group", proxy: node }
+	| { kind: "entry", path: string }
+	| { kind: "button", button: button.button }
+
+--// Functions
+const function read_only()
+	error("attempt to modify a read-only table", 3)
+end
+
+const function sorted_keys(source: { [string]: member })
+	const keys = {}
+
+	for key in source do
+		table.insert(keys, key)
+	end
+
+	table.sort(keys)
+	return keys
+end
+
+const function resolve(members: { [string]: member }, key: string): (kinds.value | button.button | node)?
+	const found = members[key]
+	if not found then return nil end
+
+	if found.kind == "group" then return found.proxy end
+	if found.kind == "button" then return found.button end
+
+	return registry.get(found.path)
+end
+
+const function build_group(source: node, limits: limit_tree?, path: string)
+	const members = {} :: { [string]: member }
+
+	for key, value in source do
+		const member_path = `{path}.{key}`
+		const limit = if limits then limits[key] else nil
+
+		if type(value) == "table" and button.is_button(value) then
+			const pressable = value :: button.button
+			registry.add_button(member_path, key, path, pressable)
+
+			members[key] = { kind = "button", button = pressable }
+			continue
+		end
+
+		if type(value) == "table" then
+			members[key] = { kind = "group", proxy = build_group(value :: node, limit :: limit_tree?, member_path) }
+			continue
+		end
+
+		const descriptor = kinds.infer(value, limit :: kinds.limit?)
+		if not descriptor then error(`backstage: unsupported value for {member_path}`, 0) end
+
+		registry.add(member_path, key, path, descriptor, value :: kinds.value)
+		members[key] = { kind = "entry", path = member_path }
+	end
+
+	const function index(_, key: string)
+		return resolve(members, key)
+	end
+
+	const function iterate()
+		const snapshot = {}
+
+		for _, key in sorted_keys(members) do
+			const current = resolve(members, key)
+			if current ~= nil then snapshot[key] = current end
+		end
+
+		return next, snapshot
+	end
+
+	const proxy = setmetatable({}, { __index = index, __newindex = read_only, __iter = iterate })
+	return proxy :: any
+end
+
+const function freeze_copy<T>(source: T): T
+	const tree: unknown = source
+	const copy = {} :: node
+
+	for key, value in tree :: node do
+		if type(value) ~= "table" then
+			copy[key] = value
+		elseif button.is_button(value) then
+			copy[key] = button.create_inert()
+		else
+			copy[key] = freeze_copy(value :: node)
+		end
+	end
+
+	const frozen: unknown = table.freeze(copy)
+	return frozen :: T
+end
+
+const function config<settings, limits>(name: string, defaults: settings, options: options<limits>?): settings
+	if not mode.active() then return freeze_copy(defaults) end
+	const given = if options then options.limits else nil :: any
+	return build_group(defaults :: any, given :: limit_tree?, name) :: any
+end
+
+--// End
+return config
