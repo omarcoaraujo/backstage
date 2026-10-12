@@ -48,7 +48,7 @@ return function(props: props)
 	const function alignment()
 		const available = size().X - px(PADDING)() * 2
 		if bounds().X > available then return Enum.TextXAlignment.Left end
-		return props.alignment or Enum.TextXAlignment.Center
+		return props.alignment or Enum.TextXAlignment.Right
 	end
 
 	return vide.create "TextBox" {

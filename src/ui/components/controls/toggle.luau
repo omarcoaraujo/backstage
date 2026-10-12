@@ -55,9 +55,9 @@ return function(props: props)
 
 		vide.create "Frame" {
 			Name = "box",
-			AnchorPoint = Vector2.new(0.5, 0.5),
+			AnchorPoint = Vector2.new(1, 0.5),
 
-			Position = px.udim2(1, -theme.input_width / 2, 0.5, 0),
+			Position = UDim2.fromScale(1, 0.5),
 			Size = px.udim2(0, BOX_SIZE, 0, BOX_SIZE),
 
 			BackgroundColor3 = theme.field,
