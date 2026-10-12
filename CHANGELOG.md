@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Tune values and press buttons that live on the server, from the same window.
+- Edits made in the window now reach the server and every player.
+
 ## 0.1.0
 
 First release.

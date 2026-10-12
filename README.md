@@ -76,13 +76,15 @@ The game cannot write to the config. Only the window does, and writing from code
 
 ### Opening the window
 
-Call `start` on the client:
+Call `start` on the client, and on the server if you want to tune server values too:
 
 ```lua
 const backstage = require(path.to.backstage)
 
 backstage.start()
 ```
+
+A config declared in a shared module shows up once in the window. The server owns its value: an edit goes to the server, which validates it and tells every client. A config declared only on the server shows up in the window too, and its buttons run on the server.
 
 `Ctrl + B` opens and closes the window. Pass `key` and `ctrl` to change it:
 
@@ -99,7 +101,7 @@ A complete project is in [`example/`](example).
 ## Limitations
 
 - Backstage is pre-1.0, so the API can still change between minor versions.
-- Edits live in the client session: they are not synced with the server and are lost when the session ends.
+- Edits live in the play session and are lost when it ends. Values declared only on the client stay local to that client.
 - Editing values of stores you already have (Vide, Charm) is not there yet.
 
 ## Contributing
