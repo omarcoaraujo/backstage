@@ -20,6 +20,7 @@ The read-only rows and expandable tables are built and shown in the UI stories, 
 - Sliders, toggles, text, choices, colors with a picker, vectors and buttons
 - Limits per value: `min`, `max`, `step` and a list of choices
 - Search bar that filters the tree by name
+- A reset button on every changed value, and an optional tool that saves what you tuned back into your config scripts
 - Zero cost in production: outside Studio the config is a frozen copy and there is no UI, no remote and no listener
 
 ## Installation
@@ -98,10 +99,23 @@ backstage.start { key = Enum.KeyCode.F4, ctrl = false }
 
 A complete project is in [`example/`](example).
 
+### Saving values into your scripts
+
+Without the tool, edits live in the play session and are lost when it ends. With it, every change is written back into the default of the matching `backstage.config` call, in place, so the next session starts from what you tuned.
+
+Install it with [Rokit](https://github.com/rojo-rbx/rokit) and point it at your project folder while Studio is open:
+
+```sh
+rokit add omarcoaraujo/backstage
+backstage . --port 34891
+```
+
+Enable **Allow HTTP Requests** in the game settings of the place. The tool listens only on `127.0.0.1`, finds each config by name across the project, and refuses a name that is declared in two files or a value that is not a literal. `--port` is optional, and the same number goes to `backstage.start { port = 34891 }` if you change it.
+
 ## Limitations
 
 - Backstage is pre-1.0, so the API can still change between minor versions.
-- Edits live in the play session and are lost when it ends. Values declared only on the client stay local to that client.
+- Without the tool, edits are lost when the play session ends. Values declared only on the client stay local to that client.
 - Editing values of stores you already have (Vide, Charm) is not there yet.
 
 ## Contributing
