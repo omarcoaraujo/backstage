@@ -17,9 +17,11 @@ const color = require(ReplicatedStorage.backstage.ui.components.controls.color)
 const group = require(ReplicatedStorage.backstage.ui.components.group)
 const list = require(ReplicatedStorage.backstage.ui.components.list)
 const number = require(ReplicatedStorage.backstage.ui.components.controls.number)
+const readout = require(ReplicatedStorage.backstage.ui.components.controls.readout)
 const row = require(ReplicatedStorage.backstage.ui.components.row)
 const text = require(ReplicatedStorage.backstage.ui.components.controls.text)
 const toggle = require(ReplicatedStorage.backstage.ui.components.controls.toggle)
+const tree = require(ReplicatedStorage.backstage.ui.components.tree)
 const vector3 = require(ReplicatedStorage.backstage.ui.components.controls.vector3)
 const window = require(ReplicatedStorage.backstage.ui.components.window)
 
@@ -122,6 +124,27 @@ return function(target: Instance)
 		const trail_enabled = vide.source(true)
 		const inventory_open = vide.source(false)
 
+		const profile = {
+			level = 12,
+			name = "Bacon",
+			position = Vector3.new(4, 0.5, -12),
+			tint = Color3.fromRGB(255, 200, 80),
+			inventory = {
+				sword = { damage = 10, durability = 80.5 },
+				potions = 3,
+				equipped = true,
+			},
+			spawn = workspace,
+		}
+
+		const function profile_value()
+			return profile
+		end
+
+		const function slots_left()
+			return slots() - profile.inventory.potions
+		end
+
 		const function close()
 			visible(false)
 		end
@@ -174,6 +197,8 @@ return function(target: Instance)
 									toggle_row("open", inventory_open),
 								},
 							},
+							row { label = "slots left", content = readout { value = slots_left } },
+							tree { name = "profile", value = profile_value, open = false },
 						},
 					},
 				},
