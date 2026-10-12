@@ -1,8 +1,11 @@
+[tools]
+"github:luau-lang/lute" = "1.0.0"
+
 [tasks.sourcemap]
 run = "rojo sourcemap dev.project.json --output sourcemap.json"
 
 [tasks.format]
-run = "stylua src example stories tests"
+run = "stylua src example stories tests tools"
 
 [tasks.analyze]
 shell = "bash -c"
