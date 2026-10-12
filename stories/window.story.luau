@@ -11,16 +11,16 @@ const px = require(ReplicatedStorage.backstage.ui.utils.px)
 const version = require(ReplicatedStorage.backstage.version)
 
 --// Components
-const number = require(ReplicatedStorage.backstage.ui.components.controls.number)
+const buttons = require(ReplicatedStorage.backstage.ui.components.buttons)
 const choice = require(ReplicatedStorage.backstage.ui.components.controls.choice)
 const color = require(ReplicatedStorage.backstage.ui.components.controls.color)
+const group = require(ReplicatedStorage.backstage.ui.components.group)
+const list = require(ReplicatedStorage.backstage.ui.components.list)
+const number = require(ReplicatedStorage.backstage.ui.components.controls.number)
+const row = require(ReplicatedStorage.backstage.ui.components.row)
 const text = require(ReplicatedStorage.backstage.ui.components.controls.text)
 const toggle = require(ReplicatedStorage.backstage.ui.components.controls.toggle)
 const vector3 = require(ReplicatedStorage.backstage.ui.components.controls.vector3)
-const buttons = require(ReplicatedStorage.backstage.ui.components.buttons)
-const group = require(ReplicatedStorage.backstage.ui.components.group)
-const list = require(ReplicatedStorage.backstage.ui.components.list)
-const row = require(ReplicatedStorage.backstage.ui.components.row)
 const window = require(ReplicatedStorage.backstage.ui.components.window)
 
 --// Functions
@@ -148,7 +148,7 @@ return function(target: Instance)
 							buttons {
 								items = {
 									action "respawn",
-									action "resettttttttttttt",
+									action "reset",
 									action "heal",
 									action "clear",
 									action "save",
