@@ -2,6 +2,8 @@
 
 Live tuning panel for Roblox Studio: edit game values in real time.
 
+Stop editing a number, pressing play and waiting to see it. Declare a value once, drag a slider while the game runs, watch the game change on the spot, and keep what feels right.
+
 [![Check](https://github.com/omarcoaraujo/backstage/actions/workflows/check.yml/badge.svg)](https://github.com/omarcoaraujo/backstage/actions/workflows/check.yml) [![Release](https://github.com/omarcoaraujo/backstage/actions/workflows/release.yml/badge.svg)](https://github.com/omarcoaraujo/backstage/actions/workflows/release.yml)
 
 <p align="center">
@@ -16,12 +18,45 @@ The read-only rows and expandable tables are built and shown in the UI stories, 
 
 ## Features
 
-- Declare your game values once and tune them in a window while you play in Studio
-- Sliders, toggles, text, choices, colors with a picker, vectors and buttons
-- Limits per value: `min`, `max`, `step` and a list of choices
+**Tune while you play**
+
+- One declaration per value, and the kind comes from its default: number, boolean, string, `Color3` or `Vector3`
+- Sliders, toggles, text boxes, choices, a color picker, vector fields and buttons
+- Limits per value: `min`, `max`, `step` and a list of `choices`, enforced on every edit
+- Nested tables become collapsible groups with a line showing the nesting
 - Search bar that filters the tree by name
-- A reset button on every changed value, and an optional tool that saves what you tuned back into your config scripts
-- Zero cost in production: outside Studio the config is a frozen copy and there is no UI, no remote and no listener
+- A reset button on every changed value
+- A draggable, resizable window opened with `Ctrl + B` or a key you choose
+
+**Fits your code**
+
+- Plain reads: `config.speed`, no wrapper and no `.get()`
+- Reactive reads: a read inside a Vide scope or a Charm effect tracks itself and reruns when you tune the value
+- Works across the network: a value on the server is tuned from the same window, validated by the server and sent to every player
+- Buttons you press in the window and listen to in code
+
+**Keeps what you tuned**
+
+- An optional tool writes every change back into the default of its `backstage.config` call, in place, so the next session starts from what you tuned
+
+**Costs nothing in production**
+
+- Outside Studio there is no UI, no remote, no listener and no signal, and `config` is a frozen copy of your defaults
+- The game can never write to the config, only the window can
+
+## How it works
+
+```
+ your code                 Studio only
+┌──────────────┐        ┌──────────────────────────┐
+│ config.speed │◀───────│ registry (validated)     │◀── window (sliders, picker...)
+└──────────────┘        └──────────────────────────┘
+   plain read              │             │
+   or tracked by           ▼             ▼
+   Vide / Charm        server ⇄ clients  saving tool ──▶ your config script
+```
+
+Every value lives in a registry keyed by path, like `pets.trail.length`. The window writes to it, the registry validates against the limits, and your code reads the latest value through the table `config` returns.
 
 ## Installation
 
@@ -31,6 +66,29 @@ Add it to your `pesde.toml`:
 [dependencies]
 backstage = { name = "omarcoaraujo/backstage", version = "^0.1.0" }
 ```
+
+## Quick start
+
+Declare the values:
+
+```lua
+const backstage = require(path.to.backstage)
+
+return backstage.config("pets", {
+	speed = 8,
+	tint = Color3.fromRGB(255, 200, 80),
+}, {
+	limits = { speed = { min = 0.5, max = 40 } },
+})
+```
+
+Start the window, once on the client:
+
+```lua
+backstage.start()
+```
+
+Press play and open the window with `Ctrl + B`. Everything below goes deeper.
 
 ## Usage
 
@@ -98,6 +156,8 @@ backstage.start { vide = vide, charm = charm }
 ```
 
 Charm is never required: without it a read inside a Charm effect is a plain read. Fusion does not track plain reads.
+
+This is what lets you tune things a per-frame loop could never reach, like a HUD that rebuilds only when a value changes. [`example/client/hud.luau`](example/client/hud.luau) is a Vide card whose corner, scale, colors, title and rows all follow the window.
 
 ### Opening the window
 
