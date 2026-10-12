@@ -18,7 +18,9 @@ luau-lsp analyze \
 """
 
 [tasks.test]
+shell = "bash -c"
 run = """
+mkdir -p build
 rojo build test.project.json --output build/tests.rbxl
 run-in-roblox --place build/tests.rbxl --script tests/lib/run.server.luau
 """
