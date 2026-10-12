@@ -2,6 +2,7 @@
 const vide = require "../../../roblox_packages/vide"
 
 --// Utils
+const filter = require "../utils/filter"
 const px = require "../utils/px"
 const theme = require "../utils/theme"
 
@@ -20,6 +21,13 @@ return function(props: props)
 	const size = vide.source(Vector2.zero)
 	const content = vide.source(Vector2.zero)
 	const items = {} :: { Instance }
+
+	const labels = {} :: { string }
+	for _, current in props.items do
+		table.insert(labels, current.text)
+	end
+
+	const node = filter.leaf(labels)
 
 	const function container_size(): UDim2
 		return UDim2.new(1, 0, 0, content().Y + px(theme.row_height - theme.field_height)())
@@ -51,10 +59,12 @@ return function(props: props)
 		)
 	end
 
-	return vide.create "Frame" {
+	const frame = vide.create "Frame" {
 		Name = "buttons",
-		Size = container_size,
 		BackgroundTransparency = 1,
+
+		Visible = node.shown,
+		Size = container_size,
 
 		vide.create "UIListLayout" {
 			FillDirection = Enum.FillDirection.Horizontal,
@@ -76,4 +86,7 @@ return function(props: props)
 		items,
 		vide.changed("AbsoluteSize", size),
 	}
+
+	filter.track(frame, node)
+	return frame
 end

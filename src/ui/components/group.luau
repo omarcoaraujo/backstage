@@ -2,6 +2,7 @@
 const vide = require "../../../roblox_packages/vide"
 
 --// Utils
+const filter = require "../utils/filter"
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../utils/theme"
@@ -17,6 +18,11 @@ type props = {
 return function(props: props)
 	const open = vide.source(props.open ~= false)
 	const hovered = vide.source(false)
+	const node = filter.branch(props.name, props.content :: { Instance }?)
+
+	const function expanded()
+		return open() or filter.searching()
+	end
 
 	const function toggle()
 		open(not open())
@@ -31,7 +37,7 @@ return function(props: props)
 	end
 
 	const function header_text()
-		return `{if open() then "[-]" else "[+]"} {props.name}`
+		return `{if expanded() then "[-]" else "[+]"} {props.name}`
 	end
 
 	const function header_color()
@@ -40,8 +46,9 @@ return function(props: props)
 		return theme.title_background
 	end
 
-	return vide.create "Frame" {
+	const frame = vide.create "Frame" {
 		Name = props.name,
+		Visible = node.shown,
 		Size = px.udim2(1, 0, 0, 0),
 
 		AutomaticSize = Enum.AutomaticSize.Y,
@@ -84,7 +91,7 @@ return function(props: props)
 
 			AutomaticSize = Enum.AutomaticSize.Y,
 			BackgroundTransparency = 1,
-			Visible = open,
+			Visible = expanded,
 
 			vide.create "UIListLayout" {
 				SortOrder = Enum.SortOrder.LayoutOrder,
@@ -97,4 +104,7 @@ return function(props: props)
 			props.content,
 		},
 	}
+
+	filter.track(frame, node)
+	return frame
 end

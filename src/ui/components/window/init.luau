@@ -12,6 +12,7 @@ const theme = require "../utils/theme"
 --// Components
 const footer = require "@self/footer"
 const handles = require "@self/handles"
+const search = require "@self/search"
 const title_bar = require "@self/title_bar"
 
 --// Constants
@@ -61,7 +62,6 @@ const function resize_axis(
 	limit: number
 ): (number, number)
 	if direction == 0 then return start, length end
-
 	if direction == 1 then return start, math.clamp(length + delta, minimum, math.max(minimum, limit - start)) end
 
 	const grown = math.clamp(length - delta, minimum, math.max(minimum, start + length))
@@ -78,7 +78,6 @@ const function resize_rect(
 ): (Vector2, Vector2)
 	const x, width = resize_axis(start_position.X, start_size.X, side.horizontal, delta.X, min_size.X, bounds.X)
 	const y, height = resize_axis(start_position.Y, start_size.Y, side.vertical, delta.Y, min_size.Y, bounds.Y)
-
 	return Vector2.new(x, y), Vector2.new(width, height)
 end
 
@@ -206,11 +205,13 @@ return function(props: props)
 			BackgroundTransparency = 1,
 			ClipsDescendants = true,
 
-			Position = px.udim2(0, 0, 0, theme.title_height),
-			Size = px.udim2(1, 0, 1, -theme.title_height - footer_height),
+			Position = px.udim2(0, 0, 0, theme.title_height + theme.row_height),
+			Size = px.udim2(1, 0, 1, -theme.title_height - theme.row_height - footer_height),
 
 			props.content,
 		},
+
+		search(),
 
 		footer {
 			text = props.footer or "",

@@ -2,6 +2,7 @@
 const vide = require "../../../roblox_packages/vide"
 
 --// Utils
+const filter = require "../utils/filter"
 const px = require "../utils/px"
 const theme = require "../utils/theme"
 
@@ -16,10 +17,14 @@ type props = {
 
 --// Component
 return function(props: props)
-	return vide.create "Frame" {
+	const node = filter.leaf { props.label }
+
+	const frame = vide.create "Frame" {
 		Name = props.label,
-		Size = px.udim2(1, 0, 0, theme.row_height),
 		BackgroundTransparency = 1,
+
+		Visible = node.shown,
+		Size = px.udim2(1, 0, 0, theme.row_height),
 
 		vide.create "TextLabel" {
 			Name = "label",
@@ -47,4 +52,7 @@ return function(props: props)
 			props.content,
 		},
 	}
+
+	filter.track(frame, node)
+	return frame
 end
