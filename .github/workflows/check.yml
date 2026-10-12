@@ -18,7 +18,22 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check formatting
-        run: stylua --check src example stories tests
+        run: stylua --check src example stories tests cli
+
+  cli:
+    name: CLI specs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run the specs
+        run: lute run tests/cli/run.luau
 
   analyze:
     name: Type check
@@ -47,4 +62,4 @@ jobs:
         run: curl -sL https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/main/scripts/globalTypes.d.luau -o roblox.d.luau
 
       - name: Type check
-        run: luau-lsp analyze --definitions=roblox.d.luau --sourcemap=sourcemap.json --ignore "**/roblox_packages/**" src example stories tests
+        run: luau-lsp analyze --definitions=roblox.d.luau --sourcemap=sourcemap.json --ignore "**/roblox_packages/**" src example stories tests/lib

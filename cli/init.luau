@@ -4,7 +4,7 @@ const scan = require "@self/scan"
 const server = require "@self/server"
 
 --// Constants
-const USAGE = "usage: lute run cli <project folder> [--port <number>]"
+const USAGE = "usage: backstage <project folder> [--port <number>]"
 
 --// Types
 type options = { root: string?, port: number? }

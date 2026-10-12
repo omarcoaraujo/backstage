@@ -8,6 +8,49 @@ jobs:
     uses: ./.github/workflows/check.yml
     secrets: inherit
 
+  binaries:
+    name: Build the CLI for ${{ matrix.target }}
+    needs: [check]
+    if: github.event_name == 'release'
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-latest, target: linux-x86_64, executable: backstage }
+          - { runner: ubuntu-24.04-arm, target: linux-aarch64, executable: backstage }
+          - { runner: macos-latest, target: macos-aarch64, executable: backstage }
+          - { runner: windows-latest, target: windows-x86_64, executable: backstage.exe }
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compile
+        shell: bash
+        run: lute compile cli/init.luau --output ${{ matrix.executable }}
+
+      - name: Zip
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            7z a backstage-${{ matrix.target }}.zip ${{ matrix.executable }}
+          else
+            zip backstage-${{ matrix.target }}.zip ${{ matrix.executable }}
+          fi
+
+      - name: Attach to the release
+        shell: bash
+        run: gh release upload "${{ github.event.release.tag_name }}" backstage-${{ matrix.target }}.zip --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish:
     name: Publish the library
     runs-on: ubuntu-latest
