@@ -32,7 +32,7 @@ run-in-roblox --place build/tests.rbxl --script tests/lib/run.server.luau
 run = "rojo serve dev.project.json --port 34890"
 
 [tasks.backstage]
-run = "lute run cli example/shared/pets_config.luau"
+run = "lute run cli example"
 
 [tasks.dev]
 run = [{ tasks = ["rojo", "backstage"] }]

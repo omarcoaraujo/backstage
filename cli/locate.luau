@@ -53,6 +53,27 @@ const function find_config_call(node, name: string)
 	return nil
 end
 
+const function collect_config_names(node, names: { string })
+	if type(node) ~= "table" then return end
+
+	if node.tag == "call" and node.func.tag == "indexname" and node.func.index.text == "config" then
+		const first = node.arguments[1]
+		const name = if first then string_text(first.node) else nil
+		if name then table.insert(names, name) end
+	end
+
+	for key, child in node do
+		if key == "location" or key == "leadingTrivia" or key == "trailingTrivia" then continue end
+		collect_config_names(child, names)
+	end
+end
+
+const function config_names(source: string): { string }
+	const names = {}
+	collect_config_names(parser.parse(source).root, names)
+	return names
+end
+
 const function find_entry(table_node, key: string)
 	for _, entry in table_node.entries do
 		if entry.key and entry.key.text == key then return entry end
@@ -92,4 +113,4 @@ const function locate(source: string, path: string): (found?, string?)
 end
 
 --// End
-return { locate = locate }
+return { locate = locate, config_names = config_names }
