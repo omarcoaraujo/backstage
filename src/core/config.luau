@@ -75,7 +75,6 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 
 		const text = if type(hint) == "string" then hint else nil
 		registry.add(member_path, key, path, descriptor, value :: kinds.value, text)
-
 		members[key] = { kind = "entry", path = member_path }
 	end
 
