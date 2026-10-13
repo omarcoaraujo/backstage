@@ -33,6 +33,7 @@ The read-only rows and expandable tables are built and shown in the UI stories, 
 
 - Plain reads: `config.speed`, no wrapper and no `.get()`
 - Reactive reads: a read inside a Vide scope or a Charm effect tracks itself and reruns when you tune the value
+- `on_change`: run a callback when a value changes, so code that caches a value stays live without a per-frame loop
 - Works across the network: a value on the server is tuned from the same window, validated by the server and sent to every player
 - Buttons you press in the window and listen to in code
 
@@ -179,6 +180,23 @@ backstage.start { vide = vide, charm = charm }
 Charm is never required: without it a read inside a Charm effect is a plain read. Fusion does not track plain reads.
 
 This is what lets you tune things a per-frame loop could never reach, like a HUD that rebuilds only when a value changes. [`example/client/hud.luau`](example/client/hud.luau) is a Vide card whose corner, scale, colors, title and rows all follow the window.
+
+### Reacting to a change
+
+For code that caches a value instead of reading it again every frame, hook a callback to a path. It works in any script, so you can use it right in your game code:
+
+```lua
+const function apply_size(size: number)
+	pet.Size = Vector3.one * size
+end
+
+apply_size(config.size)
+backstage.on_change("pets.size", apply_size)
+```
+
+It fires on every change, from the window, from a restore and from the other side of the network, with the new and the previous value. It never fires for the value you start with, so apply that one yourself, as above. It returns a function that disconnects it.
+
+Outside Studio it does nothing, and since nothing changes there, the game ships with the value you applied first. Code written this way, setting a property when it changes and not on every frame, is cheaper than a loop anyway. [`example/client/pets.luau`](example/client/pets.luau) does it for the pet's size and color, and keeps reading the rest every frame.
 
 ### Opening the window
 

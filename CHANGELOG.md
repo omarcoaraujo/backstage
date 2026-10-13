@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Your game can now react when a value changes in the window, without adding anything to your game scripts.
 - Each value can now have a short explanation that shows when you hover its row.
 - Values you read from your config now update live in Vide and Charm code while you tune them in the window.
 
