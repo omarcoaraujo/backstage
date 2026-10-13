@@ -3,6 +3,7 @@ const button = require "@self/core/button"
 const config = require "@self/core/config"
 const kinds = require "@self/core/kinds"
 const mode = require "@self/core/mode"
+const on_change = require "@self/core/on_change"
 const start = require "@self/core/start"
 
 --// Types
@@ -29,6 +30,8 @@ end
 return table.freeze {
 	config = create_config,
 	button = create_button,
+
+	on_change = on_change,
 	start = start,
 
 	enable = mode.enable,
