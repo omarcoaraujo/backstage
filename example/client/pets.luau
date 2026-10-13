@@ -4,6 +4,7 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 const RunService = game:GetService "RunService"
 
 --// Modules
+const backstage = require(ReplicatedStorage.backstage)
 const config = require(ReplicatedStorage.shared.pets_config)
 
 --// Constants
@@ -60,6 +61,18 @@ const function build_pet()
 	return part
 end
 
+const function apply_size(size: number)
+	if not pet then return end
+	pet.Size = Vector3.one * size
+end
+
+const function apply_tint(tint: Color3)
+	if not pet or not trail then return end
+
+	pet.Color = tint
+	trail.Color = ColorSequence.new(tint)
+end
+
 const function destroy()
 	if pet then pet:Destroy() end
 	pet = nil
@@ -69,6 +82,9 @@ end
 const function spawn_pet()
 	destroy()
 	pet = build_pet()
+
+	apply_size(config.size)
+	apply_tint(config.tint)
 end
 
 const function step(dt: number)
@@ -76,19 +92,18 @@ const function step(dt: number)
 	if not pet or not trail or not root then return end
 
 	const alpha = math.min(config.speed * dt, 1)
-	pet.Size = Vector3.one * config.size
-
-	pet.Color = config.tint
 	pet.Position = pet.Position:Lerp(resolve_target(root, dt), alpha)
 
 	trail.Enabled = config.trail.enabled
 	trail.Lifetime = config.trail.length
-	trail.Color = ColorSequence.new(config.tint)
 end
 
 --// Listeners
 RunService.Heartbeat:Connect(step)
 config.respawn:connect(spawn_pet)
+
+backstage.on_change("pets.size", apply_size)
+backstage.on_change("pets.tint", apply_tint)
 
 --// End
 return table.freeze {
