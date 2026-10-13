@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - Your game can now react when a value changes in the window, without adding anything to your game scripts.
 - Each value can now have a short explanation that shows when you hover its row.
