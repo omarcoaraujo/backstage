@@ -34,8 +34,13 @@ run = "lute run tests/cli/run.luau"
 [tasks.rojo]
 run = "rojo serve dev.project.json --port 34890"
 
+[tasks."install:cli"]
+dir = "cli"
+run = "pesde install"
+
 [tasks.backstage]
-run = "lute run cli example"
+depends = ["install:cli"]
+run = "lute run cli serve example"
 
 [tasks.dev]
 run = [{ tasks = ["rojo", "backstage"] }]

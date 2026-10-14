@@ -32,6 +32,16 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install pesde
+        uses: axiom-co/setup-pesde@b690699ace34169731b6b2a1c93b2008472038a7
+        with:
+          token: ${{ github.token }}
+
+      - name: Install the CLI packages
+        shell: bash
+        working-directory: cli
+        run: pesde install
+
       - name: Compile
         shell: bash
         run: lute compile cli/init.luau --output ${{ matrix.executable }}

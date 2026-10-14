@@ -9,7 +9,10 @@ The tools are pinned in `rokit.toml` and `mise.toml` runs them:
 ```sh
 rokit install
 pesde install
+mise run install:cli
 ```
+
+The CLI has its own `cli/pesde.toml`, with [tint](https://github.com/omarcoaraujo/tint) for the terminal colors, so it installs apart from the library.
 
 ## Layout
 

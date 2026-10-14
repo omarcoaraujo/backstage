@@ -1,5 +1,6 @@
 # Pesde
 /roblox_packages/
+/cli/luau_packages/
 
 # Lock Files
 **/*.lock*
