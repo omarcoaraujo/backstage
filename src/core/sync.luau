@@ -8,11 +8,35 @@ const registry = require "./registry"
 const REMOTE_NAME = "backstage_sync"
 const REMOTE_TIMEOUT = 10
 
+--// Types
+type signal<callback> = { Connect: (self: any, callback: callback) -> () }
+
+export type server_remote = {
+	FireClient: (self: any, player: Player, ...any) -> (),
+	FireAllClients: (self: any, ...any) -> (),
+	OnServerEvent: signal<(player: Player, ...any) -> ()>,
+}
+
+export type client_remote = {
+	FireServer: (self: any, ...any) -> (),
+	OnClientEvent: signal<(...any) -> ()>,
+}
+
 --// Functions
-const function serve()
-	const remote = Instance.new "RemoteEvent"
-	remote.Name = REMOTE_NAME
-	remote.Parent = ReplicatedStorage
+const function create_remote(): server_remote
+	const created = Instance.new "RemoteEvent"
+	created.Name = REMOTE_NAME
+
+	created.Parent = ReplicatedStorage
+	return created :: any
+end
+
+const function find_remote(): client_remote?
+	return ReplicatedStorage:WaitForChild(REMOTE_NAME, REMOTE_TIMEOUT) :: any
+end
+
+const function serve(given: server_remote?)
+	const remote = given or create_remote()
 
 	const function send_snapshot(player: Player)
 		remote:FireClient(player, "snapshot", registry.snapshot())
@@ -55,8 +79,8 @@ const function serve()
 	registry.on_register(on_registered)
 end
 
-const function connect()
-	const remote = ReplicatedStorage:WaitForChild(REMOTE_NAME, REMOTE_TIMEOUT) :: RemoteEvent?
+const function connect(given: client_remote?)
+	const remote = given or find_remote()
 	if not remote then return false end
 
 	const function on_event(kind: unknown, path: unknown, value: unknown)
