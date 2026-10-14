@@ -95,7 +95,7 @@ Install the tool and leave it running next to Studio, so what you tune is saved 
 
 ```sh
 rokit add omarcoaraujo/backstage
-backstage .
+backstage serve
 ```
 
 Press play and open the window with `Ctrl + B`. Everything below goes deeper.
@@ -191,8 +191,10 @@ const function apply_size(size: number)
 end
 
 apply_size(config.size)
-backstage.on_change("pets.size", apply_size)
+backstage.on_change(config.size, apply_size)
 ```
+
+It is a signal, so the first argument is always the config read itself, with the path written out (`config.size`, `config.trail.length`), and the second is the callback. It finds the path from that read, so a typo is a type error. Anything else, a variable, a literal, an expression or a string, raises an error in Studio.
 
 It fires on every change, from the window, from a restore and from the other side of the network, with the new and the previous value. It never fires for the value you start with, so apply that one yourself, as above. It returns a function that disconnects it.
 
@@ -228,14 +230,14 @@ This is where Backstage pays off. Every change you make in the window is written
 
 Without it, edits live in the play session and are lost when it ends. Treat it as a required part of the workflow and keep it running whenever you tune.
 
-Install it with [Rokit](https://github.com/rojo-rbx/rokit) and point it at your project folder while Studio is open:
+Install it with [Rokit](https://github.com/rojo-rbx/rokit) and serve your project folder while Studio is open:
 
 ```sh
 rokit add omarcoaraujo/backstage
-backstage . --port 34891
+backstage serve --port 34891
 ```
 
-Enable **Allow HTTP Requests** in the game settings of the place. The tool listens only on `127.0.0.1`, finds each config by name across the project, and refuses a name that is declared in two files or a value that is not a literal. `--port` is optional, and the same number goes to `backstage.start { port = 34891 }` if you change it.
+Enable **Allow HTTP Requests** in the game settings of the place. The tool listens only on `127.0.0.1`, finds each config by name across the project, and refuses a name that is declared in two files or a value that is not a literal. The folder defaults to the current one, and `backstage serve path/to/project` picks another. `--port` is optional, and the same number goes to `backstage.start { port = 34891 }` if you change it.
 
 ## Limitations
 

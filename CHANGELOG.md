@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Reacting to a change now takes the value itself, like `config.size`, instead of its name in quotes. A typo in the name is caught, and any other use shows an error in Studio.
+- The window now covers the whole screen, including the area under the top bar.
+- The tool that saves your edits now starts with `backstage serve`, like Rojo, with colors and clearer messages when something goes wrong.
+
 ## 0.4.0
 
 - Your game can now react when a value changes in the window, without adding anything to your game scripts.
