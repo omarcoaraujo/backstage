@@ -4,6 +4,8 @@
 
 - Values that exist only in client scripts now show up on the server too, so editing them in the window is no longer lost.
 - The tool that saves your edits now warns on startup about a config whose name is not plain text, since edits to it cannot be saved.
+- The tool that saves your edits now ignores the folders listed in your project's ignore file.
+- Studio now warns when Vide is swapped after values were already being tracked, instead of failing silently.
 
 ## 0.5.0
 
