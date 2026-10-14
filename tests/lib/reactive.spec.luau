@@ -1,4 +1,5 @@
 --// Services
+const LogService = game:GetService "LogService"
 const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
 --// Packages
@@ -45,6 +46,33 @@ const function spy()
 	}
 
 	return log, stop
+end
+
+const function fake_vide()
+	return {
+		source = function(value: unknown)
+			return function()
+				return value
+			end
+		end,
+	}
+end
+
+const function warnings_during(run: () -> ())
+	const warnings = {} :: { string }
+
+	const connection = LogService.MessageOut:Connect(function(message: string, kind: Enum.MessageType)
+		if kind == Enum.MessageType.MessageWarning then table.insert(warnings, message) end
+	end)
+
+	task.wait(0.1)
+	table.clear(warnings)
+
+	run()
+	task.wait(0.1)
+	connection:Disconnect()
+
+	return warnings
 end
 
 --// Specs
@@ -195,6 +223,32 @@ return {
 
 		_ = pets.distance
 		assert(created == 1)
+	end,
+
+	swapping_a_library_after_tracked_reads_warns = function()
+		fresh()
+		const pets = backstage.config("pets", defaults())
+
+		install { vide = fake_vide() }
+		local _ = pets.distance
+
+		const warnings = warnings_during(function()
+			install { vide = vide }
+		end)
+
+		assert(#warnings == 1 and string.find(warnings[1], "replaced the vide", 1, true))
+	end,
+
+	swapping_a_library_before_any_read_stays_quiet = function()
+		fresh()
+		backstage.config("pets", defaults())
+
+		install { vide = fake_vide() }
+		const warnings = warnings_during(function()
+			install { vide = vide }
+		end)
+
+		assert(#warnings == 0)
 	end,
 
 	a_charm_effect_runs_again_when_the_window_writes = function()
