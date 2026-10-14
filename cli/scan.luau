@@ -17,6 +17,7 @@ const SKIPPED = {
 
 --// Types
 export type index = { [string]: { string } }
+type ignored = { names: { [string]: boolean }, paths: { [string]: boolean } }
 
 --// Functions
 const function has_extension(name: string)
@@ -28,11 +29,43 @@ const function mentions_config(source: string)
 	return string.find(source, "config", 1, true) ~= nil
 end
 
-const function visit(directory: string, found: index, dynamic: { string })
+const function read_ignored(root: string): ignored
+	const ignored = { names = {}, paths = {} } :: ignored
+	const file = `{root}/.gitignore`
+	if not fs.exists(file) then return ignored end
+
+	for line in string.gmatch(fs.readFileToString(file), "[^\r\n]+") do
+		if string.find(line, "^[#!]") or string.find(line, "[%*%?%[%s]") then continue end
+
+		const anchored = string.sub(line, 1, 1) == "/"
+		const trimmed = string.gsub(string.gsub(line, "^/", ""), "/$", "")
+
+		if trimmed == "" then continue end
+		if anchored or string.find(trimmed, "/", 1, true) then
+			ignored.paths[trimmed] = true
+			continue
+		end
+
+		ignored.names[trimmed] = true
+	end
+
+	return ignored
+end
+
+const function is_skipped(name: string, relative: string, ignored: ignored)
+	return SKIPPED[name] == true or ignored.names[name] == true or ignored.paths[relative] == true
+end
+
+const function visit(directory: string, relative: string, found: index, dynamic: { string }, ignored: ignored)
 	for _, entry in fs.listDirectory(directory) do
 		const path = `{directory}/{entry.name}`
+		const relative_path = if relative == "" then entry.name else `{relative}/{entry.name}`
+
 		if entry.type == "dir" then
-			if not SKIPPED[entry.name] then visit(path, found, dynamic) end
+			if not is_skipped(entry.name, relative_path, ignored) then
+				visit(path, relative_path, found, dynamic, ignored)
+			end
+
 			continue
 		end
 
@@ -59,7 +92,7 @@ const function scan(root: string)
 	const found = {} :: index
 	const dynamic = {} :: { string }
 
-	visit(root, found, dynamic)
+	visit(root, "", found, dynamic, read_ignored(root))
 	return found, dynamic
 end
 

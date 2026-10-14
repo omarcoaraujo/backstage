@@ -17,6 +17,15 @@ const function make_project()
 	fs.writeStringToFile(`{root}/nested/world_copy.luau`, 'backstage.config("world", { gravity = 3 })')
 
 	fs.writeStringToFile(`{root}/roblox_packages/vendor.luau`, 'backstage.config("vendor", {})')
+	fs.createDirectory(`{root}/generated`)
+	fs.createDirectory(`{root}/nested/cache`)
+	fs.createDirectory(`{root}/nested/generated`)
+
+	fs.writeStringToFile(`{root}/.gitignore`, "# output\n/generated/\ncache\n*.log\n")
+	fs.writeStringToFile(`{root}/generated/made.luau`, 'backstage.config("made", {})')
+	fs.writeStringToFile(`{root}/nested/cache/stored.luau`, 'backstage.config("stored", {})')
+	fs.writeStringToFile(`{root}/nested/generated/kept.luau`, 'backstage.config("kept", {})')
+
 	fs.writeStringToFile(`{root}/nested/named.luau`, "backstage.config(name, {})")
 	fs.writeStringToFile(`{root}/plain.luau`, "return 1")
 	fs.writeStringToFile(`{root}/notes.txt`, 'backstage.config("text", {})')
@@ -54,6 +63,19 @@ return {
 	lists_the_place_of_a_config_whose_name_is_not_a_string = function()
 		with_project(function(_, root, dynamic)
 			assert(#dynamic == 1 and dynamic[1] == `{root}/nested/named.luau:1`)
+		end)
+	end,
+
+	skips_the_folders_the_gitignore_names = function()
+		with_project(function(index)
+			assert(index.made == nil)
+			assert(index.stored == nil)
+		end)
+	end,
+
+	keeps_a_folder_the_gitignore_anchors_elsewhere = function()
+		with_project(function(index)
+			assert(index.kept and #index.kept == 1)
 		end)
 	end,
 
