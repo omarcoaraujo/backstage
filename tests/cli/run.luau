@@ -5,7 +5,9 @@ const process = require "@std/process"
 const suites = {
 	apply = require "./apply.spec",
 	locate = require "./locate.spec",
+	save = require "./save.spec",
 	scan = require "./scan.spec",
+	version = require "./version.spec",
 	write = require "./write.spec",
 }
 
