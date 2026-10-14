@@ -73,6 +73,7 @@ const function start(options: options?)
 			DisplayOrder = DISPLAY_ORDER,
 
 			ResetOnSpawn = false,
+			IgnoreGuiInset = true,
 			ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 
 			app {
