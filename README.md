@@ -222,6 +222,10 @@ backstage.start { key = Enum.KeyCode.F4, ctrl = false }
 
 `start` does nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode.
 
+### Team Test
+
+Team Test is not supported. Its server runs on Roblox's machines, so it cannot reach the tool on your computer and your edits would never be saved to the scripts. If the server does not start Backstage there, the client gives up after a few seconds and never opens the window. Play, and Clients and Servers with more than one player, run the server on your computer and work normally.
+
 A complete project is in [`example/`](example).
 
 ### The Backstage tool
