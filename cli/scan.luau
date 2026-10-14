@@ -3,8 +3,17 @@ const fs = require "@std/fs"
 const locate = require "./locate"
 
 --// Constants
-const SKIPPED = { [".git"] = true, roblox_packages = true, node_modules = true, build = true, Packages = true }
 const EXTENSIONS = { [".luau"] = true, [".lua"] = true }
+const SKIPPED = {
+	[".git"] = true,
+	roblox_packages = true,
+
+	luau_packages = true,
+	node_modules = true,
+
+	build = true,
+	Packages = true,
+}
 
 --// Types
 export type index = { [string]: { string } }
