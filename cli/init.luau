@@ -62,10 +62,15 @@ end
 
 const function describe(root: string)
 	local count = 0
+	const index, dynamic = scan.scan(root)
 
-	for name, files in scan.scan(root) do
+	for name, files in index do
 		count += 1
 		if #files > 1 then output.warning(`config "{name}" is declared in {#files} files, edits to it are refused`) end
+	end
+
+	for _, place in dynamic do
+		output.warning(`config at {place} has a name that is not a string, edits to it are refused`)
 	end
 
 	return count

@@ -99,4 +99,10 @@ return {
 	config_names_skips_a_name_that_is_not_a_string = function()
 		assert(#locate.config_names "backstage.config(name, {})" == 0)
 	end,
+
+	config_names_reports_the_line_of_a_name_that_is_not_a_string = function()
+		const names, dynamic = locate.config_names "local a = 1\nbackstage.config(name, {})"
+		assert(#names == 0)
+		assert(#dynamic == 1 and dynamic[1] == 2)
+	end,
 }

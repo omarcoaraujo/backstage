@@ -28,11 +28,11 @@ const function mentions_config(source: string)
 	return string.find(source, "config", 1, true) ~= nil
 end
 
-const function visit(directory: string, found: index)
+const function visit(directory: string, found: index, dynamic: { string })
 	for _, entry in fs.listDirectory(directory) do
 		const path = `{directory}/{entry.name}`
 		if entry.type == "dir" then
-			if not SKIPPED[entry.name] then visit(path, found) end
+			if not SKIPPED[entry.name] then visit(path, found, dynamic) end
 			continue
 		end
 
@@ -40,7 +40,7 @@ const function visit(directory: string, found: index)
 		const source = fs.readFileToString(path)
 		if not mentions_config(source) then continue end
 
-		const ok, names = pcall(locate.config_names, source)
+		const ok, names, lines = pcall(locate.config_names, source)
 		if not ok then continue end
 
 		for _, name in names do
@@ -48,13 +48,19 @@ const function visit(directory: string, found: index)
 			table.insert(files, path)
 			found[name] = files
 		end
+
+		for _, line in lines do
+			table.insert(dynamic, `{path}:{line}`)
+		end
 	end
 end
 
 const function scan(root: string)
 	const found = {} :: index
-	visit(root, found)
-	return found
+	const dynamic = {} :: { string }
+
+	visit(root, found, dynamic)
+	return found, dynamic
 end
 
 --// End

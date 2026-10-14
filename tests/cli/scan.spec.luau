@@ -17,6 +17,7 @@ const function make_project()
 	fs.writeStringToFile(`{root}/nested/world_copy.luau`, 'backstage.config("world", { gravity = 3 })')
 
 	fs.writeStringToFile(`{root}/roblox_packages/vendor.luau`, 'backstage.config("vendor", {})')
+	fs.writeStringToFile(`{root}/nested/named.luau`, "backstage.config(name, {})")
 	fs.writeStringToFile(`{root}/plain.luau`, "return 1")
 	fs.writeStringToFile(`{root}/notes.txt`, 'backstage.config("text", {})')
 	fs.writeStringToFile(`{root}/broken.luau`, "config = = (")
@@ -24,10 +25,11 @@ const function make_project()
 	return root
 end
 
-const function with_project(check: (index: scan.index, root: string) -> ())
+const function with_project(check: (index: scan.index, root: string, dynamic: { string }) -> ())
 	const root = make_project()
 	const ok, err = pcall(function()
-		check(scan.scan(root), root)
+		const index, dynamic = scan.scan(root)
+		check(index, root, dynamic)
 	end)
 
 	fs.removeDirectory(root, { recursive = true })
@@ -46,6 +48,12 @@ return {
 	lists_every_file_that_declares_the_same_name = function()
 		with_project(function(index)
 			assert(index.world and #index.world == 2)
+		end)
+	end,
+
+	lists_the_place_of_a_config_whose_name_is_not_a_string = function()
+		with_project(function(_, root, dynamic)
+			assert(#dynamic == 1 and dynamic[1] == `{root}/nested/named.luau:1`)
 		end)
 	end,
 
