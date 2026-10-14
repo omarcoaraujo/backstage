@@ -102,8 +102,8 @@ end
 RunService.Heartbeat:Connect(step)
 config.respawn:connect(spawn_pet)
 
-backstage.on_change("pets.size", apply_size)
-backstage.on_change("pets.tint", apply_tint)
+backstage.on_change(config.size, apply_size)
+backstage.on_change(config.tint, apply_tint)
 
 --// End
 return table.freeze {

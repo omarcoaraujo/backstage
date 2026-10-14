@@ -31,7 +31,14 @@ const function sorted_keys(source: { [string]: member })
 	return keys
 end
 
-const function resolve(members: { [string]: member }, key: string): (kinds.value | button.button | node)?
+const function resolve(
+	members: { [string]: member },
+	key: string,
+
+	source: string?,
+	line: number?,
+	caller: unknown
+): (kinds.value | button.button | node)?
 	const found = members[key]
 	if not found then return nil end
 
@@ -41,7 +48,7 @@ const function resolve(members: { [string]: member }, key: string): (kinds.value
 	const value = registry.get(found.path)
 	if value == nil then return nil end
 
-	tracker.read(found.path, value)
+	tracker.read(found.path, value, source, line, caller)
 	return value
 end
 
@@ -79,7 +86,8 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 	end
 
 	const function index(_, key: string)
-		return resolve(members, key)
+		const caller, source, line = debug.info(2, "fsl")
+		return resolve(members, key, source, line, caller)
 	end
 
 	const function iterate()
