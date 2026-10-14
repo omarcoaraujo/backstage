@@ -44,7 +44,7 @@ const function start(options: options?)
 	end
 
 	if not RunService:IsClient() then return end
-	sync.connect()
+	if not sync.connect() then return end
 
 	const key = if options and options.key then options.key else DEFAULT_KEY
 	const needs_control = not options or options.ctrl ~= false

@@ -6,6 +6,7 @@ const registry = require "./registry"
 
 --// Constants
 const REMOTE_NAME = "backstage_sync"
+const REMOTE_TIMEOUT = 10
 
 --// Functions
 const function serve()
@@ -50,7 +51,8 @@ const function serve()
 end
 
 const function connect()
-	const remote = ReplicatedStorage:WaitForChild(REMOTE_NAME) :: RemoteEvent
+	const remote = ReplicatedStorage:WaitForChild(REMOTE_NAME, REMOTE_TIMEOUT) :: RemoteEvent?
+	if not remote then return false end
 
 	const function on_event(kind: unknown, path: unknown, value: unknown)
 		if kind == "snapshot" then
@@ -72,6 +74,8 @@ const function connect()
 	remote.OnClientEvent:Connect(on_event)
 	registry.connect_remote { edit = edit, press = press }
 	remote:FireServer "ready"
+
+	return true
 end
 
 --// End
