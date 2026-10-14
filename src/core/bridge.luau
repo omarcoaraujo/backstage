@@ -12,10 +12,26 @@ const RECONNECT = 3
 
 --// Types
 type edit = { path: string, kind: string, value: unknown }
+type signal<callback> = { Connect: (self: any, callback: callback) -> () }
+
+export type client = {
+	Send: (self: any, message: string) -> (),
+	Opened: signal<() -> ()>,
+
+	MessageReceived: signal<(message: string) -> ()>,
+	Error: signal<(status: unknown, message: string) -> ()>,
+	Closed: signal<() -> ()>,
+}
+
+export type deps = {
+	create_client: ((url: string) -> client)?,
+	debounce: number?,
+	reconnect: number?,
+}
 
 --// Variables
 const pending = {} :: { [string]: unknown }
-local socket = nil :: WebStreamClient?
+local socket = nil :: client?
 local url = `{HOST}:{DEFAULT_PORT}`
 
 local connected = false
@@ -24,7 +40,17 @@ local scheduled = false
 local reconnecting = false
 local warned = false
 
+local generation = 0
+local debounce = DEBOUNCE
+local reconnect = RECONNECT
+local create_client = nil :: ((url: string) -> client)?
+
 --// Functions
+const function create_web_client(address: string): client
+	const created = HttpService:CreateWebStreamClient(Enum.WebStreamClientType.WebSocket, { Url = address })
+	return created :: any
+end
+
 const function warn_once(reason: string)
 	if warned then return end
 	warned = true
@@ -69,7 +95,12 @@ end
 const function schedule_flush()
 	if scheduled then return end
 	scheduled = true
-	task.delay(DEBOUNCE, flush)
+
+	const current = generation
+	task.delay(debounce, function()
+		if current ~= generation then return end
+		flush()
+	end)
 end
 
 const function report(message: string)
@@ -82,7 +113,8 @@ const function report(message: string)
 end
 
 const function connect()
-	const client = HttpService:CreateWebStreamClient(Enum.WebStreamClientType.WebSocket, { Url = url })
+	const client = (create_client or create_web_client)(url)
+	const current = generation
 	socket = client
 
 	const function lost(reason: string)
@@ -95,7 +127,8 @@ const function connect()
 		if reconnecting then return end
 		reconnecting = true
 
-		task.delay(RECONNECT, function()
+		task.delay(reconnect, function()
+			if current ~= generation then return end
 			reconnecting = false
 			connect()
 		end)
@@ -122,11 +155,28 @@ const function on_change(path: string, value: unknown)
 	schedule_flush()
 end
 
-const function serve(port: number?)
+const function serve(port: number?, given: deps?)
 	url = `{HOST}:{port or DEFAULT_PORT}`
+
+	create_client = if given then given.create_client else nil
+	debounce = if given and given.debounce then given.debounce else DEBOUNCE
+	reconnect = if given and given.reconnect then given.reconnect else RECONNECT
+
 	registry.on_change(on_change)
 	connect()
 end
 
+const function reset()
+	generation += 1
+	table.clear(pending)
+
+	socket = nil
+	connected = false
+
+	scheduled = false
+	reconnecting = false
+	warned = false
+end
+
 --// End
-return table.freeze { serve = serve }
+return table.freeze { serve = serve, reset = reset }
