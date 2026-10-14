@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- Values that exist only in client scripts now show up on the server too, so editing them in the window is no longer lost.
+
 ## 0.5.0
 
 - Reacting to a change now takes the value itself, like `config.size`, instead of its name in quotes. A typo in the name is caught, and any other use shows an error in Studio.

@@ -144,4 +144,43 @@ return {
 		assert(#shot.entries == 1 and shot.entries[1].value == 2)
 		assert(#shot.buttons == 1 and shot.buttons[1].path == "pets.respawn")
 	end,
+
+	local_snapshot_leaves_out_what_the_server_already_has = function()
+		fresh()
+
+		registry.import(incoming(1))
+		registry.add("pets.size", "size", "pets", kinds.infer(2) :: kinds.descriptor, 2)
+
+		const shot = registry.snapshot(true)
+		assert(#shot.entries == 1 and shot.entries[1].path == "pets.size")
+		assert(#shot.buttons == 0)
+	end,
+
+	adopt_takes_only_what_is_missing = function()
+		const edits = fresh()
+		declare_speed(1)
+
+		registry.adopt(incoming(9))
+		assert(registry.get "pets.speed" == 1)
+		assert(registry.press "pets.respawn")
+
+		assert(registry.set("pets.speed", 4))
+		assert(#edits == 0)
+	end,
+
+	adopt_fires_register_only_when_something_is_new = function()
+		fresh()
+		declare_speed(1)
+
+		local announced = 0
+		registry.on_register(function()
+			announced += 1
+		end)
+
+		registry.adopt(incoming(9))
+		assert(announced == 1)
+
+		registry.adopt(incoming(9))
+		assert(announced == 1)
+	end,
 }

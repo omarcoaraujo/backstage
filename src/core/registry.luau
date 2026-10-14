@@ -172,12 +172,12 @@ const function connect_remote(handler: remote?)
 	remote = handler
 end
 
-const function snapshot(): snapshot
-	const result = { entries = {}, buttons = {} } :: snapshot
+const function snapshot(only_local: boolean?)
+	const result = { entries = {}, buttons = {} }
 
 	for _, path in sorted_paths(entries) do
 		const found = entries[path]
-
+		if only_local and found.remote then continue end
 		table.insert(result.entries, {
 			path = found.path,
 			name = found.name,
@@ -193,6 +193,7 @@ const function snapshot(): snapshot
 
 	for _, path in sorted_paths(buttons) do
 		const found = buttons[path]
+		if only_local and found.remote then continue end
 		table.insert(result.buttons, { path = found.path, name = found.name, group = found.group })
 	end
 
@@ -231,6 +232,21 @@ const function import(source: snapshot)
 	end
 
 	announce()
+end
+
+const function adopt(source: snapshot)
+	const missing = { entries = {}, buttons = {} } :: snapshot
+
+	for _, incoming in source.entries do
+		if not entries[incoming.path] then table.insert(missing.entries, incoming) end
+	end
+
+	for _, incoming in source.buttons do
+		if not buttons[incoming.path] then table.insert(missing.buttons, incoming) end
+	end
+
+	if #missing.entries == 0 and #missing.buttons == 0 then return end
+	import(missing)
 end
 
 const function on_change(listener: listener)
@@ -296,6 +312,8 @@ return table.freeze {
 
 	snapshot = snapshot,
 	import = import,
+
+	adopt = adopt,
 	connect_remote = connect_remote,
 
 	announce = announce,

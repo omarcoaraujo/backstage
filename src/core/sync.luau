@@ -24,6 +24,11 @@ const function serve()
 			return
 		end
 
+		if kind == "declare" then
+			if type(path) == "table" then registry.adopt(path :: registry.snapshot) end
+			return
+		end
+
 		if type(path) ~= "string" then return end
 		if kind == "press" then
 			registry.press(path)
@@ -71,10 +76,19 @@ const function connect()
 		remote:FireServer("press", path)
 	end
 
+	const function declare()
+		const local_only = registry.snapshot(true)
+		if #local_only.entries == 0 and #local_only.buttons == 0 then return end
+		remote:FireServer("declare", local_only)
+	end
+
 	remote.OnClientEvent:Connect(on_event)
 	registry.connect_remote { edit = edit, press = press }
+
+	registry.on_register(declare)
 	remote:FireServer "ready"
 
+	declare()
 	return true
 end
 
