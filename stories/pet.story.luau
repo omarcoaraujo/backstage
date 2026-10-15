@@ -35,8 +35,7 @@ const function resolve_goal(position: Vector3, forward: Vector3, angle: number):
 	return position - forward * config.distance + Vector3.yAxis * config.height
 end
 
---// Story
-return function(target: Instance)
+const function build_world(target: Instance): (ViewportFrame, Part, Part)
 	const world = Instance.new "ViewportFrame"
 	world.Size = UDim2.fromScale(1, 1)
 	world.BackgroundColor3 = Color3.fromRGB(24, 26, 32)
@@ -52,7 +51,13 @@ return function(target: Instance)
 	owner.Size = Vector3.new(2, 4, 2)
 	owner.Color = Color3.fromRGB(120, 130, 150)
 
-	const pet = build_part(Enum.PartType.Ball, world)
+	return world, owner, build_part(Enum.PartType.Ball, world)
+end
+
+--// Story
+return function(target: Instance)
+	const world, owner, pet = build_world(target)
+
 	local time = 0
 	local angle = 0
 
@@ -89,7 +94,7 @@ return function(target: Instance)
 
 	const stop_size = backstage.on_change(config.size, apply_size)
 	const stop_tint = backstage.on_change(config.tint, apply_tint)
-	const stop_panel = backstage.embed(target, { title = "pets" })
+	const stop_panel = backstage.embed(target)
 
 	return function()
 		stop_panel()
