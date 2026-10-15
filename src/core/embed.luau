@@ -1,7 +1,10 @@
 --// Modules
+const baseline = require "./baseline"
 const bridge = require "./bridge"
 const geometry = require "./geometry"
+const kinds = require "./kinds"
 const mode = require "./mode"
+const registry = require "./registry"
 const shortcut = require "./shortcut"
 
 --// Constants
@@ -28,17 +31,16 @@ const function embed(parent: Instance, options: options?): () -> ()
 	if not mode.active() then return ignore end
 
 	const install = require "../reactive/install"
-	install(options)
-
 	const vide = require "../../roblox_packages/vide"
 	const app = require "../ui/app"
 	const version = require "../version"
 
 	const title = if options and options.title then options.title else DEFAULT_TITLE
 	const footer = if options and options.footer then options.footer else `v{version}`
-
 	const saved = geometry.get(title)
+
 	const visible = vide.source(not options or options.open ~= false)
+	const settled = {} :: { [string]: true }
 
 	const function close()
 		visible(false)
@@ -52,9 +54,27 @@ const function embed(parent: Instance, options: options?): () -> ()
 		geometry.save(title, position, size)
 	end
 
-	bridge.serve(if options then options.port else nil)
-	const listening = shortcut.listen(options, toggle)
+	const function keep_baseline()
+		for _, entry in registry.list() do
+			if settled[entry.path] then continue end
+			settled[entry.path] = true
 
+			registry.rebase(entry.path, baseline.resolve(entry.path, entry.default))
+		end
+	end
+
+	const function remember_edit(path: string, value: kinds.value)
+		baseline.remember(path, value)
+	end
+
+	install(options)
+	keep_baseline()
+
+	const stop_rebasing = registry.on_register(keep_baseline)
+	const stop_remembering = registry.on_change(remember_edit)
+
+	bridge.serve(if options then options.port else nil, { hold = true })
+	const listening = shortcut.listen(options, toggle)
 	const destroy = vide.mount(function()
 		return app {
 			title = title,
@@ -71,8 +91,11 @@ const function embed(parent: Instance, options: options?): () -> ()
 
 	return function()
 		listening:Disconnect()
+		stop_remembering()
+		stop_rebasing()
+
 		destroy()
-		bridge.reset()
+		bridge.finish()
 	end
 end
 
