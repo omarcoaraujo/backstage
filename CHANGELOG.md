@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The window can now be shown inside a storybook such as UI Labs while you edit in Studio, without pressing play, and it keeps its position and size every time the story reloads. The close button hides it and Ctrl + B brings it back.
+- The connection to the tool that saves your edits now closes by itself when you stop editing, and opens again on the next edit, so reloading stories no longer piles up connections until Studio refuses new ones.
+
 ## 0.6.0
 
 - Values that exist only in client scripts now show up on the server too, so editing them in the window is no longer lost.

@@ -218,9 +218,24 @@ A config declared in a shared module shows up once in the window. The server own
 backstage.start { key = Enum.KeyCode.F4, ctrl = false }
 ```
 
+### In a storybook
+
+`embed` puts the window inside any `GuiObject`, with no server, no `PlayerGui` and no play session. It is made for storybooks such as [UI Labs](https://github.com/PepeElToro41/ui-labs), which run in edit mode. It reads the values declared in the same script environment and returns a function that cleans everything up:
+
+```lua
+return function(target)
+	require(path.to.pets_config)
+	return backstage.embed(target, { title = "pets", port = 34891 })
+end
+```
+
+The window opens already visible. The close button hides it and the same shortcut as `start` (`Ctrl + B`) shows it again. The options are `title`, `footer`, `port`, `key`, `ctrl`, `open`, `vide` and `charm`, where `open = false` starts it hidden. Edits are saved by the Backstage tool, as in a play session. [`stories/pet.story.luau`](stories/pet.story.luau) is a complete example: tuning the window moves a pet in the story.
+
+A storybook reloads the story often, so `embed` keeps one connection to the tool: embedding again reuses it, the cleanup closes it, and a connection left behind by a reload is closed by the next `embed` or by itself when idle. The window position and size are remembered by `title` between reloads, as long as the storybook stays open. Both are kept in `shared`, which UI Labs preserves across reloads.
+
 ### Production
 
-`start` does nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode.
+`start` and `embed` do nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode.
 
 ### Team Test
 
