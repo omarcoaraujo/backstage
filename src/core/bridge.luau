@@ -11,6 +11,8 @@ const DEBOUNCE = 0.5
 const RECONNECT = 3
 
 const IDLE = 10
+const GRACE = 0.5
+const FINISH_TIMEOUT = 5
 const SHARED_KEY = "backstage_bridge"
 
 --// Types
@@ -31,7 +33,10 @@ export type deps = {
 	create_client: ((url: string) -> client)?,
 	debounce: number?,
 	reconnect: number?,
+
 	idle: number?,
+	grace: number?,
+	hold: boolean?,
 }
 
 --// Variables
@@ -42,6 +47,10 @@ local url = `{HOST}:{DEFAULT_PORT}`
 local serving = false
 local connected = false
 local scheduled = false
+
+local holding = false
+local finishing = false
+local on_flushed = nil :: (() -> ())?
 
 local reconnecting = false
 local warned = false
@@ -57,6 +66,7 @@ local debounce = DEBOUNCE
 local reconnect = RECONNECT
 
 local idle = IDLE
+local grace = GRACE
 local create_client = nil :: ((url: string) -> client)?
 
 --// Functions
@@ -142,14 +152,21 @@ const function flush()
 	end
 
 	table.clear(pending)
-	if #edits == 0 then return end
 
-	touch()
-	socket:Send(HttpService:JSONEncode { edits = edits })
+	if #edits > 0 then
+		touch()
+		socket:Send(HttpService:JSONEncode { edits = edits })
+	end
+
+	const done = on_flushed
+	on_flushed = nil
+
+	if not done then return end
+	done()
 end
 
 const function schedule_flush()
-	if scheduled then return end
+	if scheduled or holding then return end
 	scheduled = true
 
 	const current = generation
@@ -172,7 +189,9 @@ const function connect()
 	dormant = false
 	touch()
 
+	if socket then return end
 	const current = generation
+
 	const function retry_later()
 		if reconnecting then return end
 		reconnecting = true
@@ -186,6 +205,14 @@ const function connect()
 		end)
 	end
 
+	const function lost(source: client, reason: string)
+		if socket ~= source then return end
+		close_socket()
+
+		warn_once(reason)
+		retry_later()
+	end
+
 	const created, client = pcall(create_client or create_web_client, url)
 	if not created then
 		warn_once(tostring(client))
@@ -194,14 +221,6 @@ const function connect()
 	end
 
 	socket = client
-	const function lost(reason: string)
-		if socket ~= client then return end
-		socket = nil
-
-		connected = false
-		warn_once(reason)
-		retry_later()
-	end
 
 	client.Opened:Connect(function()
 		connected = true
@@ -211,11 +230,11 @@ const function connect()
 
 	client.MessageReceived:Connect(report)
 	client.Error:Connect(function(_, message: string)
-		lost(message)
+		lost(client, message)
 	end)
 
 	client.Closed:Connect(function()
-		lost "connection closed"
+		lost(client, "connection closed")
 	end)
 end
 
@@ -223,7 +242,7 @@ const function on_change(path: string, value: unknown)
 	pending[path] = value
 	touch()
 
-	if dormant then connect() end
+	if dormant and not holding then connect() end
 	schedule_flush()
 end
 
@@ -241,11 +260,49 @@ const function reset()
 	serving = false
 	scheduled = false
 
+	holding = false
+	finishing = false
+	on_flushed = nil
+
 	reconnecting = false
 	warned = false
 
 	dormant = false
 	idle_armed = false
+end
+
+const function finish()
+	if not serving or finishing then return end
+	if next(pending) == nil then
+		reset()
+		return
+	end
+
+	const slots = shared :: any
+	const current = generation
+
+	const function conclude()
+		if current ~= generation then return end
+		reset()
+	end
+
+	holding = false
+	finishing = true
+	debounce = 0
+
+	if stop_listening then stop_listening() end
+	stop_listening = nil
+
+	if slots[SHARED_KEY] == reset then slots[SHARED_KEY] = nil end
+	on_flushed = function()
+		task.delay(grace, conclude)
+	end
+
+	task.delay(FINISH_TIMEOUT, conclude)
+	connect()
+
+	if not connected then return end
+	schedule_flush()
 end
 
 const function release_previous()
@@ -258,7 +315,7 @@ end
 
 const function serve(port: number?, given: deps?)
 	const address = `{HOST}:{port or DEFAULT_PORT}`
-	if serving and address == url then return end
+	if serving and not finishing and address == url then return end
 	if serving then reset() end
 
 	release_previous()
@@ -266,8 +323,12 @@ const function serve(port: number?, given: deps?)
 
 	create_client = if given then given.create_client else nil
 	debounce = if given and given.debounce then given.debounce else DEBOUNCE
+
 	reconnect = if given and given.reconnect then given.reconnect else RECONNECT
 	idle = if given and given.idle then given.idle else IDLE
+
+	grace = if given and given.grace then given.grace else GRACE
+	holding = given ~= nil and given.hold == true
 
 	stop_listening = registry.on_change(on_change)
 	serving = true
@@ -275,4 +336,8 @@ const function serve(port: number?, given: deps?)
 end
 
 --// End
-return table.freeze { serve = serve, reset = reset }
+return table.freeze {
+	serve = serve,
+	finish = finish,
+	reset = reset,
+}

@@ -12,6 +12,7 @@ const DEBOUNCE = 0.02
 const RECONNECT = 0.05
 const SETTLE = 0.12
 const IDLE = 5
+const GRACE = 0.05
 
 --// Types
 type fake = {
@@ -84,11 +85,14 @@ const function fake_client(): fake
 	}
 end
 
-const function serve(clients: { fake }, idle: number?)
+const function serve(clients: { fake }, idle: number?, reconnect: number?, hold: boolean?)
 	bridge.serve(nil, {
 		debounce = DEBOUNCE,
-		reconnect = RECONNECT,
+		reconnect = reconnect or RECONNECT,
+
 		idle = idle or IDLE,
+		grace = GRACE,
+		hold = hold,
 
 		create_client = function()
 			const created = fake_client()
@@ -98,14 +102,14 @@ const function serve(clients: { fake }, idle: number?)
 	})
 end
 
-const function start(idle: number?)
+const function start(idle: number?, reconnect: number?, hold: boolean?)
 	bridge.reset()
 	registry.reset()
 
 	registry.add("pets.speed", "speed", "pets", kinds.infer(1) :: kinds.descriptor, 1)
 	const clients = {} :: { fake }
 
-	serve(clients, idle)
+	serve(clients, idle, reconnect, hold)
 	return clients
 end
 
@@ -209,6 +213,80 @@ return {
 
 		task.wait(SETTLE)
 		assert(#clients == 1)
+	end,
+
+	holds_the_edits_until_it_finishes = function()
+		const clients = start(nil, nil, true)
+		clients[1].open()
+
+		registry.set("pets.speed", 6)
+		task.wait(SETTLE)
+		assert(#clients[1].sent == 0)
+
+		bridge.finish()
+		task.wait(SETTLE)
+
+		assert(#clients[1].sent == 1 and edits_of(clients[1].sent[1])[1].value == 6)
+		bridge.reset()
+	end,
+
+	closes_the_connection_after_sending_what_it_held = function()
+		const clients = start(nil, nil, true)
+		clients[1].open()
+
+		registry.set("pets.speed", 6)
+		bridge.finish()
+		task.wait(GRACE + SETTLE)
+
+		assert(#clients[1].sent == 1)
+		assert(clients[1].closes() == 1)
+	end,
+
+	finishing_with_nothing_held_closes_at_once = function()
+		const clients = start(nil, nil, true)
+		clients[1].open()
+
+		bridge.finish()
+		assert(clients[1].closes() == 1)
+	end,
+
+	finishing_connects_again_to_send_what_it_held_after_going_idle = function()
+		const clients = start(0.05, nil, true)
+		clients[1].open()
+		task.wait(SETTLE)
+
+		registry.set("pets.speed", 6)
+		assert(#clients == 1)
+
+		bridge.finish()
+		assert(#clients == 2)
+
+		clients[2].open()
+		task.wait(SETTLE)
+
+		assert(#clients[2].sent == 1 and edits_of(clients[2].sent[1])[1].value == 6)
+		bridge.reset()
+	end,
+
+	closes_a_client_that_failed = function()
+		const clients = start()
+		clients[1].fail()
+
+		assert(clients[1].closes() == 1)
+		bridge.reset()
+	end,
+
+	an_edit_waking_the_bridge_does_not_open_a_second_connection_on_the_retry = function()
+		const clients = start(0.2, 0.3)
+		clients[1].fail()
+
+		task.wait(0.22)
+		registry.set("pets.speed", 5)
+		assert(#clients == 2)
+
+		task.wait(0.14)
+		assert(#clients == 2)
+		bridge.reset()
 	end,
 
 	tries_again_when_the_client_cannot_be_created = function()
