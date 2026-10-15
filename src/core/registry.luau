@@ -93,6 +93,12 @@ const function add(
 	}
 end
 
+const function rebase(path: string, default: kinds.value)
+	const found = entries[path]
+	if not found then return end
+	found.default = default
+end
+
 const function add_button(path: string, name: string, group: string, source: button.button)
 	const existing = buttons[path]
 
@@ -302,6 +308,7 @@ end
 return table.freeze {
 	add = add,
 	add_button = add_button,
+	rebase = rebase,
 
 	get = get,
 	set = set,
