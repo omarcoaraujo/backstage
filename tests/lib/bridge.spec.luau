@@ -11,11 +11,13 @@ const registry = require(ReplicatedStorage.backstage.core.registry)
 const DEBOUNCE = 0.02
 const RECONNECT = 0.05
 const SETTLE = 0.12
+const IDLE = 5
 
 --// Types
 type fake = {
 	client: bridge.client,
 	sent: { string },
+	closes: () -> number,
 
 	open: () -> (),
 	drop: () -> (),
@@ -45,11 +47,17 @@ const function fake_client(): fake
 
 	const failed, fire_failed = signal()
 	const closed, fire_closed = signal()
+
 	const sent = {} :: { string }
+	local closed_count = 0
 
 	const client = {
 		Send = function(_, message: string)
 			table.insert(sent, message)
+		end,
+
+		Close = function()
+			closed_count += 1
 		end,
 
 		Opened = opened,
@@ -63,6 +71,10 @@ const function fake_client(): fake
 		client = client :: any,
 		sent = sent,
 
+		closes = function()
+			return closed_count
+		end,
+
 		open = fire_opened,
 		drop = fire_closed,
 
@@ -72,25 +84,28 @@ const function fake_client(): fake
 	}
 end
 
-const function start()
+const function serve(clients: { fake }, idle: number?)
+	bridge.serve(nil, {
+		debounce = DEBOUNCE,
+		reconnect = RECONNECT,
+		idle = idle or IDLE,
+
+		create_client = function()
+			const created = fake_client()
+			table.insert(clients, created)
+			return created.client
+		end,
+	})
+end
+
+const function start(idle: number?)
 	bridge.reset()
 	registry.reset()
 
 	registry.add("pets.speed", "speed", "pets", kinds.infer(1) :: kinds.descriptor, 1)
 	const clients = {} :: { fake }
 
-	bridge.serve(nil, {
-		debounce = DEBOUNCE,
-		reconnect = RECONNECT,
-
-		create_client = function()
-			const created = fake_client()
-			table.insert(clients, created)
-
-			return created.client
-		end,
-	})
-
+	serve(clients, idle)
 	return clients
 end
 
@@ -194,5 +209,103 @@ return {
 
 		task.wait(SETTLE)
 		assert(#clients == 1)
+	end,
+
+	tries_again_when_the_client_cannot_be_created = function()
+		bridge.reset()
+		registry.reset()
+
+		local attempts = 0
+		const clients = {} :: { fake }
+
+		bridge.serve(nil, {
+			debounce = DEBOUNCE,
+			reconnect = RECONNECT,
+			idle = IDLE,
+
+			create_client = function()
+				attempts += 1
+				if attempts == 1 then error "Too many WebStreamClients active" end
+
+				const created = fake_client()
+				table.insert(clients, created)
+				return created.client
+			end,
+		})
+
+		assert(attempts == 1)
+		task.wait(SETTLE)
+
+		assert(attempts == 2 and #clients == 1)
+		bridge.reset()
+	end,
+
+	serving_again_keeps_one_connection = function()
+		const clients = start()
+		serve(clients)
+		serve(clients)
+
+		assert(#clients == 1)
+		bridge.reset()
+	end,
+
+	a_reset_closes_the_connection = function()
+		const clients = start()
+		clients[1].open()
+
+		bridge.reset()
+		assert(clients[1].closes() == 1)
+	end,
+
+	a_reset_does_not_reconnect_when_the_connection_closes = function()
+		const clients = start()
+		clients[1].open()
+
+		bridge.reset()
+		clients[1].drop()
+
+		task.wait(SETTLE)
+		assert(#clients == 1)
+	end,
+
+	serving_closes_the_bridge_of_a_previous_module = function()
+		bridge.reset()
+		registry.reset()
+
+		local released = false
+		const slots = shared :: any
+		slots.backstage_bridge = function()
+			released = true
+		end
+
+		serve {}
+		assert(released)
+		bridge.reset()
+	end,
+
+	closes_the_connection_when_it_stays_idle = function()
+		const clients = start(0.05)
+		clients[1].open()
+
+		task.wait(SETTLE)
+		assert(clients[1].closes() == 1)
+
+		assert(#clients == 1)
+		bridge.reset()
+	end,
+
+	connects_again_on_an_edit_after_it_went_idle = function()
+		const clients = start(0.05)
+		clients[1].open()
+		task.wait(SETTLE)
+
+		registry.set("pets.speed", 7)
+		assert(#clients == 2)
+
+		clients[2].open()
+		task.wait(DEBOUNCE * 3)
+
+		assert(#clients[2].sent == 1 and edits_of(clients[2].sent[1])[1].value == 7)
+		bridge.reset()
 	end,
 }

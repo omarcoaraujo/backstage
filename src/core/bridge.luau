@@ -10,12 +10,16 @@ const DEFAULT_PORT = 34891
 const DEBOUNCE = 0.5
 const RECONNECT = 3
 
+const IDLE = 10
+const SHARED_KEY = "backstage_bridge"
+
 --// Types
 type edit = { path: string, kind: string, value: unknown }
 type signal<callback> = { Connect: (self: any, callback: callback) -> () }
 
 export type client = {
 	Send: (self: any, message: string) -> (),
+	Close: (self: any) -> (),
 	Opened: signal<() -> ()>,
 
 	MessageReceived: signal<(message: string) -> ()>,
@@ -27,6 +31,7 @@ export type deps = {
 	create_client: ((url: string) -> client)?,
 	debounce: number?,
 	reconnect: number?,
+	idle: number?,
 }
 
 --// Variables
@@ -34,18 +39,67 @@ const pending = {} :: { [string]: unknown }
 local socket = nil :: client?
 local url = `{HOST}:{DEFAULT_PORT}`
 
+local serving = false
 local connected = false
 local scheduled = false
 
 local reconnecting = false
 local warned = false
 
+local dormant = false
+local idle_armed = false
+
+local last_activity = 0
+local stop_listening = nil :: (() -> ())?
+
 local generation = 0
 local debounce = DEBOUNCE
 local reconnect = RECONNECT
+
+local idle = IDLE
 local create_client = nil :: ((url: string) -> client)?
 
 --// Functions
+const function close_socket()
+	const current = socket
+	socket = nil
+	connected = false
+
+	if not current then return end
+	pcall(current.Close, current)
+end
+
+const function go_dormant()
+	dormant = true
+	close_socket()
+end
+
+const function arm_idle()
+	if idle_armed then return end
+	idle_armed = true
+
+	const current = generation
+	const function check()
+		if current ~= generation then return end
+		const remaining = idle - (os.clock() - last_activity)
+
+		if remaining > 0 then
+			task.delay(remaining, check)
+			return
+		end
+
+		idle_armed = false
+		go_dormant()
+	end
+
+	task.delay(idle, check)
+end
+
+const function touch()
+	last_activity = os.clock()
+	arm_idle()
+end
+
 const function create_web_client(address: string): client
 	const created = HttpService:CreateWebStreamClient(Enum.WebStreamClientType.WebSocket, { Url = address })
 	return created :: any
@@ -89,6 +143,8 @@ const function flush()
 
 	table.clear(pending)
 	if #edits == 0 then return end
+
+	touch()
 	socket:Send(HttpService:JSONEncode { edits = edits })
 end
 
@@ -113,25 +169,38 @@ const function report(message: string)
 end
 
 const function connect()
-	const client = (create_client or create_web_client)(url)
+	dormant = false
+	touch()
+
 	const current = generation
-	socket = client
-
-	const function lost(reason: string)
-		if socket ~= client then return end
-		socket = nil
-
-		connected = false
-		warn_once(reason)
-
+	const function retry_later()
 		if reconnecting then return end
 		reconnecting = true
 
 		task.delay(reconnect, function()
 			if current ~= generation then return end
 			reconnecting = false
+
+			if dormant then return end
 			connect()
 		end)
+	end
+
+	const created, client = pcall(create_client or create_web_client, url)
+	if not created then
+		warn_once(tostring(client))
+		retry_later()
+		return
+	end
+
+	socket = client
+	const function lost(reason: string)
+		if socket ~= client then return end
+		socket = nil
+
+		connected = false
+		warn_once(reason)
+		retry_later()
 	end
 
 	client.Opened:Connect(function()
@@ -152,30 +221,57 @@ end
 
 const function on_change(path: string, value: unknown)
 	pending[path] = value
+	touch()
+
+	if dormant then connect() end
 	schedule_flush()
-end
-
-const function serve(port: number?, given: deps?)
-	url = `{HOST}:{port or DEFAULT_PORT}`
-
-	create_client = if given then given.create_client else nil
-	debounce = if given and given.debounce then given.debounce else DEBOUNCE
-	reconnect = if given and given.reconnect then given.reconnect else RECONNECT
-
-	registry.on_change(on_change)
-	connect()
 end
 
 const function reset()
 	generation += 1
 	table.clear(pending)
+	close_socket()
 
-	socket = nil
-	connected = false
+	if stop_listening then stop_listening() end
+	stop_listening = nil
 
+	const slots = shared :: any
+	if slots[SHARED_KEY] == reset then slots[SHARED_KEY] = nil end
+
+	serving = false
 	scheduled = false
+
 	reconnecting = false
 	warned = false
+
+	dormant = false
+	idle_armed = false
+end
+
+const function release_previous()
+	const slots = shared :: any
+	const previous = slots[SHARED_KEY]
+
+	if type(previous) == "function" and previous ~= reset then previous() end
+	slots[SHARED_KEY] = reset
+end
+
+const function serve(port: number?, given: deps?)
+	const address = `{HOST}:{port or DEFAULT_PORT}`
+	if serving and address == url then return end
+	if serving then reset() end
+
+	release_previous()
+	url = address
+
+	create_client = if given then given.create_client else nil
+	debounce = if given and given.debounce then given.debounce else DEBOUNCE
+	reconnect = if given and given.reconnect then given.reconnect else RECONNECT
+	idle = if given and given.idle then given.idle else IDLE
+
+	stop_listening = registry.on_change(on_change)
+	serving = true
+	connect()
 end
 
 --// End
