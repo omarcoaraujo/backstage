@@ -41,6 +41,7 @@ type props = {
 
 	position: Vector2?,
 	size: Vector2?,
+	on_geometry: ((position: Vector2, size: Vector2) -> ())?,
 
 	min_size: Vector2?,
 	footer: string?,
@@ -94,8 +95,17 @@ return function(props: props)
 		}
 	end
 
+	const function finish()
+		const finished = drag()
+		drag(nil)
+
+		const placed = position()
+		if not finished or not placed or not props.on_geometry then return end
+		props.on_geometry(placed, size())
+	end
+
 	const function release(input: InputObject)
-		if pointer.is_press(input) then drag(nil) end
+		if pointer.is_press(input) then finish() end
 	end
 
 	const function resizing(): handles.side?
@@ -125,7 +135,7 @@ return function(props: props)
 			input.UserInputType == Enum.UserInputType.MouseMovement
 			and not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
 		then
-			drag(nil)
+			finish()
 			return
 		end
 

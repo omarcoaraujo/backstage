@@ -28,6 +28,10 @@ type props = {
 
 	visible: () -> boolean,
 	on_close: () -> (),
+
+	position: Vector2?,
+	size: Vector2?,
+	on_geometry: ((position: Vector2, size: Vector2) -> ())?,
 }
 
 type branch = {
@@ -266,6 +270,11 @@ return function(props: props)
 
 		visible = props.visible,
 		on_close = props.on_close,
+
+		position = props.position,
+		size = props.size,
+
+		on_geometry = props.on_geometry,
 		content = frame,
 	}
 end
