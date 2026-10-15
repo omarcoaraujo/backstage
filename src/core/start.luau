@@ -1,15 +1,14 @@
 --// Services
 const Players = game:GetService "Players"
 const RunService = game:GetService "RunService"
-const UserInputService = game:GetService "UserInputService"
 
 --// Modules
 const bridge = require "./bridge"
 const mode = require "./mode"
+const shortcut = require "./shortcut"
 const sync = require "./sync"
 
 --// Constants
-const DEFAULT_KEY = Enum.KeyCode.B
 const DISPLAY_ORDER = 1000
 
 --// Types
@@ -26,10 +25,6 @@ export type options = {
 local started = false
 
 --// Functions
-const function holding_control()
-	return UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
-end
-
 const function start(options: options?)
 	if started or not mode.active() then return end
 	started = true
@@ -46,9 +41,6 @@ const function start(options: options?)
 	if not RunService:IsClient() then return end
 	if not sync.connect() then return end
 
-	const key = if options and options.key then options.key else DEFAULT_KEY
-	const needs_control = not options or options.ctrl ~= false
-
 	const vide = require "../../roblox_packages/vide"
 	const app = require "../ui/app"
 	const version = require "../version"
@@ -60,10 +52,7 @@ const function start(options: options?)
 		visible(false)
 	end
 
-	const function on_input(input: InputObject)
-		if input.KeyCode ~= key then return end
-		if needs_control and not holding_control() then return end
-
+	const function toggle()
 		visible(not visible())
 	end
 
@@ -86,7 +75,7 @@ const function start(options: options?)
 		}
 	end, player_gui)
 
-	UserInputService.InputBegan:Connect(on_input)
+	shortcut.listen(options, toggle)
 end
 
 --// End
