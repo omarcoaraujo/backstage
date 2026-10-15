@@ -225,13 +225,17 @@ backstage.start { key = Enum.KeyCode.F4, ctrl = false }
 ```lua
 return function(target)
 	require(path.to.pets_config)
-	return backstage.embed(target, { title = "pets", port = 34891 })
+	return backstage.embed(target)
 end
 ```
 
 The window opens already visible. The close button hides it and the same shortcut as `start` (`Ctrl + B`) shows it again. The options are `title`, `footer`, `port`, `key`, `ctrl`, `open`, `vide` and `charm`, where `open = false` starts it hidden. Edits are saved by the Backstage tool, as in a play session. [`stories/pet.story.luau`](stories/pet.story.luau) is a complete example: tuning the window moves a pet in the story.
 
 A storybook reloads the story often, so `embed` keeps one connection to the tool: embedding again reuses it, the cleanup closes it, and a connection left behind by a reload is closed by the next `embed` or by itself when idle. The window position and size are remembered by `title` between reloads, as long as the storybook stays open. Both are kept in `shared`, which UI Labs preserves across reloads.
+
+The tool rewrites the default in your script every time you edit, and the storybook then reloads the story with the new default, which would leave the reset button with nothing to go back to. `embed` remembers the default each value had when the session began, so reset still returns to that original, as long as the default in the script is the one the tool saved. If you change a default by hand, that new default becomes the one reset returns to. 
+
+The storybook reloads the story whenever the script changes, which would interrupt you on every edit. So `embed` holds your edits in memory and sends them to the tool only when the story closes, which includes the unmount right before a reload. Edits that were never sent are lost if Studio closes before the story does.
 
 ### Production
 

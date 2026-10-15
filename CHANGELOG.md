@@ -3,6 +3,8 @@
 ## Unreleased
 
 - The window can now be shown inside a storybook such as UI Labs while you edit in Studio, without pressing play, and it keeps its position and size every time the story reloads. The close button hides it and Ctrl + B brings it back.
+- In a storybook, your edits are now saved to your script when you close the story, so it no longer reloads in the middle of tuning.
+- In a storybook, the reset button keeps going back to the value you started with, even after the story reloads with your saved edits.
 - The connection to the tool that saves your edits now closes by itself when you stop editing, and opens again on the next edit, so reloading stories no longer piles up connections until Studio refuses new ones.
 
 ## 0.6.0
