@@ -113,10 +113,23 @@ const function is_literal(node)
 	return LITERAL_TAGS[node.tag] == true or is_negative_number(node) or is_constructor(node)
 end
 
-const function locate(source: string, path: string): (found?, string?)
-	const segments = string.split(path, ".")
-	const name = table.remove(segments, 1) :: string
+const function owning_name(names: { string }, path: string): string?
+	local owner = nil :: string?
 
+	for _, name in names do
+		if string.sub(path, 1, #name + 1) ~= `{name}.` then continue end
+		if owner and #owner >= #name then continue end
+		owner = name
+	end
+
+	return owner
+end
+
+const function locate(source: string, path: string): (found?, string?)
+	const names = config_names(source)
+	const name = owning_name(names, path)
+	if not name then return nil, `config "{string.match(path, "^[^%.]+")}" not found` end
+	const segments = string.split(string.sub(path, #name + 2), ".")
 	const call = find_config_call(parser.parse(source).root, name)
 	if not call then return nil, `config "{name}" not found` end
 
@@ -133,9 +146,8 @@ const function locate(source: string, path: string): (found?, string?)
 	end
 
 	if not is_literal(current) then return nil, `"{path}" is not a literal` end
-
 	return { tag = current.tag, range = to_range(current.location) }
 end
 
 --// End
-return { locate = locate, config_names = config_names }
+return { locate = locate, config_names = config_names, owning_name = owning_name }

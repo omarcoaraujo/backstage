@@ -127,7 +127,7 @@ return backstage.config("pets", {
 })
 ```
 
-The kind of each value comes from its default: number, boolean, string, `Color3` or `Vector3`. A `choices` limit turns a string into a choice. Nested tables become groups.
+The kind of each value comes from its default: number, boolean, string, `Color3` or `Vector3`. A `choices` limit turns a string into a choice. Nested tables become groups. A dot in the config name nests it too: `backstage.config("pet.drops", ...)` and `backstage.config("pet.skins", ...)` both show up inside one `pet` group.
 
 Add a `hints` table, shaped like `limits`, to explain a value. The text shows as a tooltip when you hover the row:
 

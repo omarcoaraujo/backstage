@@ -2,6 +2,7 @@
 const apply = require "./apply"
 const fs = require "@std/fs"
 const json = require "@std/json"
+const locate = require "./locate"
 const scan = require "./scan"
 
 --// Types
@@ -10,8 +11,18 @@ type refusal = apply.refusal
 export type state = { index: scan.index }
 
 --// Functions
-const function config_name(path: string)
-	return string.match(path, "^[^%.]+") :: string
+const function index_names(index: scan.index)
+	const names = {}
+
+	for name in index do
+		table.insert(names, name)
+	end
+
+	return names
+end
+
+const function config_name(names: { string }, path: string)
+	return locate.owning_name(names, path) or string.match(path, "^[^%.]+") :: string
 end
 
 const function refuse_all(edits: { edit }, reason: string, refusals: { refusal })
@@ -20,11 +31,11 @@ const function refuse_all(edits: { edit }, reason: string, refusals: { refusal }
 	end
 end
 
-const function group_by_config(edits: { edit })
+const function group_by_config(edits: { edit }, names: { string })
 	const groups = {} :: { [string]: { edit } }
 
 	for _, edit in edits do
-		const name = config_name(edit.path)
+		const name = config_name(names, edit.path)
 		const group = groups[name] or {}
 
 		table.insert(group, edit)
@@ -38,16 +49,19 @@ const function save_edits(root: string, state: state, message: string)
 	const ok, payload = pcall(json.deserialize, message)
 	if not ok or type(payload) ~= "table" or type(payload.edits) ~= "table" then return nil end
 
-	local scanned_again = false
+	local names = index_names(state.index)
 	const refusals = {} :: { refusal }
 	const by_file = {} :: { [string]: { edit } }
 
-	for name, edits in group_by_config(payload.edits) do
-		if not state.index[name] and not scanned_again then
-			state.index = scan.scan(root)
-			scanned_again = true
-		end
+	for _, edit in payload.edits do
+		if locate.owning_name(names, edit.path) then continue end
 
+		state.index = scan.scan(root)
+		names = index_names(state.index)
+		break
+	end
+
+	for name, edits in group_by_config(payload.edits, names) do
 		const files = state.index[name]
 		if not files then
 			refuse_all(edits, `config "{name}" is not in the project`, refusals)

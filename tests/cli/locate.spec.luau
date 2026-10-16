@@ -16,6 +16,15 @@ const pets = backstage.config("pets", {
 })
 ]]
 
+const NESTED = [[
+backstage.config("pet.drops", {
+	rate = 1,
+})
+backstage.config("pet", {
+	rate = 2,
+})
+]]
+
 const CONFIGS = [[
 backstage.config("pets", {})
 backstage.config("world", {})
@@ -88,6 +97,22 @@ return {
 	refuses_a_path_through_a_value = function()
 		const found = locate.locate(SOURCE, "pets.speed.deeper")
 		assert(found == nil)
+	end,
+
+	finds_a_value_of_a_config_named_with_dots = function()
+		const found = locate.locate(NESTED, "pet.drops.rate")
+		assert(found and found.tag == "number")
+		assert(found.range.begin_line == 2)
+	end,
+
+	prefers_the_longest_config_name = function()
+		const found = locate.locate(NESTED, "pet.rate")
+		assert(found and found.range.begin_line == 5)
+	end,
+
+	owning_name_matches_whole_segments_only = function()
+		assert(locate.owning_name({ "pet" }, "pets.speed") == nil)
+		assert(locate.owning_name({ "pet", "pet.drops" }, "pet.drops.rate") == "pet.drops")
 	end,
 
 	config_names_lists_every_config_call = function()
