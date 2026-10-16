@@ -6,6 +6,9 @@ const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../utils/theme"
 
+--// Components
+const hint = require "./hint"
+
 --// Constants
 const PRESS_TRANSPARENCY = 0.3
 const PADDING = 8
@@ -14,6 +17,7 @@ const PADDING = 8
 type props = {
 	text: string,
 	on_press: () -> (),
+	hint: string?,
 
 	min_width: (() -> number)?,
 	max_width: (() -> number)?,
@@ -24,13 +28,23 @@ return function(props: props)
 	const hovered = vide.source(false)
 	const pressed = vide.source(false)
 
+	local root = nil :: TextButton?
+	const tip = hint {
+		text = props.hint,
+		anchor = function()
+			return root
+		end,
+	}
+
 	const function on_enter()
 		hovered(true)
+		tip.on_enter()
 	end
 
 	const function on_leave()
 		hovered(false)
 		pressed(false)
+		tip.on_leave()
 	end
 
 	const function on_down()
@@ -45,7 +59,6 @@ return function(props: props)
 	const function background()
 		if pressed() then return theme.divider end
 		if hovered() and not overlay.active() then return theme.hover end
-
 		return theme.field
 	end
 
@@ -68,7 +81,7 @@ return function(props: props)
 		return Vector2.new(props.max_width(), math.huge)
 	end
 
-	return vide.create "TextButton" {
+	const content = vide.create "TextButton" {
 		Name = props.text,
 		Size = px.udim2(0, 0, 0, theme.field_height),
 		AutomaticSize = Enum.AutomaticSize.X,
@@ -90,6 +103,7 @@ return function(props: props)
 
 		MouseButton1Down = on_down,
 		MouseButton1Up = on_up,
+		InputBegan = tip.on_input,
 
 		vide.create "UIPadding" {
 			PaddingLeft = px.udim(0, PADDING),
@@ -114,4 +128,7 @@ return function(props: props)
 			Thickness = px(1),
 		},
 	}
+
+	root = content
+	return content
 end

@@ -68,6 +68,57 @@ return {
 		assert(registry.list()[1].hint == "How fast")
 	end,
 
+	button_and_group_hints_travel_in_the_snapshot = function()
+		fresh()
+		registry.add_button(
+			"pets.respawn",
+			"respawn",
+			"pets",
+			require(ReplicatedStorage.backstage.core.button).create(),
+			"Brings it back"
+		)
+
+		registry.add_group_hint("pets", "Everything about pets")
+		const snapshot = registry.snapshot()
+		assert(snapshot.buttons[1].hint == "Brings it back")
+
+		fresh()
+		registry.import(snapshot)
+
+		assert(registry.list_buttons()[1].hint == "Brings it back")
+		assert(registry.group_hint "pets" == "Everything about pets")
+	end,
+
+	dirty_looks_only_inside_the_group = function()
+		fresh()
+		declare_speed(1)
+
+		registry.add("world.gravity", "gravity", "world", kinds.infer(1) :: kinds.descriptor, 1)
+		registry.set("pets.speed", 5)
+
+		assert(registry.dirty())
+		assert(registry.dirty "pets")
+		assert(not registry.dirty "world")
+		assert(not registry.dirty "pet")
+	end,
+
+	restore_group_restores_only_that_group = function()
+		fresh()
+		declare_speed(1)
+		registry.add("world.gravity", "gravity", "world", kinds.infer(1) :: kinds.descriptor, 1)
+
+		registry.set("pets.speed", 5)
+		registry.set("world.gravity", 9)
+
+		registry.restore_group "pets"
+		assert(registry.get "pets.speed" == 1)
+		assert(registry.get "world.gravity" == 9)
+
+		registry.restore_group()
+		assert(registry.get "world.gravity" == 1)
+		assert(not registry.dirty())
+	end,
+
 	imported_entries_forward_user_edits = function()
 		const edits = fresh()
 		registry.import(incoming(1))

@@ -23,6 +23,8 @@ return backstage.config("hud", {
 	},
 
 	hints = {
+		_ = "The card that shows the pet on screen",
+
 		show_stats = "Show the mode, size and trail rows under the title",
 		corner = "Which corner of the screen the card sticks to",
 		fade = "0 is solid, 1 is fully see-through",

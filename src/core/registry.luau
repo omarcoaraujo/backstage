@@ -24,6 +24,7 @@ export type button_entry = {
 	group: string,
 	button: button.button,
 
+	hint: string?,
 	remote: boolean,
 }
 
@@ -41,7 +42,8 @@ export type snapshot_entry = {
 
 export type snapshot = {
 	entries: { snapshot_entry },
-	buttons: { { path: string, name: string, group: string } },
+	buttons: { { path: string, name: string, group: string, hint: string? } },
+	groups: { [string]: string }?,
 }
 
 export type remote = {
@@ -54,6 +56,8 @@ type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
 --// Variables
 const entries = {} :: { [string]: entry }
 const buttons = {} :: { [string]: button_entry }
+
+const group_hints = {} :: { [string]: string }
 const listeners = {} :: { listener }
 
 const register_listeners = {} :: { () -> () }
@@ -99,7 +103,7 @@ const function rebase(path: string, default: kinds.value)
 	found.default = default
 end
 
-const function add_button(path: string, name: string, group: string, source: button.button)
+const function add_button(path: string, name: string, group: string, source: button.button, hint: string?)
 	const existing = buttons[path]
 
 	buttons[path] = {
@@ -108,8 +112,17 @@ const function add_button(path: string, name: string, group: string, source: but
 		group = group,
 
 		button = source,
+		hint = hint,
 		remote = existing ~= nil and existing.remote,
 	}
+end
+
+const function add_group_hint(path: string, hint: string)
+	group_hints[path] = hint
+end
+
+const function group_hint(path: string): string?
+	return group_hints[path]
 end
 
 const function get(path: string): kinds.value?
@@ -164,6 +177,25 @@ const function restore(path: string)
 	return write(path, found.default, true)
 end
 
+const function inside(path: string, prefix: string?)
+	if not prefix then return true end
+	return string.sub(path, 1, #prefix + 1) == `{prefix}.`
+end
+
+const function dirty(prefix: string?)
+	for path, found in entries do
+		if inside(path, prefix) and found.value ~= found.default then return true end
+	end
+
+	return false
+end
+
+const function restore_group(prefix: string?)
+	for _, path in sorted_paths(entries) do
+		if inside(path, prefix) then restore(path) end
+	end
+end
+
 const function press(path: string)
 	const found = buttons[path]
 	if not found then return false end
@@ -179,7 +211,7 @@ const function connect_remote(handler: remote?)
 end
 
 const function snapshot(only_local: boolean?)
-	const result = { entries = {}, buttons = {} }
+	const result = { entries = {}, buttons = {}, groups = table.clone(group_hints) }
 
 	for _, path in sorted_paths(entries) do
 		const found = entries[path]
@@ -200,7 +232,7 @@ const function snapshot(only_local: boolean?)
 	for _, path in sorted_paths(buttons) do
 		const found = buttons[path]
 		if only_local and found.remote then continue end
-		table.insert(result.buttons, { path = found.path, name = found.name, group = found.group })
+		table.insert(result.buttons, { path = found.path, name = found.name, group = found.group, hint = found.hint })
 	end
 
 	return result
@@ -229,19 +261,26 @@ const function import(source: snapshot)
 		const existing = buttons[incoming.path]
 
 		if not existing then
-			add_button(incoming.path, incoming.name, incoming.group, button.create())
+			add_button(incoming.path, incoming.name, incoming.group, button.create(), incoming.hint)
 			buttons[incoming.path].remote = true
 			continue
 		end
 
 		existing.remote = true
+		existing.hint = incoming.hint
+	end
+
+	if source.groups then
+		for path, text in source.groups do
+			group_hints[path] = text
+		end
 	end
 
 	announce()
 end
 
 const function adopt(source: snapshot)
-	const missing = { entries = {}, buttons = {} } :: snapshot
+	const missing = { entries = {}, buttons = {}, groups = source.groups } :: snapshot
 
 	for _, incoming in source.entries do
 		if not entries[incoming.path] then table.insert(missing.entries, incoming) end
@@ -296,6 +335,7 @@ end
 const function reset()
 	table.clear(entries)
 	table.clear(buttons)
+	table.clear(group_hints)
 
 	table.clear(listeners)
 	table.clear(register_listeners)
@@ -308,13 +348,18 @@ end
 return table.freeze {
 	add = add,
 	add_button = add_button,
+	add_group_hint = add_group_hint,
 	rebase = rebase,
 
 	get = get,
 	set = set,
+	group_hint = group_hint,
 
 	apply = apply,
 	restore = restore,
+	restore_group = restore_group,
+
+	dirty = dirty,
 	press = press,
 
 	snapshot = snapshot,

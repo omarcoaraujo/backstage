@@ -17,8 +17,8 @@ const search = require "@self/search"
 const title_bar = require "@self/title_bar"
 
 --// Constants
-const DEFAULT_SIZE = Vector2.new(360, 480)
-const DEFAULT_MIN_SIZE = Vector2.new(330, 160)
+const DEFAULT_SIZE = Vector2.new(365, 480)
+const DEFAULT_MIN_SIZE = Vector2.new(365, 160)
 
 const KEEP_VISIBLE = 48
 const CAPTURE_SPAN = 20000
@@ -46,6 +46,9 @@ type props = {
 	min_size: Vector2?,
 	footer: string?,
 	content: unknown?,
+
+	dirty: (() -> boolean)?,
+	on_reset: (() -> ())?,
 }
 
 --// Functions
@@ -207,6 +210,9 @@ return function(props: props)
 
 			on_release = release,
 			on_close = close,
+
+			dirty = props.dirty,
+			on_reset = props.on_reset,
 		},
 
 		handles {

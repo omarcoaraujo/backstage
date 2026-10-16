@@ -5,6 +5,9 @@ const mode = require "./mode"
 const registry = require "./registry"
 const tracker = require "./tracker"
 
+--// Constants
+const GROUP_HINT_KEY = "_"
+
 --// Types
 type tree = { [string]: unknown }
 export type options<limits> = { limits: limits?, hints: { [string]: any }? }
@@ -55,8 +58,22 @@ const function resolve(
 	return value
 end
 
-const function build_group(source: node, limits: tree?, hints: tree?, path: string)
+const function hint_text(hint: unknown): string?
+	if type(hint) == "string" then return hint end
+	if type(hint) ~= "table" then return nil end
+
+	const own = (hint :: tree)[GROUP_HINT_KEY]
+	if type(own) ~= "string" then return nil end
+
+	return own
+end
+
+const function build_group(source: node, limits: tree?, group_hint: unknown, path: string)
 	const members = {} :: { [string]: member }
+	const hints = if type(group_hint) == "table" then group_hint :: tree else nil
+
+	const own_hint = hint_text(group_hint)
+	if own_hint then registry.add_group_hint(path, own_hint) end
 
 	for key, value in source do
 		const member_path = `{path}.{key}`
@@ -65,7 +82,7 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 
 		if type(value) == "table" and button.is_button(value) then
 			const pressable = value :: button.button
-			registry.add_button(member_path, key, path, pressable)
+			registry.add_button(member_path, key, path, pressable, if type(hint) == "string" then hint else nil)
 
 			members[key] = { kind = "button", button = pressable }
 			continue
@@ -74,7 +91,7 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		if type(value) == "table" then
 			members[key] = {
 				kind = "group",
-				proxy = build_group(value :: node, limit :: tree?, hint :: tree?, member_path),
+				proxy = build_group(value :: node, limit :: tree?, hint, member_path),
 			}
 
 			continue
@@ -140,7 +157,7 @@ const function warn_shadowed(name: string, defaults: tree)
 
 		const inside_other = shadowed_key(other, other_defaults, name)
 		const inside_name = shadowed_key(name, defaults, other)
-		
+
 		const key = inside_other or inside_name
 		if not key then continue end
 
@@ -159,8 +176,8 @@ const function config<settings, limits>(name: string, defaults: settings, option
 
 	const given_limits = if options then options.limits else nil :: any
 	const given_hints = if options then options.hints else nil :: any
-	
-	const group = build_group(defaults :: any, given_limits :: tree?, given_hints :: tree?, name)
+
+	const group = build_group(defaults :: any, given_limits :: tree?, given_hints, name)
 	registry.announce()
 
 	return group :: any

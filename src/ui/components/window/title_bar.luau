@@ -6,6 +6,9 @@ const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
 const theme = require "../../utils/theme"
 
+--// Components
+const reset_button = require "../reset_button"
+
 --// Types
 type props = {
 	title: string,
@@ -13,6 +16,9 @@ type props = {
 
 	on_release: (input: InputObject) -> (),
 	on_close: () -> (),
+
+	dirty: (() -> boolean)?,
+	on_reset: (() -> ())?,
 }
 
 --// Component
@@ -25,6 +31,14 @@ return function(props: props)
 
 	const function on_close_leave()
 		close_hovered(false)
+	end
+
+	const function reset_visible()
+		return props.dirty ~= nil and props.dirty()
+	end
+
+	const function on_reset()
+		if props.on_reset then props.on_reset() end
 	end
 
 	const function close_transparency()
@@ -66,6 +80,12 @@ return function(props: props)
 			Size = UDim2.new(1, 0, 0, 1),
 			BackgroundColor3 = theme.divider,
 			BorderSizePixel = 0,
+		},
+
+		reset_button {
+			right = theme.title_height + theme.padding / 2,
+			visible = reset_visible,
+			on_reset = on_reset,
 		},
 
 		vide.create "TextButton" {

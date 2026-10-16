@@ -7,6 +7,10 @@ const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../utils/theme"
 
+--// Components
+const hint = require "./hint"
+const reset_button = require "./reset_button"
+
 --// Constants
 const BRANCH_TRANSPARENCY = 0.5
 const BRANCH_OFFSET = 4
@@ -26,6 +30,10 @@ type props = {
 	name: string,
 	open: boolean?,
 	content: unknown?,
+	hint: string?,
+
+	dirty: (() -> boolean)?,
+	on_reset: (() -> ())?,
 }
 
 --// Functions
@@ -52,11 +60,20 @@ end
 return function(props: props)
 	const node = filter.branch(props.name, props.content :: { Instance }?)
 	const children = (props.content or {}) :: { Instance }
+
 	local last = nil :: Instance?
+	local header = nil :: TextButton?
 
 	const open = vide.source(props.open == true)
 	const hovered = vide.source(false)
+
 	const last_height = vide.source(0)
+	const tip = hint {
+		text = props.hint,
+		anchor = function()
+			return header
+		end,
+	}
 
 	for _, child in children do
 		if child.Name == "buttons" then continue end
@@ -88,10 +105,20 @@ return function(props: props)
 
 	const function on_enter()
 		hovered(true)
+		tip.on_enter()
 	end
 
 	const function on_leave()
 		hovered(false)
+		tip.on_leave()
+	end
+
+	const function reset_visible()
+		return props.dirty ~= nil and props.dirty()
+	end
+
+	const function on_reset()
+		if props.on_reset then props.on_reset() end
 	end
 
 	const function arrow_frame()
@@ -103,6 +130,54 @@ return function(props: props)
 		if hovered() then return theme.hover end
 		return theme.title_background
 	end
+
+	header = vide.create "TextButton" {
+		Name = "header",
+		LayoutOrder = 1,
+
+		Size = px.udim2(1, 0, 0, theme.row_height),
+		AutoButtonColor = false,
+
+		BackgroundColor3 = header_color,
+		BorderSizePixel = 0,
+
+		FontFace = theme.font,
+		Text = props.name,
+		TextColor3 = theme.text,
+
+		TextSize = px(theme.text_size),
+		TextXAlignment = Enum.TextXAlignment.Left,
+
+		Activated = overlay.guard(toggle),
+		MouseEnter = on_enter,
+		MouseLeave = on_leave,
+		InputBegan = tip.on_input,
+
+		vide.create "UIPadding" {
+			PaddingLeft = px.udim(0, theme.padding + ARROW_SIZE + ARROW_GAP),
+		},
+
+		vide.create "ImageLabel" {
+			Name = "arrow",
+			AnchorPoint = Vector2.new(0, 0.5),
+
+			Position = px.udim2(0, -(ARROW_SIZE + ARROW_GAP), 0.5, 0),
+			Size = px.udim2(0, ARROW_SIZE, 0, ARROW_SIZE),
+
+			BackgroundTransparency = 1,
+			Image = ARROW_IMAGE,
+
+			ImageColor3 = theme.text,
+			ImageRectSize = Vector2.new(ARROW_FRAME, ARROW_FRAME),
+			ImageRectOffset = arrow_frame,
+		},
+
+		reset_button {
+			right = theme.padding / 2,
+			visible = reset_visible,
+			on_reset = on_reset,
+		},
+	}
 
 	const frame = vide.create "Frame" {
 		Name = props.name,
@@ -116,46 +191,7 @@ return function(props: props)
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		},
 
-		vide.create "TextButton" {
-			Name = "header",
-			LayoutOrder = 1,
-
-			Size = px.udim2(1, 0, 0, theme.row_height),
-			AutoButtonColor = false,
-
-			BackgroundColor3 = header_color,
-			BorderSizePixel = 0,
-
-			FontFace = theme.font,
-			Text = props.name,
-			TextColor3 = theme.text,
-
-			TextSize = px(theme.text_size),
-			TextXAlignment = Enum.TextXAlignment.Left,
-
-			Activated = overlay.guard(toggle),
-			MouseEnter = on_enter,
-			MouseLeave = on_leave,
-
-			vide.create "UIPadding" {
-				PaddingLeft = px.udim(0, theme.padding + ARROW_SIZE + ARROW_GAP),
-			},
-
-			vide.create "ImageLabel" {
-				Name = "arrow",
-				AnchorPoint = Vector2.new(0, 0.5),
-
-				Position = px.udim2(0, -(ARROW_SIZE + ARROW_GAP), 0.5, 0),
-				Size = px.udim2(0, ARROW_SIZE, 0, ARROW_SIZE),
-
-				BackgroundTransparency = 1,
-				Image = ARROW_IMAGE,
-
-				ImageColor3 = theme.text,
-				ImageRectSize = Vector2.new(ARROW_FRAME, ARROW_FRAME),
-				ImageRectOffset = arrow_frame,
-			},
-		},
+		header,
 
 		vide.create "Frame" {
 			Name = "body",

@@ -129,17 +129,20 @@ return backstage.config("pets", {
 
 The kind of each value comes from its default: number, boolean, string, `Color3` or `Vector3`. A `choices` limit turns a string into a choice. Nested tables become groups. A dot in the config name nests it too: `backstage.config("pet.drops", ...)` and `backstage.config("pet.skins", ...)` both show up inside one `pet` group.
 
-Add a `hints` table, shaped like `limits`, to explain a value. The text shows as a tooltip when you hover the row:
+Add a `hints` table, shaped like `limits`, to explain a value or a button. The text shows as a tooltip when you hover the row or the button. To explain a group, give its key a text, or an `_` key when the group also hints its own values:
 
 ```lua
 {
 	limits = { distance = { min = 0, max = 30, step = 0.1 } },
 	hints = {
 		distance = "How far behind the player the pet stays",
-		trail = { length = "Seconds the trail takes to fade" },
+		respawn = "Brings the pet back to the player",
+		trail = { _ = "How the trail looks", length = "Seconds the trail takes to fade" },
 	},
 }
 ```
+
+Every changed value shows a reset arrow. A group shows one that resets everything inside it, and the title bar shows one that resets the whole window. Numbers and vectors keep three decimals.
 
 Read the values as plain fields, always through the returned table, so you see the latest edit:
 

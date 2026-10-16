@@ -13,7 +13,7 @@ const button = require "./button"
 const MAX_PER_ROW = 4
 
 --// Types
-export type item = { text: string, on_press: () -> () }
+export type item = { text: string, on_press: () -> (), hint: string? }
 type props = { items: { item } }
 
 --// Component
@@ -52,6 +52,7 @@ return function(props: props)
 			button {
 				text = current.text,
 				on_press = current.on_press,
+				hint = current.hint,
 
 				min_width = min_width,
 				max_width = max_width,

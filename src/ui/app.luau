@@ -88,6 +88,7 @@ return function(props: props)
 
 	const appliers = {} :: { [string]: (value: kinds.value) -> () }
 	const frame = list {}
+	const revision = vide.source(0)
 
 	local destroy_tree = nil :: (() -> ())?
 	local items = {} :: { Instance }
@@ -97,8 +98,18 @@ return function(props: props)
 	end
 
 	const function on_value_changed(path: string, value: kinds.value)
+		revision(revision() + 1)
 		const apply = appliers[path]
 		if apply then apply(value) end
+	end
+
+	const function any_dirty()
+		revision()
+		return registry.dirty()
+	end
+
+	const function restore_all()
+		registry.restore_group()
 	end
 
 	const function restorable(entry: registry.entry, value: () -> unknown, content: unknown)
@@ -200,6 +211,8 @@ return function(props: props)
 
 			table.insert(items, {
 				text = entry.name,
+				hint = entry.hint,
+
 				on_press = function()
 					registry.press(path)
 				end,
@@ -209,8 +222,17 @@ return function(props: props)
 		return buttons { items = items }
 	end
 
-	const function build_branch(source: branch, name: string)
+	const function build_branch(source: branch, name: string, path: string)
 		const content = {}
+
+		const function dirty()
+			revision()
+			return registry.dirty(path)
+		end
+
+		const function on_reset()
+			registry.restore_group(path)
+		end
 
 		for _, entry in source.entries do
 			table.insert(content, entry_row(entry))
@@ -219,10 +241,17 @@ return function(props: props)
 		if #source.buttons > 0 then table.insert(content, build_buttons(source.buttons)) end
 
 		for _, child_name in sorted_names(source.groups) do
-			table.insert(content, build_branch(source.groups[child_name], child_name))
+			table.insert(content, build_branch(source.groups[child_name], child_name, `{path}.{child_name}`))
 		end
 
-		return group { name = name, content = content }
+		return group {
+			name = name,
+			hint = registry.group_hint(path),
+			content = content,
+
+			dirty = dirty,
+			on_reset = on_reset,
+		}
 	end
 
 	const function tree()
@@ -230,7 +259,7 @@ return function(props: props)
 		const content = {} :: { Instance }
 
 		for _, name in sorted_names(root.groups) do
-			table.insert(content, build_branch(root.groups[name], name))
+			table.insert(content, build_branch(root.groups[name], name, name))
 		end
 
 		return content
@@ -276,5 +305,8 @@ return function(props: props)
 
 		on_geometry = props.on_geometry,
 		content = frame,
+
+		dirty = any_dirty,
+		on_reset = restore_all,
 	}
 end

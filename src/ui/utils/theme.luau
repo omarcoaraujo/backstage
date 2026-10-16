@@ -22,6 +22,7 @@ return table.freeze {
 
 	field_height = 20,
 	input_width = 56,
+	reset_width = 18,
 
 	padding = 10,
 	indent = 12,
