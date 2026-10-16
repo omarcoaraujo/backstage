@@ -1,8 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.8.0
 
 - The window now starts with every group closed.
+- Buttons and groups can now have a hint that shows when you hover them.
+- Groups now have a reset arrow that puts back every value inside them, and the title bar has one that puts back all of them.
+- Values shown as read-only now follow the game while the window is open, instead of staying at the value they had when it opened.
+- Numbers and vectors now keep three decimals, so what you see is what is saved.
+- The window is a little wider, so long numbers fit.
 - Configs can be grouped under one name by writing it with a dot, such as "pet.drops" and "pet.skins" inside a "pet" group, and their edits are saved to the right script. Studio warns when two such configs define the same value.
 
 ## 0.7.0
