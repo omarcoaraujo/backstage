@@ -15,6 +15,9 @@ type member =
 	| { kind: "entry", path: string }
 	| { kind: "button", button: button.button }
 
+--// Variables
+const declared = {} :: { [string]: tree }
+
 --// Functions
 const function read_only()
 	error("attempt to modify a read-only table", 3)
@@ -123,14 +126,43 @@ const function freeze_copy<T>(source: T): T
 	return frozen :: T
 end
 
+const function shadowed_key(outer: string, outer_defaults: tree, inner: string): string?
+	if string.sub(inner, 1, #outer + 1) ~= `{outer}.` then return nil end
+	const key = string.match(string.sub(inner, #outer + 2), "^[^%.]+") :: string
+
+	if outer_defaults[key] == nil then return nil end
+	return key
+end
+
+const function warn_shadowed(name: string, defaults: tree)
+	for other, other_defaults in declared do
+		if other == name then continue end
+
+		const inside_other = shadowed_key(other, other_defaults, name)
+		const inside_name = shadowed_key(name, defaults, other)
+		
+		const key = inside_other or inside_name
+		if not key then continue end
+
+		const outer = if inside_other then other else name
+		warn(
+			`[backstage] config "{other}" and "{name}" both define "{outer}.{key}", so edits to it are saved to the longer name`
+		)
+	end
+
+	declared[name] = defaults
+end
+
 const function config<settings, limits>(name: string, defaults: settings, options: options<limits>?): settings
 	if not mode.active() then return freeze_copy(defaults) end
+	warn_shadowed(name, defaults :: any)
+
 	const given_limits = if options then options.limits else nil :: any
-
 	const given_hints = if options then options.hints else nil :: any
+	
 	const group = build_group(defaults :: any, given_limits :: tree?, given_hints :: tree?, name)
-
 	registry.announce()
+
 	return group :: any
 end
 
