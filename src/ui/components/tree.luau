@@ -58,8 +58,6 @@ const function tree(props: props)
 				tree {
 					name = label,
 					value = child_table,
-
-					open = false,
 					depth = depth + 1,
 				}
 			)

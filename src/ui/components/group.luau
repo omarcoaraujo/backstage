@@ -54,7 +54,7 @@ return function(props: props)
 	const children = (props.content or {}) :: { Instance }
 	local last = nil :: Instance?
 
-	const open = vide.source(props.open ~= false)
+	const open = vide.source(props.open == true)
 	const hovered = vide.source(false)
 	const last_height = vide.source(0)
 
