@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The window now starts with every group closed.
+- Configs can be grouped under one name by writing it with a dot, such as "pet.drops" and "pet.skins" inside a "pet" group, and their edits are saved to the right script. Studio warns when two such configs define the same value.
+
 ## 0.7.0
 
 - The window can now be shown inside a storybook such as UI Labs while you edit in Studio, without pressing play, and it keeps its position and size every time the story reloads. The close button hides it and Ctrl + B brings it back.
