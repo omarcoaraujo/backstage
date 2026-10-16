@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- Groups no longer take a hint, only values and buttons do.
+
 ## 0.8.0
 
 - The window now starts with every group closed.
