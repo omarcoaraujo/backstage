@@ -68,7 +68,7 @@ return {
 		assert(registry.list()[1].hint == "How fast")
 	end,
 
-	button_and_group_hints_travel_in_the_snapshot = function()
+	a_button_hint_travels_in_the_snapshot = function()
 		fresh()
 		registry.add_button(
 			"pets.respawn",
@@ -78,7 +78,6 @@ return {
 			"Brings it back"
 		)
 
-		registry.add_group_hint("pets", "Everything about pets")
 		const snapshot = registry.snapshot()
 		assert(snapshot.buttons[1].hint == "Brings it back")
 
@@ -86,7 +85,6 @@ return {
 		registry.import(snapshot)
 
 		assert(registry.list_buttons()[1].hint == "Brings it back")
-		assert(registry.group_hint "pets" == "Everything about pets")
 	end,
 
 	dirty_looks_only_inside_the_group = function()

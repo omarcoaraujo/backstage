@@ -246,7 +246,6 @@ return function(props: props)
 
 		return group {
 			name = name,
-			hint = registry.group_hint(path),
 			content = content,
 
 			dirty = dirty,

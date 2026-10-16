@@ -8,7 +8,6 @@ const px = require "../utils/px"
 const theme = require "../utils/theme"
 
 --// Components
-const hint = require "./hint"
 const reset_button = require "./reset_button"
 
 --// Constants
@@ -30,7 +29,6 @@ type props = {
 	name: string,
 	open: boolean?,
 	content: unknown?,
-	hint: string?,
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
@@ -62,22 +60,13 @@ return function(props: props)
 	const children = (props.content or {}) :: { Instance }
 
 	local last = nil :: Instance?
-	local header = nil :: TextButton?
 
 	const open = vide.source(props.open == true)
 	const hovered = vide.source(false)
-
 	const last_height = vide.source(0)
-	const tip = hint {
-		text = props.hint,
-		anchor = function()
-			return header
-		end,
-	}
 
 	for _, child in children do
 		if child.Name == "buttons" then continue end
-
 		tick(child)
 		last = child
 	end
@@ -105,12 +94,10 @@ return function(props: props)
 
 	const function on_enter()
 		hovered(true)
-		tip.on_enter()
 	end
 
 	const function on_leave()
 		hovered(false)
-		tip.on_leave()
 	end
 
 	const function reset_visible()
@@ -131,7 +118,7 @@ return function(props: props)
 		return theme.title_background
 	end
 
-	header = vide.create "TextButton" {
+	const header = vide.create "TextButton" {
 		Name = "header",
 		LayoutOrder = 1,
 
@@ -151,7 +138,6 @@ return function(props: props)
 		Activated = overlay.guard(toggle),
 		MouseEnter = on_enter,
 		MouseLeave = on_leave,
-		InputBegan = tip.on_input,
 
 		vide.create "UIPadding" {
 			PaddingLeft = px.udim(0, theme.padding + ARROW_SIZE + ARROW_GAP),
@@ -192,7 +178,6 @@ return function(props: props)
 		},
 
 		header,
-
 		vide.create "Frame" {
 			Name = "body",
 			LayoutOrder = 2,

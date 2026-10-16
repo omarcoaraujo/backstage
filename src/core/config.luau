@@ -5,9 +5,6 @@ const mode = require "./mode"
 const registry = require "./registry"
 const tracker = require "./tracker"
 
---// Constants
-const GROUP_HINT_KEY = "_"
-
 --// Types
 type tree = { [string]: unknown }
 export type options<limits> = { limits: limits?, hints: { [string]: any }? }
@@ -58,31 +55,19 @@ const function resolve(
 	return value
 end
 
-const function hint_text(hint: unknown): string?
-	if type(hint) == "string" then return hint end
-	if type(hint) ~= "table" then return nil end
-
-	const own = (hint :: tree)[GROUP_HINT_KEY]
-	if type(own) ~= "string" then return nil end
-
-	return own
-end
-
-const function build_group(source: node, limits: tree?, group_hint: unknown, path: string)
+const function build_group(source: node, limits: tree?, hints: tree?, path: string)
 	const members = {} :: { [string]: member }
-	const hints = if type(group_hint) == "table" then group_hint :: tree else nil
-
-	const own_hint = hint_text(group_hint)
-	if own_hint then registry.add_group_hint(path, own_hint) end
 
 	for key, value in source do
 		const member_path = `{path}.{key}`
 		const limit = if limits then limits[key] else nil
+
 		const hint = if hints then hints[key] else nil
+		const text = if type(hint) == "string" then hint else nil
 
 		if type(value) == "table" and button.is_button(value) then
 			const pressable = value :: button.button
-			registry.add_button(member_path, key, path, pressable, if type(hint) == "string" then hint else nil)
+			registry.add_button(member_path, key, path, pressable, text)
 
 			members[key] = { kind = "button", button = pressable }
 			continue
@@ -91,7 +76,7 @@ const function build_group(source: node, limits: tree?, group_hint: unknown, pat
 		if type(value) == "table" then
 			members[key] = {
 				kind = "group",
-				proxy = build_group(value :: node, limit :: tree?, hint, member_path),
+				proxy = build_group(value :: node, limit :: tree?, hint :: tree?, member_path),
 			}
 
 			continue
@@ -100,7 +85,6 @@ const function build_group(source: node, limits: tree?, group_hint: unknown, pat
 		const descriptor = kinds.infer(value, limit :: kinds.limit?)
 		if not descriptor then error(`backstage: unsupported value for {member_path}`, 0) end
 
-		const text = if type(hint) == "string" then hint else nil
 		registry.add(member_path, key, path, descriptor, value :: kinds.value, text)
 		members[key] = { kind = "entry", path = member_path }
 	end
@@ -177,7 +161,7 @@ const function config<settings, limits>(name: string, defaults: settings, option
 	const given_limits = if options then options.limits else nil :: any
 	const given_hints = if options then options.hints else nil :: any
 
-	const group = build_group(defaults :: any, given_limits :: tree?, given_hints, name)
+	const group = build_group(defaults :: any, given_limits :: tree?, given_hints :: tree?, name)
 	registry.announce()
 
 	return group :: any

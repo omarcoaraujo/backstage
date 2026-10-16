@@ -95,30 +95,11 @@ return {
 		assert(hints["pets.mode"] == nil)
 	end,
 
-	studio_keeps_hints_of_groups_and_buttons = function()
+	studio_keeps_the_hint_of_a_button = function()
 		fresh()
+		backstage.config("pets", defaults(), { hints = { respawn = "Brings the pet back" } })
 
-		backstage.config("pets", defaults(), {
-			hints = {
-				_ = "Everything about pets",
-				respawn = "Brings the pet back",
-				trail = { _ = "How the trail looks", length = "Seconds to fade" },
-			},
-		})
-
-		assert(registry.group_hint "pets" == "Everything about pets")
-		assert(registry.group_hint "pets.trail" == "How the trail looks")
 		assert(registry.list_buttons()[1].hint == "Brings the pet back")
-
-		for _, entry in registry.list() do
-			if entry.path == "pets.trail.length" then assert(entry.hint == "Seconds to fade") end
-		end
-	end,
-
-	studio_takes_a_text_hint_as_the_hint_of_a_group = function()
-		fresh()
-		backstage.config("pets", defaults(), { hints = { trail = "The trail" } })
-		assert(registry.group_hint "pets.trail" == "The trail")
 	end,
 
 	studio_ignores_a_hint_that_is_not_text = function()

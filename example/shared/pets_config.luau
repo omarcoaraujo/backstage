@@ -32,13 +32,11 @@ return backstage.config("pets", {
 	},
 
 	hints = {
-		_ = "Settings of the pet that follows the player",
-
 		distance = "How far behind the player the pet stays",
 		speed = "Higher snaps to the target, lower drifts",
 
 		mode = "Follow trails the player, orbit circles around",
 		respawn = "Puts the pet back next to the player",
-		trail = { _ = "The line the pet leaves behind", length = "Seconds the trail takes to fade" },
+		trail = { length = "Seconds the trail takes to fade" },
 	},
 })

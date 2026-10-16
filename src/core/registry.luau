@@ -43,7 +43,6 @@ export type snapshot_entry = {
 export type snapshot = {
 	entries: { snapshot_entry },
 	buttons: { { path: string, name: string, group: string, hint: string? } },
-	groups: { [string]: string }?,
 }
 
 export type remote = {
@@ -56,8 +55,6 @@ type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
 --// Variables
 const entries = {} :: { [string]: entry }
 const buttons = {} :: { [string]: button_entry }
-
-const group_hints = {} :: { [string]: string }
 const listeners = {} :: { listener }
 
 const register_listeners = {} :: { () -> () }
@@ -115,14 +112,6 @@ const function add_button(path: string, name: string, group: string, source: but
 		hint = hint,
 		remote = existing ~= nil and existing.remote,
 	}
-end
-
-const function add_group_hint(path: string, hint: string)
-	group_hints[path] = hint
-end
-
-const function group_hint(path: string): string?
-	return group_hints[path]
 end
 
 const function get(path: string): kinds.value?
@@ -211,7 +200,7 @@ const function connect_remote(handler: remote?)
 end
 
 const function snapshot(only_local: boolean?)
-	const result = { entries = {}, buttons = {}, groups = table.clone(group_hints) }
+	const result = { entries = {}, buttons = {} }
 
 	for _, path in sorted_paths(entries) do
 		const found = entries[path]
@@ -270,17 +259,11 @@ const function import(source: snapshot)
 		existing.hint = incoming.hint
 	end
 
-	if source.groups then
-		for path, text in source.groups do
-			group_hints[path] = text
-		end
-	end
-
 	announce()
 end
 
 const function adopt(source: snapshot)
-	const missing = { entries = {}, buttons = {}, groups = source.groups } :: snapshot
+	const missing = { entries = {}, buttons = {} } :: snapshot
 
 	for _, incoming in source.entries do
 		if not entries[incoming.path] then table.insert(missing.entries, incoming) end
@@ -335,7 +318,6 @@ end
 const function reset()
 	table.clear(entries)
 	table.clear(buttons)
-	table.clear(group_hints)
 
 	table.clear(listeners)
 	table.clear(register_listeners)
@@ -348,12 +330,10 @@ end
 return table.freeze {
 	add = add,
 	add_button = add_button,
-	add_group_hint = add_group_hint,
 	rebase = rebase,
 
 	get = get,
 	set = set,
-	group_hint = group_hint,
 
 	apply = apply,
 	restore = restore,
