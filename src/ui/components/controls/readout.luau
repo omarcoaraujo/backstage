@@ -1,3 +1,6 @@
+--// Services
+const RunService = game:GetService "RunService"
+
 --// Packages
 const vide = require "../../../../roblox_packages/vide"
 
@@ -16,10 +19,12 @@ type props = {
 
 --// Component
 return function(props: props)
-	const function text()
-		return format.value(props.value())
+	const text = vide.source(format.value(props.value()))
+	const function on_step()
+		text(format.value(props.value()))
 	end
 
+	vide.cleanup(RunService.Heartbeat:Connect(on_step))
 	return vide.create "TextLabel" {
 		Name = "readout",
 		AnchorPoint = Vector2.new(0, 0.5),
