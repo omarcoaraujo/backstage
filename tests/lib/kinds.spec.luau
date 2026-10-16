@@ -49,6 +49,22 @@ return {
 		assert(kinds.coerce(descriptor, 0.30000000000000004) == 0.3)
 	end,
 
+	number_keeps_three_decimals = function()
+		const descriptor = number()
+		assert(kinds.coerce(descriptor, 1.23456) == 1.235)
+		assert(kinds.coerce(descriptor, 0.0004) == 0)
+	end,
+
+	number_keeps_the_limits_after_rounding = function()
+		const descriptor = number { min = 0, max = 1.0004 }
+		assert(kinds.coerce(descriptor, 5) == 1.0004)
+	end,
+
+	vector3_keeps_three_decimals = function()
+		const rounded = kinds.coerce(kinds.infer(Vector3.zero) :: kinds.descriptor, Vector3.new(1.23456, 2, 0.0004))
+		assert(rounded == Vector3.new(1.235, 2, 0))
+	end,
+
 	number_rejects_nan_inf_and_other_types = function()
 		const descriptor = number()
 		assert(kinds.coerce(descriptor, 0 / 0) == nil)

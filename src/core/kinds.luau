@@ -1,3 +1,6 @@
+--// Modules
+const precision = require "./precision"
+
 --// Constants
 const PRECISION = 10
 
@@ -54,7 +57,7 @@ const function snap(value: number, descriptor: descriptor)
 		result = tonumber(string.format(`%.{PRECISION}g`, result)) :: number
 	end
 
-	return math.clamp(result, descriptor.min or -math.huge, descriptor.max or math.huge)
+	return math.clamp(precision.round(result), descriptor.min or -math.huge, descriptor.max or math.huge)
 end
 
 const function coerce(descriptor: descriptor, value: unknown): value?
@@ -82,7 +85,8 @@ const function coerce(descriptor: descriptor, value: unknown): value?
 
 	if kind == "vector3" then
 		if typeof(value) ~= "Vector3" then return nil end
-		return value :: Vector3
+		const vector = value :: Vector3
+		return Vector3.new(precision.round(vector.X), precision.round(vector.Y), precision.round(vector.Z))
 	end
 
 	if kind == "choice" then

@@ -1,15 +1,14 @@
+--// Modules
+const precision = require "../../core/precision"
+
 --// Utils
 const hex = require "./hex"
 
---// Constants
-const DECIMALS = 3
-const DECIMAL_SCALE = 10 ^ DECIMALS
-
 --// Functions
 const function number(value: number): string
-	const rounded = math.round(value * DECIMAL_SCALE) / DECIMAL_SCALE
+	const rounded = precision.round(value)
 	if rounded == 0 then return "0" end
-	return (string.gsub(string.format(`%.{DECIMALS}f`, rounded), "%.?0+$", ""))
+	return (string.gsub(string.format(`%.{precision.decimals}f`, rounded), "%.?0+$", ""))
 end
 
 const function vector3(value: Vector3): string
