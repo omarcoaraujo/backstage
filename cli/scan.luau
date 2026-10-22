@@ -96,5 +96,27 @@ const function scan(root: string)
 	return found, dynamic
 end
 
+const function collect_directories(directory: string, relative: string, found: { string }, ignored: ignored)
+	table.insert(found, directory)
+
+	for _, entry in fs.listDirectory(directory) do
+		if entry.type ~= "dir" then continue end
+		const relative_path = if relative == "" then entry.name else `{relative}/{entry.name}`
+
+		if is_skipped(entry.name, relative_path, ignored) then continue end
+		collect_directories(`{directory}/{entry.name}`, relative_path, found, ignored)
+	end
+end
+
+const function directories(root: string)
+	const found = {} :: { string }
+	collect_directories(root, "", found, read_ignored(root))
+	return found
+end
+
 --// End
-return { scan = scan }
+return {
+	scan = scan,
+	directories = directories,
+	has_extension = has_extension,
+}

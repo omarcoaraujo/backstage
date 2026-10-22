@@ -168,6 +168,63 @@ const function owning_name(names: { string }, path: string): string?
 	return owner
 end
 
+const function collect_calls(node, calls: { any })
+	if type(node) ~= "table" then return end
+
+	if node.tag == "call" and node.func.tag == "indexname" and node.func.index.text == "config" then
+		table.insert(calls, node)
+	end
+
+	for key, child in node do
+		if key == "location" or key == "leadingTrivia" or key == "trailingTrivia" then continue end
+		collect_calls(child, calls)
+	end
+end
+
+const function collect_literals(table_node, prefix: string, found: { [string]: found })
+	local items = 0
+
+	for _, entry in table_node.entries do
+		local key = nil :: string?
+
+		if entry.kind == "list" then
+			items += 1
+			key = tostring(items)
+		elseif entry.key then
+			key = entry.key.text
+		end
+
+		if not key then continue end
+		const path = `{prefix}.{key}`
+
+		if entry.value.tag == "table" then
+			collect_literals(entry.value, path, found)
+			continue
+		end
+
+		if is_literal(entry.value) then
+			found[path] = { tag = entry.value.tag, range = to_range(entry.value.location) }
+		end
+	end
+end
+
+const function literals(source: string): { [string]: found }
+	const found = {} :: { [string]: found }
+	const calls = {}
+	collect_calls(parser.parse(source).root, calls)
+
+	for _, call in calls do
+		const first = call.arguments[1]
+		const name = if first then string_text(first.node) else nil
+		const defaults = call.arguments[2]
+
+		if not name or not defaults or defaults.node.tag ~= "table" then continue end
+		collect_literals(defaults.node, name, found)
+	end
+
+	return found
+end
+
 const function locate(source: string, path: string): (found?, string?)
 	const names = config_names(source)
 	const name = owning_name(names, path)
@@ -212,6 +269,8 @@ end
 --// End
 return {
 	locate = locate,
+	literals = literals,
+
 	config_names = config_names,
 	owning_name = owning_name,
 }

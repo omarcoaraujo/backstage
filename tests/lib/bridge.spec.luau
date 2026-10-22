@@ -23,6 +23,7 @@ type fake = {
 	open: () -> (),
 	drop: () -> (),
 	fail: () -> (),
+	receive: (message: string) -> (),
 }
 
 --// Functions
@@ -44,7 +45,7 @@ end
 
 const function fake_client(): fake
 	const opened, fire_opened = signal()
-	const received = signal()
+	const received, fire_received = signal()
 
 	const failed, fire_failed = signal()
 	const closed, fire_closed = signal()
@@ -78,6 +79,7 @@ const function fake_client(): fake
 
 		open = fire_opened,
 		drop = fire_closed,
+		receive = fire_received,
 
 		fail = function()
 			fire_failed(nil, "refused")
@@ -369,6 +371,56 @@ return {
 		assert(clients[1].closes() == 1)
 
 		assert(#clients == 1)
+		bridge.reset()
+	end,
+
+	applies_a_change_pushed_from_the_script_without_sending_it_back = function()
+		const clients = start()
+		clients[1].open()
+
+		clients[1].receive(HttpService:JSONEncode { pushed = { { path = "pets.speed", kind = "number", value = 9 } } })
+		task.wait(SETTLE)
+
+		assert(registry.get "pets.speed" == 9)
+		assert(not registry.dirty())
+
+		assert(#clients[1].sent == 0)
+		bridge.reset()
+	end,
+
+	ignores_a_pushed_change_it_cannot_apply = function()
+		const clients = start()
+		clients[1].open()
+
+		clients[1].receive(
+			HttpService:JSONEncode { pushed = { { path = "pets.speed", kind = "string", value = "fast" } } }
+		)
+		clients[1].receive(HttpService:JSONEncode { pushed = { { path = "cats.speed", kind = "number", value = 9 } } })
+
+		assert(registry.get "pets.speed" == 1)
+		bridge.reset()
+	end,
+
+	keeps_the_connection_open_to_hear_the_script = function()
+		bridge.reset()
+		registry.reset()
+
+		const clients = {} :: { fake }
+		bridge.serve(nil, {
+			idle = 0.05,
+			keep = true,
+
+			create_client = function()
+				const created = fake_client()
+				table.insert(clients, created)
+				return created.client
+			end,
+		})
+
+		clients[1].open()
+		task.wait(SETTLE)
+
+		assert(clients[1].closes() == 0)
 		bridge.reset()
 	end,
 

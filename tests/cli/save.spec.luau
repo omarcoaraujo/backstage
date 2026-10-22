@@ -21,7 +21,7 @@ end
 const function with_project(check: (root: string, state: save.state) -> ())
 	const root = make_project()
 	const ok, err = pcall(function()
-		check(root, { index = scan.scan(root) })
+		check(root, { index = scan.scan(root), literals = {}, saving = 0 })
 	end)
 
 	fs.removeDirectory(root, { recursive = true })
@@ -43,6 +43,13 @@ return {
 			const refusals = save.save_edits(root, state, message { number_edit("pets.speed", 5) })
 			assert(refusals and #refusals == 0)
 			assert(fs.readFileToString(`{root}/pets.luau`) == 'backstage.config("pets", { speed = 5 })')
+		end)
+	end,
+
+	remembers_the_values_it_wrote_so_they_are_not_sent_back = function()
+		with_project(function(root, state)
+			save.save_edits(root, state, message { number_edit("pets.speed", 5) })
+			assert(state.literals[`{root}/pets.luau`]["pets.speed"].value == 5)
 		end)
 	end,
 

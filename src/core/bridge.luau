@@ -2,6 +2,7 @@
 const HttpService = game:GetService "HttpService"
 
 --// Modules
+const kinds = require "./kinds"
 const registry = require "./registry"
 
 --// Constants
@@ -36,7 +37,9 @@ export type deps = {
 
 	idle: number?,
 	grace: number?,
+
 	hold: boolean?,
+	keep: boolean?,
 }
 
 --// Variables
@@ -49,6 +52,9 @@ local connected = false
 local scheduled = false
 
 local holding = false
+local keeping = false
+local pushing = false
+
 local finishing = false
 local on_flushed = nil :: (() -> ())?
 
@@ -85,7 +91,7 @@ const function go_dormant()
 end
 
 const function arm_idle()
-	if idle_armed then return end
+	if idle_armed or keeping then return end
 	idle_armed = true
 
 	const current = generation
@@ -176,9 +182,55 @@ const function schedule_flush()
 	end)
 end
 
+const function to_value(edit: { kind: unknown, value: unknown }): kinds.value?
+	const kind, value = edit.kind, edit.value
+
+	if kind == "number" and type(value) == "number" then return value end
+	if kind == "boolean" and type(value) == "boolean" then return value end
+	if kind == "string" and type(value) == "string" then return value end
+
+	if kind == "color" and type(value) == "table" then
+		const rgb = value :: { [string]: number }
+		return Color3.new(rgb.r / 255, rgb.g / 255, rgb.b / 255)
+	end
+
+	if kind == "vector3" and type(value) == "table" then
+		const axes = value :: { [string]: number }
+		return Vector3.new(axes.x, axes.y, axes.z)
+	end
+
+	return nil
+end
+
+const function push_edits(edits: { unknown })
+	for _, item in edits do
+		if type(item) ~= "table" then continue end
+
+		const edit = item :: { path: unknown, kind: unknown, value: unknown }
+		const value = to_value(edit)
+
+		if type(edit.path) ~= "string" or value == nil then continue end
+		registry.push(edit.path, value)
+	end
+
+	return true
+end
+
+const function apply_pushed(edits: { unknown })
+	pushing = true
+	const ok, reason = pcall(push_edits, edits)
+	pushing = false
+
+	if not ok then warn(`[backstage] could not apply the change made in the script: {reason}`) end
+	registry.announce()
+end
+
 const function report(message: string)
 	const ok, reply = pcall(HttpService.JSONDecode, HttpService, message)
-	if not ok or type(reply) ~= "table" or type(reply.refused) ~= "table" then return end
+	if not ok or type(reply) ~= "table" then return end
+
+	if type(reply.pushed) == "table" then apply_pushed(reply.pushed) end
+	if type(reply.refused) ~= "table" then return end
 
 	for _, refusal in reply.refused do
 		warn(`[backstage] could not save {refusal.path} to the script: {refusal.reason}`)
@@ -239,6 +291,8 @@ const function connect()
 end
 
 const function on_change(path: string, value: unknown)
+	if pushing then return end
+
 	pending[path] = value
 	touch()
 
@@ -261,6 +315,9 @@ const function reset()
 	scheduled = false
 
 	holding = false
+	keeping = false
+	pushing = false
+
 	finishing = false
 	on_flushed = nil
 
@@ -329,6 +386,7 @@ const function serve(port: number?, given: deps?)
 
 	grace = if given and given.grace then given.grace else GRACE
 	holding = given ~= nil and given.hold == true
+	keeping = given ~= nil and given.keep == true
 
 	stop_listening = registry.on_change(on_change)
 	serving = true

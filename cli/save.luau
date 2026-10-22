@@ -4,11 +4,19 @@ const fs = require "@std/fs"
 const json = require "@std/json"
 const locate = require "./locate"
 const scan = require "./scan"
+const values = require "./values"
+
+--// Constants
+const MAX_READS = 3
 
 --// Types
 type edit = apply.edit
 type refusal = apply.refusal
-export type state = { index: scan.index }
+export type state = {
+	index: scan.index,
+	literals: { [string]: values.snapshot },
+	saving: number,
+}
 
 --// Functions
 const function index_names(index: scan.index)
@@ -45,6 +53,35 @@ const function group_by_config(edits: { edit }, names: { string })
 	return groups
 end
 
+const function rewrite_file(state: state, file: string, edits: { edit })
+	local source = fs.readFileToString(file)
+	local updated, refused = apply.apply(source, edits)
+
+	for _ = 1, MAX_READS do
+		const current = fs.readFileToString(file)
+		if current == source then break end
+
+		source = current
+		updated, refused = apply.apply(source, edits)
+	end
+
+	if updated ~= source then
+		fs.writeStringToFile(file, updated)
+		state.literals[file] = values.read(updated)
+	end
+
+	return refused
+end
+
+const function rewrite(state: state, file: string, edits: { edit })
+	state.saving += 1
+	const ok, result = pcall(rewrite_file, state, file, edits)
+	state.saving -= 1
+
+	if not ok then error(result, 0) end
+	return result :: { refusal }
+end
+
 const function save_edits(root: string, state: state, message: string)
 	const ok, payload = pcall(json.deserialize, message)
 	if not ok or type(payload) ~= "table" or type(payload.edits) ~= "table" then return nil end
@@ -79,10 +116,7 @@ const function save_edits(root: string, state: state, message: string)
 	end
 
 	for file, edits in by_file do
-		const source = fs.readFileToString(file)
-		const updated, refused = apply.apply(source, edits)
-
-		if updated ~= source then fs.writeStringToFile(file, updated) end
+		const refused = rewrite(state, file, edits)
 		table.move(refused, 1, #refused, #refusals + 1, refusals)
 	end
 
@@ -90,4 +124,6 @@ const function save_edits(root: string, state: state, message: string)
 end
 
 --// End
-return { save_edits = save_edits }
+return {
+	save_edits = save_edits,
+}

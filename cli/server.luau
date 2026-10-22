@@ -1,8 +1,12 @@
 --// Modules
+const apply = require "./apply"
+const guard = require "./guard"
 const json = require "@std/json"
+const output = require "./output"
 const save = require "./save"
 const scan = require "./scan"
 const server = require "@lute/net/server"
+const watch = require "./watch"
 
 --// Constants
 const HOSTNAME = "127.0.0.1"
@@ -14,18 +18,43 @@ const function reply(socket, body: unknown)
 end
 
 const function serve(root: string, port: number?)
-	const state = { index = scan.scan(root) } :: save.state
+	const listening = port or DEFAULT_PORT
+	const state = { index = scan.scan(root), literals = {}, saving = 0 } :: save.state
+	const sockets = {}
 
-	return server.serve {
+	const function push(edits: { apply.edit })
+		const paths = {}
+
+		for _, edit in edits do
+			table.insert(paths, edit.path)
+		end
+
+		for socket in sockets do
+			reply(socket, { pushed = edits })
+		end
+
+		output.pushed(paths)
+	end
+
+	const started = server.serve {
 		hostname = HOSTNAME,
-		port = port or DEFAULT_PORT,
+		port = listening,
 
 		handler = function(request, running)
+			if not guard.allows(request.headers, listening) then return { status = 403, body = "forbidden" } end
 			if running:upgrade(request) then return nil end
 			return { status = 426, body = "websocket only" }
 		end,
 
 		websocket = {
+			open = function(socket)
+				sockets[socket] = true
+			end,
+
+			close = function(socket)
+				sockets[socket] = nil
+			end,
+
 			message = function(socket, message)
 				const refusals = save.save_edits(root, state, tostring(message))
 
@@ -38,7 +67,15 @@ const function serve(root: string, port: number?)
 			end,
 		},
 	}
+
+	const watching, reason = pcall(watch.start, root, state, push)
+	if not watching then output.warning(`edits made by hand in the scripts will not reach the game: {reason}`) end
+
+	return started
 end
 
 --// End
-return { serve = serve, DEFAULT_PORT = DEFAULT_PORT }
+return {
+	serve = serve,
+	DEFAULT_PORT = DEFAULT_PORT,
+}

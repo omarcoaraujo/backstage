@@ -162,6 +162,28 @@ return {
 		assert(registry.get "pets.speed" == 1)
 	end,
 
+	push_changes_the_value_and_the_default = function()
+		fresh()
+		declare_speed(1)
+
+		assert(registry.push("pets.speed", 7))
+		assert(registry.get "pets.speed" == 7)
+		assert(not registry.dirty())
+
+		assert(registry.set("pets.speed", 3))
+		assert(registry.restore "pets.speed")
+		assert(registry.get "pets.speed" == 7)
+	end,
+
+	push_refuses_a_path_it_does_not_know_and_a_wrong_kind = function()
+		fresh()
+		declare_speed(1)
+
+		assert(not registry.push("pets.size", 7))
+		assert(not registry.push("pets.speed", "fast"))
+		assert(registry.get "pets.speed" == 1)
+	end,
+
 	restore_forwards_to_the_server_with_the_server_default = function()
 		const edits = fresh()
 		registry.import(incoming(9, 4))

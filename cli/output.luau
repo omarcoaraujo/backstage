@@ -14,6 +14,12 @@ const function warning(message: string)
 	print(`{tint.yellow.bold "warning:"} {message}`)
 end
 
+const function pushed(paths: { string })
+	for _, path in paths do
+		print(`{tint.cyan.bold "backstage"} {tint.bold(path)} changed in the script, sent to the game`)
+	end
+end
+
 const function usage()
 	print(`{tint.dim "usage:"} {USAGE}`)
 end
@@ -26,4 +32,11 @@ const function serving(count: number, root: string, address: string)
 end
 
 --// End
-return { failure = failure, warning = warning, usage = usage, serving = serving }
+return {
+	failure = failure,
+	warning = warning,
+
+	pushed = pushed,
+	usage = usage,
+	serving = serving,
+}

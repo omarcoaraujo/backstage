@@ -50,6 +50,12 @@ const function line_start(source: string, line: number)
 	return start
 end
 
+const function slice(source: string, range)
+	const first = line_start(source, range.begin_line) + range.begin_column - 1
+	const last = line_start(source, range.end_line) + range.end_column - 1
+	return string.sub(source, first, last - 1)
+end
+
 const function replace(source: string, range, text: string)
 	const first = line_start(source, range.begin_line) + range.begin_column - 1
 	const last = line_start(source, range.end_line) + range.end_column - 1
@@ -57,4 +63,8 @@ const function replace(source: string, range, text: string)
 end
 
 --// End
-return { literal = literal, replace = replace }
+return {
+	literal = literal,
+	replace = replace,
+	slice = slice,
+}

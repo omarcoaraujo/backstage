@@ -58,6 +58,7 @@ const buttons = {} :: { [string]: button_entry }
 const listeners = {} :: { listener }
 
 const register_listeners = {} :: { () -> () }
+const groups = {} :: { [unknown]: string }
 local remote = nil :: remote?
 
 --// Functions
@@ -114,6 +115,14 @@ const function add_button(path: string, name: string, group: string, source: but
 	}
 end
 
+const function add_group(proxy: unknown, path: string)
+	groups[proxy] = path
+end
+
+const function group_path(proxy: unknown): string?
+	return groups[proxy]
+end
+
 const function get(path: string): kinds.value?
 	const found = entries[path]
 	if not found then return nil end
@@ -158,6 +167,17 @@ end
 
 const function apply(path: string, value: unknown)
 	return write(path, value, false)
+end
+
+const function push(path: string, value: unknown)
+	const found = entries[path]
+	if not found then return false end
+
+	const coerced = kinds.coerce(found.descriptor, value)
+	if coerced == nil then return false end
+
+	found.default = coerced
+	return write(path, coerced, true)
 end
 
 const function restore(path: string)
@@ -321,6 +341,7 @@ const function reset()
 
 	table.clear(listeners)
 	table.clear(register_listeners)
+	table.clear(groups)
 
 	tracker.reset()
 	remote = nil
@@ -330,15 +351,21 @@ end
 return table.freeze {
 	add = add,
 	add_button = add_button,
+
+	add_group = add_group,
 	rebase = rebase,
 
 	get = get,
+	group_path = group_path,
 	set = set,
 
 	apply = apply,
+	push = push,
+
 	restore = restore,
 	restore_group = restore_group,
 
+	inside = inside,
 	dirty = dirty,
 	press = press,
 
