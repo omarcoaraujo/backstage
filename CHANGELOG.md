@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0
+
+- Editing a config script by hand while the game is running now updates the game, the window and every player, without a restart.
+- Reacting to a change can now watch a whole group, or every value at once.
+- The saving tool now refuses connections from web pages.
+- The example shows a Charm label that follows the values, and the last change.
+
 ## 0.8.2
 
 - Groups can now be closed while searching, and they open again when the search text changes.

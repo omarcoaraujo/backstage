@@ -33,7 +33,8 @@ The read-only rows and expandable tables are built and shown in the UI stories, 
 
 - Plain reads: `config.speed`, no wrapper and no `.get()`
 - Reactive reads: a read inside a Vide scope or a Charm effect tracks itself and reruns when you tune the value
-- `on_change`: run a callback when a value changes, so code that caches a value stays live without a per-frame loop
+- `on_change`: run a callback when a value changes, so code that caches a value stays live without a per-frame loop. It also watches a whole group, or every value at once
+- Edit a config script by hand while playing and the game picks the new default up, without a restart
 - Works across the network: a value on the server is tuned from the same window, validated by the server and sent to every player
 - Buttons you press in the window and listen to in code
 
@@ -204,6 +205,16 @@ It fires on every change, from the window, from a restore and from the other sid
 
 Outside Studio it does nothing, and since nothing changes there, the game ships with the value you applied first. Code written this way, setting a property when it changes and not on every frame, is cheaper than a loop anyway. [`example/client/pets.luau`](example/client/pets.luau) does it for the pet's size and color, and keeps reading the rest every frame.
 
+To react to a whole group, or to every value of a config, pass the group instead. The callback gets the path that changed as a third argument, and it also gets it for a single value:
+
+```lua
+backstage.on_change(config.trail, function(value: unknown, previous: unknown, path: string)
+	print(path, previous, value)
+end)
+```
+
+To hear every change of every config, which is handy for a log or a debug overlay, use `backstage.on_any_change`. Its callback takes the path first: `(path, value, previous)`. Both return a function that disconnects them and do nothing outside Studio. [`example/client/status.luau`](example/client/status.luau) shows the two ways to react side by side: a Charm effect that rewrites a label from the values it reads, and `on_any_change` that shows the last change.
+
 ### Opening the window
 
 Call `start` on the client, and on the server if you want to tune server values too:
@@ -265,6 +276,12 @@ backstage serve --port 34891
 ```
 
 Enable **Allow HTTP Requests** in the game settings of the place. The tool listens only on `127.0.0.1`, finds each config by name across the project, and refuses a name that is declared in two files or a value that is not a literal. The folder defaults to the current one, and `backstage serve path/to/project` picks another. `--port` is optional, and the same number goes to `backstage.start { port = 34891 }` if you change it.
+
+#### Editing the script by hand
+
+The tool also watches your scripts. When you change a default by hand while the game is running, the new number is sent to the game: the value and its reset target change, and the window and every player follow. Edits the window made itself are not sent back. The tool follows the literals it can read, the same ones it can write, and a new value or a config that was not running when you started the game needs a restart.
+
+The connection stays open during a play session so these changes can arrive. A web page cannot talk to the tool: it refuses any connection that comes from a browser, or that does not address `127.0.0.1`, `localhost` or `[::1]` on its own port.
 
 #### Values built by a helper function
 
