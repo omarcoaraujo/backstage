@@ -250,7 +250,7 @@ Without the tool, everything you tune lives in the play session and is lost when
 
 #### The file on disk is the source of truth
 
-Backstage never keeps its own copy of your numbers. The default written in the script on disk is the truth, and the window is only a way to change it. A value you tune and the same value you type into the script end up in the same place, so there is nothing to reconcile: no export, no stored overrides, and nothing to forget about.
+Backstage never saves its own copy of your numbers. The default written in the script on disk is the truth, and the window is only a way to change it. A value you tune and the same value you type into the script end up in the same place, so there is nothing to reconcile: no export, no stored overrides, and nothing to forget about.
 
 The tool writes every change you make in the window into the file as you make it. The reset button is not about what is saved: it appears when a value differs from the one you started tuning from, and it takes you back to that value. Editing the script on disk is different. The number you type becomes the new starting point, so the window shows it as the original and there is nothing to go back to, and no reset button.
 
@@ -306,7 +306,7 @@ A storybook reloads the story whenever the script changes, and that shapes how `
 
 ## Going to production
 
-`start` and `embed` do nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. There is no UI, no remote, no listener and no signal. It is not literally free: the library is still loaded, each `config` keeps one frozen copy of its defaults, and `config`, `button` and `on_change` check once per call whether Studio is running. Nothing runs after that, and reading a value is a plain table read. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode.
+`start` and `embed` do nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. There is no UI, no remote, no listener and no signal. It is not literally free: the library is still loaded, each `config` keeps one frozen copy of its defaults, and `config`, `button` and `on_change` check once per call whether Studio is running. Nothing runs after that, and reading a value is a plain table read. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode. Never ship a call to `enable`: on a live server it would let any player edit values and press buttons, because the server trusts every edit it receives while Backstage is on.
 
 ### Team Test
 
