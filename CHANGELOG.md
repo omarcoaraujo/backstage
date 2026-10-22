@@ -5,6 +5,8 @@
 - The window got a cleaner, minimal look, with softer borders, rounded corners and a blue accent.
 - Added a light theme, switched by a new button in the title bar, and a `theme` option on `start` to pick the one it opens with.
 - New reset icon.
+- Groups that were open stay open when a script is edited by hand while the game runs.
+- The reset button in the title bar no longer gets stuck visible after a script is edited by hand.
 - The window now stays on screen when the screen gets smaller.
 - Hints now open above the row by default and point at it with a small arrow.
 

@@ -31,6 +31,7 @@ const ARROW_DOWN = Vector2.new(ARROW_FRAME * 2, 0)
 type props = {
 	name: string,
 	open: boolean?,
+	on_toggle: ((open: boolean) -> ())?,
 	content: unknown?,
 
 	dirty: (() -> boolean)?,
@@ -100,6 +101,7 @@ return function(props: props)
 		end
 
 		open(not open())
+		if props.on_toggle then props.on_toggle(open()) end
 	end
 
 	vide.effect(function()

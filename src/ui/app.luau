@@ -87,6 +87,8 @@ return function(props: props)
 	px.use_px()
 
 	const appliers = {} :: { [string]: (value: kinds.value) -> () }
+	const opened = {} :: { [string]: boolean }
+
 	const frame = list {}
 	const revision = vide.source(0)
 
@@ -234,6 +236,10 @@ return function(props: props)
 			registry.restore_group(path)
 		end
 
+		const function on_toggle(open: boolean)
+			opened[path] = open
+		end
+
 		for _, entry in source.entries do
 			table.insert(content, entry_row(entry))
 		end
@@ -246,8 +252,10 @@ return function(props: props)
 
 		return group {
 			name = name,
+			open = opened[path],
 			content = content,
 
+			on_toggle = on_toggle,
 			dirty = dirty,
 			on_reset = on_reset,
 		}
@@ -275,10 +283,12 @@ return function(props: props)
 	end
 
 	const function rebuild()
+		revision(revision() + 1)
 		clear()
-		table.clear(appliers)
 
+		table.clear(appliers)
 		const destroy, content = vide.root(tree)
+
 		destroy_tree = destroy
 		items = content
 
