@@ -35,7 +35,7 @@ At a glance:
 - Limits and hints per value, a search bar, and a reset button on whatever you changed
 - Reads that are plain (`config.speed`) and also tracked, so code that depends on a value reruns when you tune it
 - Works across the network: a server value is tuned from the same window and sent to every player
-- Costs nothing in production: outside Studio there is no UI, no remote and no listener
+- Negligible cost in production: outside Studio there is no UI, no remote and no listener, and a value is a plain table read
 
 ## Install
 
@@ -306,7 +306,7 @@ A storybook reloads the story whenever the script changes, and that shapes how `
 
 ## Going to production
 
-`start` and `embed` do nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. There is no UI, no remote, no listener and no signal. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode.
+`start` and `embed` do nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. There is no UI, no remote, no listener and no signal. It is not literally free: the library is still loaded, each `config` keeps one frozen copy of its defaults, and `config`, `button` and `on_change` check once per call whether Studio is running. Nothing runs after that, and reading a value is a plain table read. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode.
 
 ### Team Test
 
