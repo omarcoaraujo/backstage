@@ -11,6 +11,7 @@ const button = require "./button"
 
 --// Constants
 const MAX_PER_ROW = 4
+const RIGHT_INSET = theme.padding + theme.reset_width
 
 --// Types
 export type item = { text: string, on_press: () -> (), hint: string? }
@@ -34,7 +35,7 @@ return function(props: props)
 	end
 
 	const function inner_width(): number
-		return size().X - px(theme.padding)() * 2
+		return size().X - px(theme.padding)() - px(RIGHT_INSET)()
 	end
 
 	const function min_width(): number
@@ -78,7 +79,7 @@ return function(props: props)
 
 		vide.create "UIPadding" {
 			PaddingLeft = px.udim(0, theme.padding),
-			PaddingRight = px.udim(0, theme.padding),
+			PaddingRight = px.udim(0, RIGHT_INSET),
 
 			PaddingTop = px.udim(0, (theme.row_height - theme.field_height) / 2),
 			PaddingBottom = px.udim(0, (theme.row_height - theme.field_height) / 2),
