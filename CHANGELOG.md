@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The arrow of the dropdown now matches the arrow of the groups.
+
 ## 0.10.0
 
 - The window got a cleaner, minimal look, with softer borders, rounded corners and a blue accent.

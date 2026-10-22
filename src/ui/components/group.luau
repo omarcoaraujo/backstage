@@ -8,6 +8,7 @@ const appearance = require "../stores/appearance"
 const filter = require "../utils/filter"
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
+const arrow = require "../constants/arrow"
 const theme = require "../constants/theme"
 
 --// Components
@@ -15,17 +16,8 @@ const reset_button = require "./reset_button"
 
 --// Constants
 const BRANCH_TRANSPARENCY = 0.5
-const ARROW_IMAGE = "rbxasset://textures/StudioSharedUI/arrowSpritesheet.png"
-const ARROW_FRAME = 12
-
-const ARROW_SIZE = 6
-const ARROW_GAP = 6
-
-const BRANCH_OFFSET = theme.padding + ARROW_SIZE / 2
+const BRANCH_OFFSET = theme.padding + arrow.size / 2
 const TICK_GAP = 2
-
-const ARROW_RIGHT = Vector2.new(ARROW_FRAME, 0)
-const ARROW_DOWN = Vector2.new(ARROW_FRAME * 2, 0)
 
 --// Types
 type props = {
@@ -42,7 +34,7 @@ type props = {
 const function tick(child: Instance)
 	const header = child:FindFirstChild "header"
 	const parent = header or child
-	const shift = if header then theme.padding + ARROW_SIZE + ARROW_GAP else 0
+	const shift = if header then theme.padding + arrow.size + arrow.gap else 0
 
 	vide.create "Frame" {
 		Name = "tick",
@@ -126,7 +118,7 @@ return function(props: props)
 	end
 
 	const function arrow_frame()
-		return if expanded() then ARROW_DOWN else ARROW_RIGHT
+		return if expanded() then arrow.down else arrow.right
 	end
 
 	const function header_transparency()
@@ -162,21 +154,21 @@ return function(props: props)
 		},
 
 		vide.create "UIPadding" {
-			PaddingLeft = px.udim(0, theme.padding + ARROW_SIZE + ARROW_GAP),
+			PaddingLeft = px.udim(0, theme.padding + arrow.size + arrow.gap),
 		},
 
 		vide.create "ImageLabel" {
 			Name = "arrow",
 			AnchorPoint = Vector2.new(0, 0.5),
 
-			Position = px.udim2(0, -(ARROW_SIZE + ARROW_GAP), 0.5, 0),
-			Size = px.udim2(0, ARROW_SIZE, 0, ARROW_SIZE),
+			Position = px.udim2(0, -(arrow.size + arrow.gap), 0.5, 0),
+			Size = px.udim2(0, arrow.size, 0, arrow.size),
 
 			BackgroundTransparency = 1,
-			Image = ARROW_IMAGE,
+			Image = arrow.image,
 
 			ImageColor3 = appearance.text,
-			ImageRectSize = Vector2.new(ARROW_FRAME, ARROW_FRAME),
+			ImageRectSize = arrow.frame,
 			ImageRectOffset = arrow_frame,
 		},
 

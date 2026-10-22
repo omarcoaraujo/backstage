@@ -5,6 +5,7 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
+const arrow = require "../../constants/arrow"
 const overlay = require "../../utils/overlay"
 const place = require "../../utils/place"
 const px = require "../../utils/px"
@@ -96,9 +97,9 @@ return function(props: props)
 		open()
 	end
 
-	const function caret()
-		if opened() then return "^" end
-		return "v"
+	const function caret_rotation()
+		if opened() then return 180 end
+		return 0
 	end
 
 	const function text_color()
@@ -156,19 +157,20 @@ return function(props: props)
 			Thickness = px(1),
 		},
 
-		vide.create "TextLabel" {
+		vide.create "ImageLabel" {
 			Name = "caret",
-			AnchorPoint = Vector2.new(1, 0),
+			AnchorPoint = Vector2.new(0.5, 0.5),
 
-			Position = px.udim2(1, theme.field_height, 0, 0),
-			Size = px.udim2(0, theme.field_height, 1, 0),
+			Position = px.udim2(1, theme.field_height / 2, 0.5, 0),
+			Size = px.udim2(0, arrow.size, 0, arrow.size),
 
 			BackgroundTransparency = 1,
-			FontFace = theme.font,
-			Text = caret,
+			Image = arrow.image,
 
-			TextColor3 = appearance.text_muted,
-			TextSize = px(theme.text_size),
+			ImageColor3 = appearance.text_muted,
+			ImageRectSize = arrow.frame,
+			ImageRectOffset = arrow.down,
+			Rotation = caret_rotation,
 		},
 
 		Activated = on_activated,
