@@ -15,6 +15,7 @@ end
 
 const function apply(source: string, edits: { edit }): (string, { refusal })
 	const placements = {} :: { placed }
+	const placed_at = {} :: { [string]: placed }
 	const refusals = {} :: { refusal }
 
 	for _, edit in edits do
@@ -24,7 +25,11 @@ const function apply(source: string, edits: { edit }): (string, { refusal })
 			continue
 		end
 
-		table.insert(placements, { edit = edit, range = found.range })
+		placed_at[`{found.range.begin_line}:{found.range.begin_column}`] = { edit = edit, range = found.range }
+	end
+
+	for _, placement in placed_at do
+		table.insert(placements, placement)
 	end
 
 	table.sort(placements, starts_later)

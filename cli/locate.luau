@@ -82,6 +82,49 @@ const function config_names(source: string): ({ string }, { number })
 	return names, dynamic
 end
 
+const function find_function(node, name: string)
+	if type(node) ~= "table" then return nil end
+	if node.tag == "localfunction" and node.name.name.text == name then return node.func end
+
+	for key, child in node do
+		if key == "location" or key == "leadingTrivia" or key == "trailingTrivia" then continue end
+		const found = find_function(child, name)
+		if found then return found end
+	end
+
+	return nil
+end
+
+const function returned_table(func)
+	for _, statement in func.body.statements do
+		if statement.tag ~= "return" then continue end
+
+		const first = statement.expressions[1]
+		if first and first.node.tag == "table" then return first.node end
+	end
+
+	return nil
+end
+
+const function parameter_index(func, name: string): number?
+	for index, parameter in func.parameters do
+		if parameter.node.name.text == name then return index end
+	end
+
+	return nil
+end
+
+const function enter_call(root, call)
+	if call.func.tag ~= "local" then return nil end
+	const func = find_function(root, call.func.token.text)
+
+	if not func then return nil end
+	const returned = returned_table(func)
+
+	if not returned then return nil end
+	return { call = call, func = func, returned = returned }
+end
+
 const function find_entry(table_node, key: string)
 	const position = tonumber(key)
 	local items = 0
@@ -129,15 +172,26 @@ const function locate(source: string, path: string): (found?, string?)
 	const names = config_names(source)
 	const name = owning_name(names, path)
 	if not name then return nil, `config "{string.match(path, "^[^%.]+")}" not found` end
+
 	const segments = string.split(string.sub(path, #name + 2), ".")
-	const call = find_config_call(parser.parse(source).root, name)
+	const root = parser.parse(source).root
+
+	const call = find_config_call(root, name)
 	if not call then return nil, `config "{name}" not found` end
 
 	const defaults = call.arguments[2]
 	if not defaults or defaults.node.tag ~= "table" then return nil, `config "{name}" has no defaults table` end
 
 	local current = defaults.node
+	local entered = nil
+
 	for _, segment in segments do
+		if current.tag == "call" then
+			entered = enter_call(root, current)
+			if not entered then return nil, `"{segment}" is inside a call that does not return a table literal` end
+			current = entered.returned
+		end
+
 		if current.tag ~= "table" then return nil, `"{segment}" is inside a value that is not a table` end
 		const entry = find_entry(current, segment)
 
@@ -145,9 +199,19 @@ const function locate(source: string, path: string): (found?, string?)
 		current = entry.value
 	end
 
+	if entered and current.tag == "local" then
+		const index = parameter_index(entered.func, current.token.text)
+		const argument = if index then entered.call.arguments[index] else nil
+		if argument then current = argument.node end
+	end
+
 	if not is_literal(current) then return nil, `"{path}" is not a literal` end
 	return { tag = current.tag, range = to_range(current.location) }
 end
 
 --// End
-return { locate = locate, config_names = config_names, owning_name = owning_name }
+return {
+	locate = locate,
+	config_names = config_names,
+	owning_name = owning_name,
+}

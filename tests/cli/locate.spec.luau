@@ -25,6 +25,23 @@ backstage.config("pet", {
 })
 ]]
 
+const BUILT = [[
+const function item(price: number, weight: number)
+	return {
+		stock = 10,
+		price = price,
+		weight = weight,
+	}
+end
+
+backstage.config("shop", {
+	items = {
+		item(10, 2),
+		item(25, 5),
+	},
+})
+]]
+
 const CONFIGS = [[
 backstage.config("pets", {})
 backstage.config("world", {})
@@ -113,6 +130,26 @@ return {
 	owning_name_matches_whole_segments_only = function()
 		assert(locate.owning_name({ "pet" }, "pets.speed") == nil)
 		assert(locate.owning_name({ "pet", "pet.drops" }, "pet.drops.rate") == "pet.drops")
+	end,
+
+	follows_a_parameter_to_the_argument_of_the_call = function()
+		const found = locate.locate(BUILT, "shop.items.2.price")
+		assert(found and found.tag == "number")
+		assert(found.range.begin_line == 12)
+	end,
+
+	finds_a_literal_inside_the_function_body = function()
+		const first = locate.locate(BUILT, "shop.items.1.stock")
+		const second = locate.locate(BUILT, "shop.items.2.stock")
+
+		assert(first and second and first.range.begin_line == 3)
+		assert(first.range.begin_column == second.range.begin_column)
+	end,
+
+	refuses_a_call_to_something_that_is_not_a_local_function = function()
+		const found, reason = locate.locate('backstage.config("a", { b = make(1) })', "a.b.c")
+		assert(found == nil)
+		assert(reason == '"c" is inside a call that does not return a table literal')
 	end,
 
 	config_names_lists_every_config_call = function()

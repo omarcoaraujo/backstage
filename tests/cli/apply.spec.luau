@@ -43,6 +43,21 @@ return {
 		assert(string.find(result, "enabled = false", 1, true))
 	end,
 
+	writes_a_shared_literal_once_when_two_paths_reach_it = function()
+		const source =
+			'const function item(price)\n\treturn { stock = 10, price = price }\nend\nbackstage.config("shop", { items = { item(1), item(2) } })'
+
+		const result, refused = apply.apply(source, {
+			{ path = "shop.items.1.stock", kind = "number", value = 20 },
+			{ path = "shop.items.2.stock", kind = "number", value = 30 },
+			{ path = "shop.items.2.price", kind = "number", value = 9 },
+		})
+
+		assert(#refused == 0)
+		assert(string.find(result, "stock = 30", 1, true))
+		assert(string.find(result, "item(1), item(9)", 1, true))
+	end,
+
 	refuses_what_it_cannot_place_and_applies_the_rest = function()
 		const result, refused = apply.apply(SOURCE, {
 			{ path = "pets.missing", kind = "number", value = 1 },
