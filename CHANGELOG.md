@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.11.0
 
 - The callback of `on_any_change` now receives `(value, previous, path)`, the same order as `on_change`. It used to receive the path first, so swap the arguments if you use it.
 - Reacting to a whole group now types the changed value as `backstage.value` instead of leaving it open.
