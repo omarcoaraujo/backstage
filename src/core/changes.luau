@@ -4,14 +4,19 @@ const mode = require "./mode"
 const registry = require "./registry"
 
 --// Types
-export type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
+export type listener = (value: kinds.value, previous: kinds.value, path: string) -> ()
 
 --// Functions
 const function inert() end
 
 const function any(callback: listener): () -> ()
 	if not mode.active() then return inert end
-	return registry.on_change(callback)
+
+	const function on_change(path: string, value: kinds.value, previous: kinds.value)
+		callback(value, previous, path)
+	end
+
+	return registry.on_change(on_change)
 end
 
 --// End

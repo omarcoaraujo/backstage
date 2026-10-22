@@ -78,7 +78,7 @@ return {
 		backstage.config("world", { gravity = 2 })
 
 		const seen = {}
-		backstage.on_any_change(function(path: string)
+		backstage.on_any_change(function(_value, _previous, path)
 			table.insert(seen, path)
 		end)
 

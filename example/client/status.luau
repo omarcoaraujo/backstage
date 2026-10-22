@@ -70,7 +70,7 @@ const function mount()
 		current.Text = `{pets.mode}  size {describe(pets.size)}  trail {describe(pets.trail.length)}`
 	end)
 
-	backstage.on_any_change(function(path, value, previous)
+	backstage.on_any_change(function(value, previous, path)
 		last.Text = `{path}  {describe(previous)} -> {describe(value)}`
 	end)
 end
