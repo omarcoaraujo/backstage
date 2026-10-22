@@ -11,9 +11,11 @@ const theme = require "../../constants/theme"
 
 --// Components
 const reset_button = require "../reset_button"
+const logo = require "./logo"
 const theme_button = require "./theme_button"
 
 --// Constants
+const TITLE_INSET = theme.padding + theme.logo_size + theme.logo_gap
 const CROSS_LENGTH = 11
 const CROSS_THICKNESS = 1.5
 
@@ -89,10 +91,12 @@ return function(props: props)
 		InputBegan = overlay.guard(props.on_press),
 		InputEnded = props.on_release,
 
+		logo(),
+
 		vide.create "TextLabel" {
 			Name = "title",
-			Position = px.udim2(0, theme.padding, 0, 0),
-			Size = px.udim2(1, -theme.title_height - theme.padding, 1, 0),
+			Position = px.udim2(0, TITLE_INSET, 0, 0),
+			Size = px.udim2(1, -theme.title_height - TITLE_INSET, 1, 0),
 
 			BackgroundTransparency = 1,
 			FontFace = theme.font,

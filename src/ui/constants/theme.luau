@@ -38,8 +38,13 @@ return table.freeze {
 	title_height = 30,
 	title_button = 20,
 	title_inset = 5,
+
+	logo_size = 16,
+	logo_gap = 5,
+
 	row_height = 26,
 	search_height = 36,
+
 	footer_height = 18,
 	footer_text_size = 11,
 

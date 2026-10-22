@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- The window title now shows the Backstage logo.
+
 ## 0.11.0
 
 - The callback of `on_any_change` now receives `(value, previous, path)`, the same order as `on_change`. It used to receive the path first, so swap the arguments if you use it.
