@@ -41,6 +41,7 @@ The read-only rows and expandable tables are built and shown in the UI stories, 
 
 - Tuning is only half of it. The tool writes every change back into the default of its `backstage.config` call, in place, so the next session starts from what you tuned and you never copy a number by hand
 - It is part of Backstage, not an add-on: install it once with Rokit and keep it running while you work. Without it, everything you tune is lost when the play session ends
+- It follows a local helper function too, so values built by `item(10, 2)` are saved into the call or into the helper
 
 **Costs nothing in production**
 
@@ -264,6 +265,28 @@ backstage serve --port 34891
 ```
 
 Enable **Allow HTTP Requests** in the game settings of the place. The tool listens only on `127.0.0.1`, finds each config by name across the project, and refuses a name that is declared in two files or a value that is not a literal. The folder defaults to the current one, and `backstage serve path/to/project` picks another. `--port` is optional, and the same number goes to `backstage.start { port = 34891 }` if you change it.
+
+#### Values built by a helper function
+
+Repeated entries are often built by a small local function. The tool follows it, so you do not have to write every entry out as a table:
+
+```lua
+const function item(price: number, weight: number)
+	return {
+		stock = 10,
+		price = price,
+		weight = weight,
+	}
+end
+
+return backstage.config("shop", {
+	items = { item(10, 2), item(25, 5) },
+})
+```
+
+- A field that is a parameter (`price`, `weight`) is saved into that argument of the matching call, so `shop.items.2.price` rewrites the `25`
+- A field that is a literal inside the function (`stock`) is saved into the function, so it changes for every call. Tuning it on one item changes all of them, and if you edit it on several in the same session the last edit wins
+- The function must be a local function in the same file and return a table literal. Anything else, such as a function from another file or a computed value, is refused with the reason in the output
 
 ## Limitations
 
