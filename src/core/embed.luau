@@ -64,6 +64,11 @@ const function embed(parent: Instance, options: options?): () -> ()
 	end
 
 	const function remember_edit(path: string, value: kinds.value)
+		if registry.get_default(path) == value then
+			baseline.forget(path)
+			return
+		end
+
 		baseline.remember(path, value)
 	end
 
@@ -73,7 +78,7 @@ const function embed(parent: Instance, options: options?): () -> ()
 	const stop_rebasing = registry.on_register(keep_baseline)
 	const stop_remembering = registry.on_change(remember_edit)
 
-	bridge.serve(if options then options.port else nil, { hold = true })
+	bridge.serve(if options then options.port else nil, { hold = true, keep = true })
 	const listening = shortcut.listen(options, toggle)
 	const destroy = vide.mount(function()
 		return app {

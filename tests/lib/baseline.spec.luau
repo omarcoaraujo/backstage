@@ -33,6 +33,17 @@ return {
 		baseline.reset()
 	end,
 
+	forgets_the_original_when_the_edit_is_forgotten = function()
+		baseline.reset()
+		baseline.resolve("pets.speed", 8)
+
+		baseline.remember("pets.speed", 12)
+		baseline.forget "pets.speed"
+
+		assert(baseline.resolve("pets.speed", 12) == 12)
+		baseline.reset()
+	end,
+
 	takes_a_new_baseline_when_the_script_changed_by_hand = function()
 		baseline.reset()
 		baseline.resolve("pets.speed", 8)

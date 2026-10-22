@@ -129,6 +129,12 @@ const function get(path: string): kinds.value?
 	return found.value
 end
 
+const function get_default(path: string): kinds.value?
+	const found = entries[path]
+	if not found then return nil end
+	return found.default
+end
+
 const function sorted_paths(source: { [string]: unknown })
 	const paths = {}
 
@@ -356,6 +362,8 @@ return table.freeze {
 	rebase = rebase,
 
 	get = get,
+	get_default = get_default,
+
 	group_path = group_path,
 	set = set,
 

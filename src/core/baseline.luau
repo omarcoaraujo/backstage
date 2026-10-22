@@ -47,6 +47,12 @@ const function remember(path: string, value: kinds.value)
 	slot().saved[path] = value
 end
 
+const function forget(path: string)
+	const state = slot()
+	state.original[path] = nil
+	state.saved[path] = nil
+end
+
 const function resolve(path: string, default: kinds.value): kinds.value
 	const state = slot()
 	const original = state.original[path]
@@ -65,6 +71,8 @@ end
 --// End
 return table.freeze {
 	remember = remember,
+	forget = forget,
+
 	resolve = resolve,
 	reset = reset,
 }
