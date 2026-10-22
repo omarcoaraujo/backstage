@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 650 128" width="650" height="128">
+  <title>Backstage</title>
+  <rect x="14" y="20" width="100" height="98" rx="10" fill="#111113"/>
+  <g stroke-linecap="round" stroke-width="4">
+    <path d="M46 58 H82" stroke="#2C2C32"/>
+    <path d="M46 58 H64" stroke="#60A5FA"/>
+    <path d="M46 74 H82" stroke="#2C2C32"/>
+    <path d="M46 74 H72" stroke="#60A5FA"/>
+    <path d="M46 90 H82" stroke="#2C2C32"/>
+    <path d="M46 90 H55" stroke="#60A5FA"/>
+  </g>
+  <circle cx="64" cy="58" r="6" fill="#E8E8EC"/>
+  <circle cx="72" cy="74" r="6" fill="#E8E8EC"/>
+  <circle cx="55" cy="90" r="6" fill="#E8E8EC"/>
+  <path d="M14 20 H40 C40 56 28 80 34 118 H14 Z" fill="#D8D8DF"/>
+  <path d="M114 20 H88 C88 56 100 80 94 118 H114 Z" fill="#D8D8DF"/>
+  <g fill="none" stroke="#F4F4F6" stroke-width="2.5" stroke-linecap="round">
+    <path d="M21 24 C21 58 16 84 19 117"/>
+    <path d="M29 24 C29 58 21 82 26 116"/>
+    <path d="M107 24 C107 58 112 84 109 117"/>
+    <path d="M99 24 C99 58 107 82 102 116"/>
+  </g>
+  <rect x="8" y="8" width="112" height="20" rx="10" fill="#2563EB"/>
+  <rect x="8" y="112" width="112" height="10" rx="5" fill="#2563EB"/>
+  <g transform="translate(0 -10)">
+    <g fill="none" stroke="#2563EB" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M142 36 V106 M142 36 H159 A17 17 0 0 1 159 70 H142 M142 70 H158 A18 18 0 0 1 158 106 H142"/>
+      <circle cx="217" cy="84" r="22"/>
+      <path d="M239 62 V106"/>
+      <path d="M297.6 68.4 A22 22 0 1 0 297.6 99.6"/>
+      <path d="M320 36 V106 M320 86 L348 62 M332 76 L350 106"/>
+      <path d="M396 68.5 C392.5 63.5 387.5 62 381.5 62 C373.5 62 367 66.5 367 72.5 C367 79.5 373.5 81 381.5 84 C389.5 87 396 88.5 396 95.5 C396 101.5 390.5 106 381.5 106 C375 106 369.5 104 366 100"/>
+      <path d="M426 44 V94 Q426 106 438 106 H444 M414 62 H442"/>
+      <circle cx="486" cy="84" r="22"/>
+      <path d="M508 62 V106"/>
+      <circle cx="551" cy="84" r="22"/>
+      <path d="M573 62 V112 Q573 128 551 128 Q535 128 529 120"/>
+      <path d="M594 84 H638 A22 22 0 1 0 631.6 99.6"/>
+    </g>
+  </g>
+</svg>
