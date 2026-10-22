@@ -2,15 +2,21 @@
   <img width="420" src="https://raw.githubusercontent.com/omarcoaraujo/backstage/main/assets/logo-wordmark.svg" alt="Backstage"/>
   <br/><br/>
   <p>Live tuning panel for Roblox Studio: edit game values in real time.</p>
-  <p>Stop editing a number, pressing play and waiting to see it. Declare a value once, drag a slider while the game runs, watch the game change on the spot, and keep what feels right.</p>
   <a href="https://github.com/omarcoaraujo/backstage/actions/workflows/check.yml"><img src="https://github.com/omarcoaraujo/backstage/actions/workflows/check.yml/badge.svg" alt="Check"/></a>
   <a href="https://github.com/omarcoaraujo/backstage/actions/workflows/release.yml"><img src="https://github.com/omarcoaraujo/backstage/actions/workflows/release.yml/badge.svg" alt="Release"/></a>
-  <br/><br/>
+</div>
+
+---
+
+Stop editing a number, pressing play and waiting to see it. Declare a value once, drag a slider while the game runs, watch the game change on the spot, and keep what feels right.
+
+<p align="center">
   <img src="docs/window.png" alt="The Backstage window tuning a pet config" width="32%">
   <img src="docs/color-picker.png" alt="The color picker open on a color value" width="32%">
   <img src="docs/readonly.png" alt="Read-only values and expandable tables" width="32%">
-  <p>The read-only rows and expandable tables are built and shown in the UI stories, but <code>config</code> does not produce them yet. They arrive with store support.</p>
-</div>
+</p>
+
+The read-only rows and expandable tables are built and shown in the UI stories, but `config` does not produce them yet. They arrive with store support.
 
 ---
 
