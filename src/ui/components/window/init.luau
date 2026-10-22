@@ -61,10 +61,19 @@ const function clamp_position(position: Vector2, size: Vector2, bounds: Vector2)
 	return Vector2.new(x, y)
 end
 
+const function fit_position(position: Vector2, size: Vector2, bounds: Vector2): Vector2
+	const x = math.clamp(position.X, 0, math.max(bounds.X - size.X, 0))
+	const y = math.clamp(position.Y, 0, math.max(bounds.Y - size.Y, 0))
+	return Vector2.new(x, y)
+end
+
 --// Component
 return function(props: props)
 	local root = nil :: Frame?
+	local watching = nil :: RBXScriptConnection?
+
 	const min_size = props.min_size or DEFAULT_MIN_SIZE * px.scale()
+	const footer_height = if props.footer then theme.footer_height else 0
 
 	const position = vide.source(props.position)
 	const size = vide.source(props.size or DEFAULT_SIZE * px.scale())
@@ -81,6 +90,47 @@ return function(props: props)
 
 		const free = bounds() - size()
 		return Vector2.new(math.floor(free.X / 2), math.floor(free.Y / 2))
+	end
+
+	const function is_dragging()
+		return drag() ~= nil
+	end
+
+	const function resizing(): handles.side?
+		const current = drag()
+		return if current and current.kind == "resize" then current.side else nil
+	end
+
+	const function root_position()
+		const placed = position()
+		if not placed then return UDim2.new(0.5, -size().X / 2, 0.5, -size().Y / 2) end
+		return UDim2.fromOffset(placed.X, placed.Y)
+	end
+
+	const function root_size()
+		return UDim2.fromOffset(size().X, size().Y)
+	end
+
+	const function keep_inside()
+		const placed = position()
+		if not placed then return end
+		position(fit_position(placed, size(), bounds()))
+	end
+
+	const function stop_watching()
+		if not watching then return end
+		watching:Disconnect()
+		watching = nil
+	end
+
+	const function on_parent_changed()
+		stop_watching()
+
+		const parent = if root then root.Parent :: GuiBase2d? else nil
+		if not parent then return end
+
+		watching = parent:GetPropertyChangedSignal("AbsoluteSize"):Connect(keep_inside)
+		keep_inside()
 	end
 
 	const function begin_move(input: InputObject)
@@ -112,11 +162,6 @@ return function(props: props)
 
 	const function release(input: InputObject)
 		if pointer.is_press(input) then finish() end
-	end
-
-	const function resizing(): handles.side?
-		const current = drag()
-		return if current and current.kind == "resize" then current.side else nil
 	end
 
 	const function follow(current: drag, delta: Vector2)
@@ -151,22 +196,6 @@ return function(props: props)
 	const function close()
 		position(props.position)
 		props.on_close()
-	end
-
-	const footer_height = if props.footer then theme.footer_height else 0
-
-	const function is_dragging(): boolean
-		return drag() ~= nil
-	end
-
-	const function root_position()
-		const placed = position()
-		if not placed then return UDim2.new(0.5, -size().X / 2, 0.5, -size().Y / 2) end
-		return UDim2.fromOffset(placed.X, placed.Y)
-	end
-
-	const function root_size()
-		return UDim2.fromOffset(size().X, size().Y)
 	end
 
 	root = vide.create "Frame" {
@@ -242,7 +271,10 @@ return function(props: props)
 			InputChanged = on_capture_changed,
 			InputEnded = release,
 		},
+
+		vide.changed("Parent", on_parent_changed),
 	}
 
+	vide.cleanup(stop_watching)
 	return root
 end

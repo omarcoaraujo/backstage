@@ -5,6 +5,7 @@
 - The window got a cleaner, minimal look, with softer borders, rounded corners and a blue accent.
 - Added a light theme, switched by a new button in the title bar, and a `theme` option on `start` to pick the one it opens with.
 - New reset icon.
+- The window now stays on screen when the screen gets smaller.
 - Hints now open above the row by default and point at it with a small arrow.
 
 ## 0.9.0
