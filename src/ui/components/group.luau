@@ -15,14 +15,14 @@ const reset_button = require "./reset_button"
 
 --// Constants
 const BRANCH_TRANSPARENCY = 0.5
-const BRANCH_OFFSET = 4
-const TICK_REACH = 4
-
 const ARROW_IMAGE = "rbxasset://textures/StudioSharedUI/arrowSpritesheet.png"
 const ARROW_FRAME = 12
 
 const ARROW_SIZE = 6
 const ARROW_GAP = 6
+
+const BRANCH_OFFSET = theme.padding + ARROW_SIZE / 2
+const TICK_GAP = 2
 
 const ARROW_RIGHT = Vector2.new(ARROW_FRAME, 0)
 const ARROW_DOWN = Vector2.new(ARROW_FRAME * 2, 0)
@@ -41,7 +41,7 @@ type props = {
 const function tick(child: Instance)
 	const header = child:FindFirstChild "header"
 	const parent = header or child
-	const shift = if header then theme.padding else 0
+	const shift = if header then theme.padding + ARROW_SIZE + ARROW_GAP else 0
 
 	vide.create "Frame" {
 		Name = "tick",
@@ -49,7 +49,7 @@ const function tick(child: Instance)
 		AnchorPoint = Vector2.new(0, 0.5),
 
 		Position = px.udim2(0, BRANCH_OFFSET - theme.indent - shift, 0, theme.row_height / 2),
-		Size = px.udim2(0, theme.indent - BRANCH_OFFSET + TICK_REACH, 0, 1),
+		Size = px.udim2(0, theme.padding - TICK_GAP - (BRANCH_OFFSET - theme.indent), 0, 1),
 
 		BackgroundColor3 = appearance.divider,
 		BackgroundTransparency = BRANCH_TRANSPARENCY,
