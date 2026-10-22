@@ -58,10 +58,11 @@ end
 return function(props: props)
 	const node = filter.branch(props.name, props.content :: { Instance }?)
 	const children = (props.content or {}) :: { Instance }
-
 	local last = nil :: Instance?
 
 	const open = vide.source(props.open == true)
+	const closed_in_search = vide.source(false)
+
 	const hovered = vide.source(false)
 	const last_height = vide.source(0)
 
@@ -85,12 +86,23 @@ return function(props: props)
 	end
 
 	const function expanded()
-		return open() or filter.searching()
+		if filter.searching() then return not closed_in_search() end
+		return open()
 	end
 
 	const function toggle()
+		if filter.searching() then
+			closed_in_search(not closed_in_search())
+			return
+		end
+
 		open(not open())
 	end
+
+	vide.effect(function()
+		filter.query()
+		closed_in_search(false)
+	end)
 
 	const function on_enter()
 		hovered(true)
