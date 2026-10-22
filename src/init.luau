@@ -9,6 +9,7 @@ const on_change = require "@self/core/on_change"
 const start = require "@self/core/start"
 
 --// Types
+export type value = kinds.value
 export type limit = kinds.limit
 export type change = changes.listener
 export type config_options<limits> = config.options<limits>

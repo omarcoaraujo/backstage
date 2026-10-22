@@ -1,4 +1,5 @@
 --// Modules
+const kinds = require "./kinds"
 const mode = require "./mode"
 const registry = require "./registry"
 const tracker = require "./tracker"
@@ -6,6 +7,11 @@ const tracker = require "./tracker"
 --// Constants
 const USAGE =
 	"backstage: on_change takes a config value or a group and a callback, like on_change(config.size, callback)"
+
+--// Types
+type group_callback = (value: kinds.value, previous: kinds.value, path: string) -> ()
+type group_listener = (target: { [string]: unknown }, callback: group_callback) -> () -> ()
+type value_listener = <value>(target: value, callback: (value: value, previous: value, path: string) -> ()) -> () -> ()
 
 --// Functions
 const function inert() end
@@ -34,8 +40,7 @@ const function path_of(target: unknown, caller: unknown, source: string?, line: 
 	return nil
 end
 
---// End
-return function<value>(target: value, callback: (value: value, previous: value, path: string) -> ()): () -> ()
+const function on_change<value>(target: value, callback: (value: value, previous: value, path: string) -> ()): () -> ()
 	if not mode.active() then return inert end
 	const group = registry.group_path(target)
 
@@ -55,3 +60,6 @@ return function<value>(target: value, callback: (value: value, previous: value, 
 		callback(current :: any, previous :: any, changed)
 	end)
 end
+
+--// End
+return (on_change :: any) :: group_listener & value_listener
