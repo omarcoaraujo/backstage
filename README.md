@@ -16,65 +16,45 @@ The read-only rows and expandable tables are built and shown in the UI stories, 
 
 ---
 
-## Features
+## What it is
 
-**Tune while you play**
+Backstage has two parts that work together:
 
-- One declaration per value, and the kind comes from its default: number, boolean, string, `Color3` or `Vector3`
-- Sliders, toggles, text boxes, choices, a color picker, vector fields and buttons
-- Limits per value: `min`, `max`, `step` and a list of `choices`, enforced on every edit
-- Hints: a tooltip on hover that explains what a value does
-- Nested tables become collapsible groups with a line showing the nesting
-- Search bar that filters the tree by name
-- A reset button on every changed value
-- A draggable, resizable window opened with `Ctrl + B` or a key you choose
+1. **The library** lives in your game. You declare the values you want to tune, and a window opens in Studio with a control for each one.
+2. **The tool** runs next to Studio. It writes every change you make in the window back into your script, so the next session starts from what you tuned.
 
-**Fits your code**
+That is the whole idea: tune by feel while you play, close Studio, and the numbers are already in your code. No export button, no JSON, no copying values.
 
-- Plain reads: `config.speed`, no wrapper and no `.get()`
-- Reactive reads: a read inside a Vide scope or a Charm effect tracks itself and reruns when you tune the value
-- `on_change`: run a callback when a value changes, so code that caches a value stays live without a per-frame loop. It also watches a whole group, or every value at once
-- Edit a config script by hand while playing and the game picks the new default up, without a restart
-- Works across the network: a value on the server is tuned from the same window, validated by the server and sent to every player
-- Buttons you press in the window and listen to in code
+At a glance:
 
-**Keeps what you tuned: the Backstage tool**
+- Sliders, toggles, text boxes, choices, a color picker, vector fields and buttons, picked from the kind of each default
+- Limits and hints per value, a search bar, and a reset button on whatever you changed
+- Reads that are plain (`config.speed`) and also tracked, so code that depends on a value reruns when you tune it
+- Works across the network: a server value is tuned from the same window and sent to every player
+- Costs nothing in production: outside Studio there is no UI, no remote and no listener
 
-- Tuning is only half of it. The tool writes every change back into the default of its `backstage.config` call, in place, so the next session starts from what you tuned and you never copy a number by hand
-- It is part of Backstage, not an add-on: install it once with Rokit and keep it running while you work. Without it, everything you tune is lost when the play session ends
-- It follows a local helper function too, so values built by `item(10, 2)` are saved into the call or into the helper
+## Install
 
-**Costs nothing in production**
-
-- Outside Studio there is no UI, no remote, no listener and no signal, and `config` is a frozen copy of your defaults
-- The game can never write to the config, only the window can
-
-## How it works
-
-```
- your code                 Studio only
-┌──────────────┐        ┌──────────────────────────┐
-│ config.speed │◀───────│ registry (validated)     │◀── window (sliders, picker...)
-└──────────────┘        └──────────────────────────┘
-   plain read              │             │
-   or tracked by           ▼             ▼
-   Vide / Charm        server ⇄ clients  saving tool ──▶ your config script
-```
-
-Every value lives in a registry keyed by path, like `pets.trail.length`. The window writes to it, the registry validates against the limits, and your code reads the latest value through the table `config` returns.
-
-## Installation
-
-Add it to your `pesde.toml`:
+**The library**, in your `pesde.toml`:
 
 ```toml
 [dependencies]
-backstage = { name = "omarcoaraujo/backstage", version = "^0.1.0" }
+backstage = { name = "omarcoaraujo/backstage", version = "^0.10.0" }
 ```
 
-## Quick start
+**The tool**, with [Rokit](https://github.com/rojo-rbx/rokit):
 
-Declare the values:
+```sh
+rokit add omarcoaraujo/backstage
+```
+
+Then enable **Allow HTTP Requests** in the game settings of the place. The tool talks to Studio over a local connection, and Studio needs that setting to open it.
+
+## Your first session
+
+Five steps, about two minutes. Everything after this page goes deeper into each one.
+
+**1. Declare a value.** Create a script that returns a config:
 
 ```lua
 const backstage = require(path.to.backstage)
@@ -87,24 +67,29 @@ return backstage.config("pets", {
 })
 ```
 
-Start the window, once on the client:
+**2. Start the window**, once on the client:
 
 ```lua
 backstage.start()
 ```
 
-Install the tool and leave it running next to Studio, so what you tune is saved into your scripts:
+**3. Run the tool** in your project folder and leave it open next to Studio:
 
 ```sh
-rokit add omarcoaraujo/backstage
 backstage serve
 ```
 
-Press play and open the window with `Ctrl + B`. Everything below goes deeper.
+**4. Press play** and open the window with `Ctrl + B`. You will see a `pets` group with a slider for `speed` and a color picker for `tint`.
 
-## Usage
+**5. Drag the slider**, then look at your script: the `8` is now the number you stopped on. The game used the new value as you dragged it, and the file keeps it after Studio closes.
 
-### Declaring values
+## The guide
+
+Each part builds on the one before, so read it in order the first time.
+
+### 1. Declaring values
+
+A config is a table of defaults plus, optionally, a table of options. This one uses most of what exists:
 
 ```lua
 const backstage = require(path.to.backstage)
@@ -121,7 +106,7 @@ return backstage.config("pets", {
 }, {
 	limits = {
 		distance = { min = 0, max = 30, step = 0.1 },
-		mode = { choices = { "follow", "orbit" } },
+		mode = { "follow", "orbit" },
 		trail = {
 			length = { min = 0.1, max = 6, step = 0.1 },
 		},
@@ -129,9 +114,14 @@ return backstage.config("pets", {
 })
 ```
 
-The kind of each value comes from its default: number, boolean, string, `Color3` or `Vector3`. A `choices` limit turns a string into a choice. Nested tables become groups. A dot in the config name nests it too: `backstage.config("pet.drops", ...)` and `backstage.config("pet.skins", ...)` both show up inside one `pet` group.
+How it is read:
 
-Add a `hints` table, shaped like `limits`, to explain a value or a button. The text shows as a tooltip when you hover the row or the button:
+- **The kind comes from the default:** number, boolean, string, `Color3` or `Vector3`. A `backstage.button()` becomes a button.
+- **Limits** depend on the kind. A number takes `min`, `max` and `step`. A string takes a list of options, like `mode = { "follow", "orbit" }`, and becomes a choice. They are enforced on every edit, and numbers and vectors keep three decimals.
+- **Nested tables become groups**, drawn with a line that shows the nesting. A dot in the config name nests it too: `backstage.config("pet.drops", ...)` and `backstage.config("pet.skins", ...)` both show up inside one `pet` group.
+- **Every value has a path,** like `pets.trail.length`. You will see it in the window, in `on_change` and in the tool.
+
+To explain a value or a button, add a `hints` table shaped like `limits`. The text shows as a tooltip when you hover the row:
 
 ```lua
 {
@@ -144,9 +134,11 @@ Add a `hints` table, shaped like `limits`, to explain a value or a button. The t
 }
 ```
 
-Every changed value shows a reset arrow. A group shows one that resets everything inside it, and the title bar shows one that resets the whole window. Numbers and vectors keep three decimals.
+In the window, every changed value shows a reset arrow. A group shows one that resets everything inside it, and the title bar shows one that resets the whole window. A search bar filters the tree by name.
 
-Read the values as plain fields, always through the returned table, so you see the latest edit:
+### 2. Reading values
+
+Read the values as plain fields, always through the table `config` returns, so you see the latest edit:
 
 ```lua
 const config = require(path.to.pets_config)
@@ -160,9 +152,9 @@ end)
 
 The game cannot write to the config. Only the window does, and writing from code raises an error.
 
-### Reactive reads
+### 3. Reading values that update themselves
 
-A read inside a Vide scope or a Charm effect is tracked, so it runs again when the window changes the value:
+A plain read gives you the current number. A read inside a Vide scope or a Charm effect also **tracks itself**, so it runs again when the window changes the value:
 
 ```lua
 vide.create "Part" {
@@ -176,19 +168,19 @@ charm.effect(function()
 end)
 ```
 
+This is what lets you tune things a per-frame loop could never reach, like a HUD that rebuilds only when a value changes. [`example/client/hud.luau`](example/client/hud.luau) is a Vide card whose corner, scale, colors, title and rows all follow the window.
+
 Vide works with the copy Backstage installs. If your game uses another copy of Vide, or uses Charm, hand them to `start` so the copy that tracks is the one your code uses:
 
 ```lua
 backstage.start { vide = vide, charm = charm }
 ```
 
-Charm is never required: without it a read inside a Charm effect is a plain read. Fusion does not track plain reads.
+Charm is never required: without it a read inside a Charm effect is a plain read.
 
-This is what lets you tune things a per-frame loop could never reach, like a HUD that rebuilds only when a value changes. [`example/client/hud.luau`](example/client/hud.luau) is a Vide card whose corner, scale, colors, title and rows all follow the window.
+### 4. Reacting to a change
 
-### Reacting to a change
-
-For code that caches a value instead of reading it again every frame, hook a callback to a path. It works in any script, so you can use it right in your game code:
+Some code caches a value instead of reading it every frame, like setting a part's size once. For that, hook a callback to a path. It works in any script, so you can use it right in your game code:
 
 ```lua
 const function apply_size(size: number)
@@ -199,23 +191,28 @@ apply_size(config.size)
 backstage.on_change(config.size, apply_size)
 ```
 
-It is a signal, so the first argument is always the config read itself, with the path written out (`config.size`, `config.trail.length`), and the second is the callback. It finds the path from that read, so a typo is a type error. Anything else, a variable, a literal, an expression or a string, raises an error in Studio.
+How it behaves:
 
-It fires on every change, from the window, from a restore and from the other side of the network, with the new and the previous value. It never fires for the value you start with, so apply that one yourself, as above. It returns a function that disconnects it.
+- **The first argument is the config read itself,** with the path written out (`config.size`, `config.trail.length`). It finds the path from that read, so a typo is a type error. Anything else, such as a variable, a literal, an expression or a string, raises an error in Studio.
+- **It fires on every change:** from the window, from a restore and from the other side of the network, with the new and the previous value.
+- **It never fires for the value you start with,** so apply that one yourself, as above.
+- **It returns a function** that disconnects it.
 
 Outside Studio it does nothing, and since nothing changes there, the game ships with the value you applied first. Code written this way, setting a property when it changes and not on every frame, is cheaper than a loop anyway. [`example/client/pets.luau`](example/client/pets.luau) does it for the pet's size and color, and keeps reading the rest every frame.
 
 To react to a whole group, or to every value of a config, pass the group instead. The callback gets the path that changed as a third argument, and it also gets it for a single value:
 
 ```lua
-backstage.on_change(config.trail, function(value: unknown, previous: unknown, path: string)
+backstage.on_change(config.trail, function(value, previous, path)
 	print(path, previous, value)
 end)
 ```
 
-To hear every change of every config, which is handy for a log or a debug overlay, use `backstage.on_any_change`. Its callback takes the path first: `(path, value, previous)`. Both return a function that disconnects them and do nothing outside Studio. [`example/client/status.luau`](example/client/status.luau) shows the two ways to react side by side: a Charm effect that rewrites a label from the values it reads, and `on_any_change` that shows the last change.
+A group has values of different kinds inside, so `value` and `previous` are typed as `backstage.value`, which is `number | boolean | string | Color3 | Vector3`. Narrow it with `typeof` or by the `path`, when you need the exact kind. A single value keeps its own type: `on_change(config.size, ...)` gives you a `number`.
 
-### Opening the window
+To hear every change of every config, which is handy for a log or a debug overlay, use `backstage.on_any_change`. Its callback takes the same arguments as the group one: `(value, previous, path)`. Both return a function that disconnects them and do nothing outside Studio. [`example/client/status.luau`](example/client/status.luau) shows the two ways to react side by side: a Charm effect that rewrites a label from the values it reads, and `on_any_change` that shows the last change.
+
+### 5. Opening the window
 
 Call `start` on the client, and on the server if you want to tune server values too:
 
@@ -225,57 +222,27 @@ const backstage = require(path.to.backstage)
 backstage.start()
 ```
 
-A config declared in a shared module shows up once in the window. The server owns its value: an edit goes to the server, which validates it and tells every client. A config declared only on the server shows up in the window too, and its buttons run on the server.
-
 `Ctrl + B` opens and closes the window. Pass `key` and `ctrl` to change it:
 
 ```lua
 backstage.start { key = Enum.KeyCode.F4, ctrl = false }
 ```
 
-### In a storybook
+The window is draggable and resizable, and it stays on screen when the screen gets smaller.
 
-`embed` puts the window inside any `GuiObject`, with no server, no `PlayerGui` and no play session. It is made for storybooks such as [UI Labs](https://github.com/PepeElToro41/ui-labs), which run in edit mode. It reads the values declared in the same script environment and returns a function that cleans everything up:
+**Client and server.** A config declared in a shared module shows up once in the window. The server owns its value: an edit goes to the server, which validates it and tells every client. A config declared only on the server shows up in the window too, and its buttons run on the server. A value declared only on the client stays local to that client.
 
-```lua
-return function(target)
-	require(path.to.pets_config)
-	return backstage.embed(target)
-end
-```
+### 6. Keeping what you tuned
 
-The window opens already visible. The close button hides it and the same shortcut as `start` (`Ctrl + B`) shows it again. The options are `title`, `footer`, `port`, `key`, `ctrl`, `open`, `vide` and `charm`, where `open = false` starts it hidden. Edits are saved by the Backstage tool, as in a play session. [`stories/pet.story.luau`](stories/pet.story.luau) is a complete example: tuning the window moves a pet in the story.
-
-A storybook reloads the story often, so `embed` keeps one connection to the tool: embedding again reuses it, the cleanup closes it, and a connection left behind by a reload is closed by the next `embed` or by itself when idle. The window position and size are remembered by `title` between reloads, as long as the storybook stays open. Both are kept in `shared`, which UI Labs preserves across reloads.
-
-The tool rewrites the default in your script every time you edit, and the storybook then reloads the story with the new default, which would leave the reset button with nothing to go back to. `embed` remembers the default each value had when the session began, so reset still returns to that original, as long as the default in the script is the one the tool saved. If you change a default by hand, that new default becomes the one reset returns to. 
-
-The storybook reloads the story whenever the script changes, which would interrupt you on every edit. So `embed` holds your edits in memory and sends them to the tool only when the story closes, which includes the unmount right before a reload. Edits that were never sent are lost if Studio closes before the story does.
-
-### Production
-
-`start` and `embed` do nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode.
-
-### Team Test
-
-Team Test is not supported. Its server runs on Roblox's machines, so it cannot reach the tool on your computer and your edits would never be saved to the scripts. If the server does not start Backstage there, the client gives up after a few seconds and never opens the window. Play, and Clients and Servers with more than one player, run the server on your computer and work normally.
-
-A complete project is in [`example/`](example).
-
-### The Backstage tool
-
-This is where Backstage pays off. Every change you make in the window is written back into the default of the matching `backstage.config` call, in place, so you tune by feel, close Studio and the numbers are already in your code. No export button, no JSON, no copying values.
-
-Without it, edits live in the play session and are lost when it ends. Treat it as a required part of the workflow and keep it running whenever you tune.
-
-Install it with [Rokit](https://github.com/rojo-rbx/rokit) and serve your project folder while Studio is open:
+This is where Backstage pays off. Every change you make in the window is written back into the default of the matching `backstage.config` call, in place. The tool does it, so keep it running whenever you tune:
 
 ```sh
-rokit add omarcoaraujo/backstage
 backstage serve --port 34891
 ```
 
-Enable **Allow HTTP Requests** in the game settings of the place. The tool listens only on `127.0.0.1`, finds each config by name across the project, and refuses a name that is declared in two files or a value that is not a literal. The folder defaults to the current one, and `backstage serve path/to/project` picks another. `--port` is optional, and the same number goes to `backstage.start { port = 34891 }` if you change it.
+The tool listens only on `127.0.0.1`, finds each config by name across the project, and refuses a name that is declared in two files or a value that is not a literal. The folder defaults to the current one, and `backstage serve path/to/project` picks another. `--port` is optional, and the same number goes to `backstage.start { port = 34891 }` if you change it.
+
+Without the tool, everything you tune lives in the play session and is lost when it ends. Treat it as a required part of the workflow.
 
 #### The file on disk is the source of truth
 
@@ -285,7 +252,9 @@ The tool writes every change you make in the window into the file as you make it
 
 #### Editing the script by hand
 
-The tool also watches your scripts. When you change a default by hand while the game is running, the new number is sent to the game: the value and its reset target change, and the window and every player follow. Edits the window made itself are not sent back. The tool follows the literals it can read, the same ones it can write, and a new value or a config that was not running when you started the game needs a restart.
+The tool also watches your scripts. When you change a default by hand while the game is running, the new number is sent to the game: the value and its reset target change, and the window and every player follow. Edits the window made itself are not sent back.
+
+The tool follows the literals it can read, the same ones it can write. A new value, or a config that was not running when you started the game, needs a restart.
 
 The connection stays open during a play session so these changes can arrive. A web page cannot talk to the tool: it refuses any connection that comes from a browser, or that does not address `127.0.0.1`, `localhost` or `[::1]` on its own port.
 
@@ -307,15 +276,62 @@ return backstage.config("shop", {
 })
 ```
 
-- A field that is a parameter (`price`, `weight`) is saved into that argument of the matching call, so `shop.items.2.price` rewrites the `25`
+- A field that is a parameter (`price`, `weight`) is saved into that argument of the matching call, so `shop.items.2.price` rewrites the `25`. The name in the window is the key (`price`), not the parameter's name
 - A field that is a literal inside the function (`stock`) is saved into the function, so it changes for every call. Tuning it on one item changes all of them, and if you edit it on several in the same session the last edit wins
 - The function must be a local function in the same file and return a table literal. Anything else, such as a function from another file or a computed value, is refused with the reason in the output
+
+### 7. Using it in a storybook
+
+`embed` puts the window inside any `GuiObject`, with no server, no `PlayerGui` and no play session. It is made for storybooks such as [UI Labs](https://github.com/PepeElToro41/ui-labs), which run in edit mode. It reads the values declared in the same script environment and returns a function that cleans everything up:
+
+```lua
+return function(target)
+	require(path.to.pets_config)
+	return backstage.embed(target)
+end
+```
+
+The window opens already visible. The close button hides it and the same shortcut as `start` (`Ctrl + B`) shows it again. The options are `title`, `footer`, `port`, `key`, `ctrl`, `open`, `vide` and `charm`, where `open = false` starts it hidden. Edits are saved by the tool, as in a play session, and editing a script by hand also updates the window. [`stories/pet.story.luau`](stories/pet.story.luau) is a complete example: tuning the window moves a pet in the story.
+
+A storybook reloads the story whenever the script changes, and that shapes how `embed` behaves:
+
+- **One connection to the tool.** Embedding again reuses it, the cleanup closes it, and a connection left behind by a reload is closed by the next `embed` or by itself when idle.
+- **The window keeps its place.** Its position and size are remembered by `title` between reloads, as long as the storybook stays open. Both are kept in `shared`, which UI Labs preserves across reloads.
+- **Reset still goes to the original.** The tool rewrites the default in your script every time you edit, and the storybook then reloads the story with the new default. `embed` remembers the default each value had when the session began, so reset still returns to that original, as long as the default in the script is the one the tool saved. If you change a default by hand, that new default becomes the one reset returns to.
+- **Edits are held until the story closes.** Sending them on every edit would reload the story on every edit, so `embed` holds them in memory and sends them to the tool when the story closes, which includes the unmount right before a reload. Edits that were never sent are lost if Studio closes before the story does.
+
+## Going to production
+
+`start` and `embed` do nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. There is no UI, no remote, no listener and no signal. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode.
+
+### Team Test
+
+Team Test is not supported. Its server runs on Roblox's machines, so it cannot reach the tool on your computer and your edits would never be saved to the scripts. If the server does not start Backstage there, the client gives up after a few seconds and never opens the window. Play, and Clients and Servers with more than one player, run the server on your computer and work normally.
+
+## How it works
+
+```
+ your code                 Studio only
+┌──────────────┐        ┌──────────────────────────┐
+│ config.speed │◀───────│ registry (validated)     │◀── window (sliders, picker...)
+└──────────────┘        └──────────────────────────┘
+   plain read              │             │
+   or tracked by           ▼             ▼
+   Vide / Charm        server ⇄ clients  saving tool ──▶ your config script
+```
+
+Every value lives in a registry keyed by path, like `pets.trail.length`. The window writes to it, the registry validates against the limits, and your code reads the latest value through the table `config` returns. The tool listens to the registry and writes each change into your script.
+
+## Example
+
+A complete project is in [`example/`](example). It is a pet that follows the player, tuned from the window.
 
 ## Limitations
 
 - Backstage is pre-1.0, so the API can still change between minor versions.
-- Edits are lost when the play session ends unless the Backstage tool is running. Values declared only on the client stay local to that client.
+- Edits are lost when the play session ends unless the Backstage tool is running.
 - Editing values of stores you already have (Vide, Charm) is not there yet.
+- Fusion is not supported: its state does not track a plain read of the config, so a Fusion value does not follow the window.
 
 ## Contributing
 
