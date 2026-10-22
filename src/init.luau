@@ -1,5 +1,6 @@
 --// Modules
 const button = require "@self/core/button"
+const changes = require "@self/core/changes"
 const config = require "@self/core/config"
 const kinds = require "@self/core/kinds"
 const mode = require "@self/core/mode"
@@ -9,6 +10,7 @@ const start = require "@self/core/start"
 
 --// Types
 export type limit = kinds.limit
+export type change = changes.listener
 export type config_options<limits> = config.options<limits>
 
 export type start_options = start.options
@@ -35,6 +37,8 @@ return table.freeze {
 	button = create_button,
 
 	on_change = on_change,
+	on_any_change = changes.any,
+
 	start = start,
 	embed = embed,
 

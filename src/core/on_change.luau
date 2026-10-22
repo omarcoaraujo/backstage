@@ -4,7 +4,8 @@ const registry = require "./registry"
 const tracker = require "./tracker"
 
 --// Constants
-const USAGE = "backstage: on_change takes a config value and a callback, like on_change(config.size, callback)"
+const USAGE =
+	"backstage: on_change takes a config value or a group and a callback, like on_change(config.size, callback)"
 
 --// Functions
 const function inert() end
@@ -34,8 +35,16 @@ const function path_of(target: unknown, caller: unknown, source: string?, line: 
 end
 
 --// End
-return function<value>(target: value, callback: (value: value, previous: value) -> ()): () -> ()
+return function<value>(target: value, callback: (value: value, previous: value, path: string) -> ()): () -> ()
 	if not mode.active() then return inert end
+	const group = registry.group_path(target)
+
+	if group then
+		return registry.on_change(function(changed, current, previous)
+			if not registry.inside(changed, group) then return end
+			callback(current :: any, previous :: any, changed)
+		end)
+	end
 
 	const caller, source, line = debug.info(2, "fsl")
 	const path = path_of(target, caller, source, line)
@@ -43,6 +52,6 @@ return function<value>(target: value, callback: (value: value, previous: value) 
 	if not path then error(USAGE, 2) end
 	return registry.on_change(function(changed, current, previous)
 		if changed ~= path then return end
-		callback(current :: any, previous :: any)
+		callback(current :: any, previous :: any, changed)
 	end)
 end

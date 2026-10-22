@@ -106,6 +106,8 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 	end
 
 	const proxy = setmetatable({}, { __index = index, __newindex = read_only, __iter = iterate })
+	registry.add_group(proxy, path)
+
 	return proxy :: any
 end
 
