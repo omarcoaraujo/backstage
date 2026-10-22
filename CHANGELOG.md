@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.2
+
+- Groups can now be closed while searching, and they open again when the search text changes.
+- Values built by a helper function, such as an item made by `item(10, 2)`, can now be saved. Changing a value that lives inside the helper changes it for every call.
+
 ## 0.8.1
 
 - Groups no longer take a hint, only values and buttons do.
