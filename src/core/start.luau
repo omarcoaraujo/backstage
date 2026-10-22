@@ -15,7 +15,9 @@ const DISPLAY_ORDER = 1000
 export type options = {
 	key: Enum.KeyCode?,
 	ctrl: boolean?,
+
 	port: number?,
+	theme: ("dark" | "light")?,
 
 	vide: unknown?,
 	charm: unknown?,
@@ -43,7 +45,10 @@ const function start(options: options?)
 
 	const vide = require "../../roblox_packages/vide"
 	const app = require "../ui/app"
+
+	const appearance = require "../ui/stores/appearance"
 	const version = require "../version"
+	if options and options.theme then appearance.light(options.theme == "light") end
 
 	const player_gui = Players.LocalPlayer:WaitForChild "PlayerGui"
 	const visible = vide.source(false)

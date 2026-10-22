@@ -1,16 +1,18 @@
 --// Packages
 const vide = require "../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../stores/appearance"
+
 --// Utils
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
-const theme = require "../utils/theme"
+const theme = require "../constants/theme"
 
 --// Components
 const hint = require "./hint"
 
 --// Constants
-const PRESS_TRANSPARENCY = 0.3
 const PADDING = 8
 
 --// Types
@@ -57,14 +59,20 @@ return function(props: props)
 	end
 
 	const function background()
-		if pressed() then return theme.divider end
-		if hovered() and not overlay.active() then return theme.hover end
-		return theme.field
+		if pressed() then return appearance.divider() end
+		if hovered() and not overlay.active() then return appearance.hover() end
+		return appearance.field()
+	end
+
+	const function stroke_color()
+		if pressed() then return appearance.accent() end
+		return appearance.stroke()
 	end
 
 	const function stroke_transparency()
-		if pressed() then return PRESS_TRANSPARENCY end
-		return 1
+		if pressed() then return theme.stroke_focus_transparency end
+		if hovered() and not overlay.active() then return theme.stroke_hover_transparency end
+		return theme.stroke_transparency
 	end
 
 	const function content_width(width: number): number
@@ -93,7 +101,7 @@ return function(props: props)
 		FontFace = theme.font,
 		Text = props.text,
 
-		TextColor3 = theme.text,
+		TextColor3 = appearance.text,
 		TextSize = px(theme.text_size),
 		TextTruncate = Enum.TextTruncate.AtEnd,
 
@@ -119,12 +127,16 @@ return function(props: props)
 			FlexMode = Enum.UIFlexMode.Grow,
 		},
 
+		vide.create "UICorner" {
+			CornerRadius = px.udim(0, theme.radius),
+		},
+
 		vide.create "UIStroke" {
-			Color = theme.stroke,
+			Color = stroke_color,
 			Transparency = stroke_transparency,
 
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			LineJoinMode = Enum.LineJoinMode.Miter,
+			LineJoinMode = Enum.LineJoinMode.Round,
 			Thickness = px(1),
 		},
 	}

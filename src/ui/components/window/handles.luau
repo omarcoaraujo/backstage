@@ -4,10 +4,12 @@ const RunService = game:GetService "RunService"
 --// Packages
 const vide = require "../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../stores/appearance"
+
 --// Utils
 const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
-const theme = require "../../utils/theme"
 
 --// Constants
 const EDGE_HIT = 5
@@ -133,7 +135,7 @@ const function line(edge: side, current: () -> side?)
 		Position = position_of(edge),
 
 		Size = line_size_of(edge),
-		BackgroundColor3 = theme.stroke,
+		BackgroundColor3 = appearance.accent,
 
 		BackgroundTransparency = transparency,
 		BorderSizePixel = 0,

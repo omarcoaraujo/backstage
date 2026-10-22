@@ -1,13 +1,21 @@
 --// Packages
 const vide = require "../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../stores/appearance"
+
 --// Utils
 const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
-const theme = require "../../utils/theme"
+const theme = require "../../constants/theme"
 
 --// Components
 const reset_button = require "../reset_button"
+const theme_button = require "./theme_button"
+
+--// Constants
+const CROSS_LENGTH = 11
+const CROSS_THICKNESS = 1.5
 
 --// Types
 type props = {
@@ -47,9 +55,32 @@ return function(props: props)
 		return 1
 	end
 
+	const function cross_color()
+		if close_hovered() and not overlay.active() then return appearance.text() end
+		return appearance.text_muted()
+	end
+
+	const function cross_stroke(rotation: number)
+		return vide.create "Frame" {
+			Name = "cross",
+			AnchorPoint = Vector2.new(0.5, 0.5),
+
+			Position = UDim2.fromScale(0.5, 0.5),
+			Size = px.udim2(0, CROSS_LENGTH, 0, CROSS_THICKNESS),
+
+			BackgroundColor3 = cross_color,
+			BorderSizePixel = 0,
+			Rotation = rotation,
+
+			vide.create "UICorner" {
+				CornerRadius = UDim.new(1, 0),
+			},
+		}
+	end
+
 	return vide.create "Frame" {
 		Name = "title_bar",
-		BackgroundColor3 = theme.title_background,
+		BackgroundTransparency = 1,
 
 		BorderSizePixel = 0,
 		Active = true,
@@ -67,7 +98,7 @@ return function(props: props)
 			FontFace = theme.font,
 
 			Text = props.title,
-			TextColor3 = theme.text,
+			TextColor3 = appearance.text,
 
 			TextXAlignment = Enum.TextXAlignment.Left,
 			TextSize = px(theme.text_size),
@@ -78,38 +109,46 @@ return function(props: props)
 			Position = UDim2.new(0, 0, 1, -1),
 
 			Size = UDim2.new(1, 0, 0, 1),
-			BackgroundColor3 = theme.divider,
+			BackgroundColor3 = appearance.stroke,
+			BackgroundTransparency = theme.stroke_transparency,
 			BorderSizePixel = 0,
 		},
 
 		reset_button {
-			right = theme.title_height + theme.padding / 2,
+			right = theme.title_inset * 2 + theme.title_button * 2,
 			visible = reset_visible,
 			on_reset = on_reset,
+		},
+
+		theme_button {
+			right = theme.title_inset * 1.5 + theme.title_button,
 		},
 
 		vide.create "TextButton" {
 			Name = "close",
 			AnchorPoint = Vector2.new(1, 0),
 
-			Position = UDim2.fromScale(1, 0),
-			Size = px.udim2(0, theme.title_height, 0, theme.title_height),
+			Position = px.udim2(1, -theme.title_inset, 0, theme.title_inset),
+			Size = px.udim2(0, theme.title_button, 0, theme.title_button),
 
 			AutoButtonColor = false,
-			BackgroundColor3 = theme.hover,
+			BackgroundColor3 = appearance.hover,
 
 			BorderSizePixel = 0,
 			BackgroundTransparency = close_transparency,
 
-			FontFace = theme.font,
-			Text = "x",
-			TextColor3 = theme.text,
-
-			TextSize = px(theme.text_size),
+			Text = "",
 			Activated = overlay.guard(props.on_close),
 
 			MouseEnter = on_close_enter,
 			MouseLeave = on_close_leave,
+
+			vide.create "UICorner" {
+				CornerRadius = px.udim(0, theme.radius),
+			},
+
+			cross_stroke(45),
+			cross_stroke(-45),
 		},
 	}
 end

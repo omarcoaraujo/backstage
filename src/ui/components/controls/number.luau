@@ -3,7 +3,7 @@ const vide = require "../../../../roblox_packages/vide"
 
 --// Utils
 const px = require "../../utils/px"
-const theme = require "../../utils/theme"
+const theme = require "../../constants/theme"
 
 --// Components
 const number_input = require "./number_input"

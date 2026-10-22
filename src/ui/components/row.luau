@@ -1,10 +1,13 @@
 --// Packages
 const vide = require "../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../stores/appearance"
+
 --// Utils
 const filter = require "../utils/filter"
 const px = require "../utils/px"
-const theme = require "../utils/theme"
+const theme = require "../constants/theme"
 
 --// Components
 const hint = require "./hint"
@@ -63,7 +66,7 @@ return function(props: props)
 			FontFace = theme.font,
 			Text = props.label,
 
-			TextColor3 = theme.text_muted,
+			TextColor3 = appearance.text_muted,
 			TextSize = px(theme.text_size),
 
 			TextTruncate = Enum.TextTruncate.AtEnd,

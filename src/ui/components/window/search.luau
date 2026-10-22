@@ -1,14 +1,16 @@
 --// Packages
 const vide = require "../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../stores/appearance"
+
 --// Utils
 const filter = require "../../utils/filter"
 const px = require "../../utils/px"
-const theme = require "../../utils/theme"
+const theme = require "../../constants/theme"
 
 --// Constants
 const PADDING = 4
-const FOCUS_TRANSPARENCY = 0.4
 
 --// Component
 return function()
@@ -22,26 +24,29 @@ return function()
 		focused(false)
 	end
 
+	const function stroke_color()
+		if focused() then return appearance.accent() end
+		return appearance.stroke()
+	end
+
 	const function stroke_transparency()
-		if focused() then return FOCUS_TRANSPARENCY end
-		return 1
+		if focused() then return theme.stroke_focus_transparency end
+		return theme.stroke_transparency
 	end
 
 	return vide.create "Frame" {
 		Name = "search",
 		Position = px.udim2(0, 0, 0, theme.title_height),
 
-		Size = px.udim2(1, 0, 0, theme.row_height),
+		Size = px.udim2(1, 0, 0, theme.search_height),
 		BackgroundTransparency = 1,
 
 		vide.create "TextBox" {
 			Name = "field",
-			AnchorPoint = Vector2.new(0, 0.5),
-
-			Position = px.udim2(0, theme.padding, 0.5, 0),
+			Position = px.udim2(0, theme.padding, 0, theme.padding),
 			Size = px.udim2(1, -theme.padding * 2, 0, theme.field_height),
 
-			BackgroundColor3 = theme.field,
+			BackgroundColor3 = appearance.field,
 			BorderSizePixel = 0,
 			ClipsDescendants = true,
 
@@ -49,10 +54,10 @@ return function()
 			FontFace = theme.font,
 
 			PlaceholderText = "search",
-			PlaceholderColor3 = theme.text_muted,
+			PlaceholderColor3 = appearance.text_muted,
 
 			Text = "",
-			TextColor3 = theme.text,
+			TextColor3 = appearance.text,
 
 			TextSize = px(theme.text_size),
 			TextXAlignment = Enum.TextXAlignment.Left,
@@ -65,12 +70,16 @@ return function()
 				PaddingRight = px.udim(0, PADDING),
 			},
 
+			vide.create "UICorner" {
+				CornerRadius = px.udim(0, theme.radius),
+			},
+
 			vide.create "UIStroke" {
-				Color = theme.stroke,
+				Color = stroke_color,
 				Transparency = stroke_transparency,
 
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				LineJoinMode = Enum.LineJoinMode.Miter,
+				LineJoinMode = Enum.LineJoinMode.Round,
 				Thickness = px(1),
 			},
 

@@ -1,9 +1,12 @@
 --// Packages
 const vide = require "../../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../../stores/appearance"
+
 --// Utils
 const px = require "../../../utils/px"
-const theme = require "../../../utils/theme"
+const theme = require "../../../constants/theme"
 
 --// Constants
 const PADDING = 4
@@ -30,8 +33,8 @@ return function(props: props)
 	end
 
 	const function text_color()
-		if props.highlighted() or props.selected then return theme.text end
-		return theme.text_muted
+		if props.highlighted() or props.selected then return appearance.text() end
+		return appearance.text_muted()
 	end
 
 	return vide.create "TextButton" {
@@ -39,7 +42,7 @@ return function(props: props)
 		Size = px.udim2(1, 0, 0, theme.field_height),
 
 		AutoButtonColor = false,
-		BackgroundColor3 = theme.hover,
+		BackgroundColor3 = appearance.hover,
 
 		BackgroundTransparency = background_transparency,
 		BorderSizePixel = 0,
@@ -53,6 +56,10 @@ return function(props: props)
 
 		Activated = on_activated,
 		MouseEnter = props.on_hover,
+
+		vide.create "UICorner" {
+			CornerRadius = px.udim(0, theme.radius),
+		},
 
 		vide.create "UIPadding" {
 			PaddingLeft = px.udim(0, PADDING),

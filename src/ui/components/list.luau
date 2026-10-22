@@ -1,9 +1,11 @@
 --// Packages
 const vide = require "../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../stores/appearance"
+
 --// Utils
 const px = require "../utils/px"
-const theme = require "../utils/theme"
 
 --// Constants
 const SCROLLBAR_THICKNESS = 4
@@ -25,7 +27,7 @@ return function(props: props)
 		CanvasSize = UDim2.fromScale(0, 0),
 		ScrollingDirection = Enum.ScrollingDirection.Y,
 
-		ScrollBarImageColor3 = theme.divider,
+		ScrollBarImageColor3 = appearance.divider,
 		ScrollBarThickness = px(SCROLLBAR_THICKNESS),
 		VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
 

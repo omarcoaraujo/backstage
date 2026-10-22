@@ -1,11 +1,14 @@
 --// Packages
 const vide = require "../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../stores/appearance"
+
 --// Utils
 const overlay = require "../../utils/overlay"
 const place = require "../../utils/place"
 const px = require "../../utils/px"
-const theme = require "../../utils/theme"
+const theme = require "../../constants/theme"
 
 --// Components
 const menu = require "@self/menu"
@@ -13,7 +16,6 @@ const menu = require "@self/menu"
 --// Constants
 const MAX_VISIBLE = 8
 const PADDING = 4
-const FOCUS_TRANSPARENCY = 0.4
 
 --// Types
 type props = {
@@ -100,13 +102,18 @@ return function(props: props)
 	end
 
 	const function text_color()
-		if table.find(props.choices, props.value()) then return theme.text end
-		return theme.text_muted
+		if table.find(props.choices, props.value()) then return appearance.text() end
+		return appearance.text_muted()
+	end
+
+	const function stroke_color()
+		if opened() then return appearance.accent() end
+		return appearance.stroke()
 	end
 
 	const function stroke_transparency()
-		if opened() then return FOCUS_TRANSPARENCY end
-		return 1
+		if opened() then return theme.stroke_focus_transparency end
+		return theme.stroke_transparency
 	end
 
 	vide.cleanup(close)
@@ -118,7 +125,7 @@ return function(props: props)
 		Size = px.udim2(1, 0, 0, theme.field_height),
 
 		AutoButtonColor = false,
-		BackgroundColor3 = theme.field,
+		BackgroundColor3 = appearance.field,
 
 		BorderSizePixel = 0,
 		ClipsDescendants = true,
@@ -136,12 +143,16 @@ return function(props: props)
 			PaddingRight = px.udim(0, theme.field_height),
 		},
 
+		vide.create "UICorner" {
+			CornerRadius = px.udim(0, theme.radius),
+		},
+
 		vide.create "UIStroke" {
-			Color = theme.stroke,
+			Color = stroke_color,
 			Transparency = stroke_transparency,
 
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			LineJoinMode = Enum.LineJoinMode.Miter,
+			LineJoinMode = Enum.LineJoinMode.Round,
 			Thickness = px(1),
 		},
 
@@ -156,7 +167,7 @@ return function(props: props)
 			FontFace = theme.font,
 			Text = caret,
 
-			TextColor3 = theme.text_muted,
+			TextColor3 = appearance.text_muted,
 			TextSize = px(theme.text_size),
 		},
 

@@ -4,11 +4,14 @@ const UserInputService = game:GetService "UserInputService"
 --// Packages
 const vide = require "../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../stores/appearance"
+
 --// Utils
 const pointer = require "../utils/pointer"
 const px = require "../utils/px"
 const resize_rect = require "../utils/resize_rect"
-const theme = require "../utils/theme"
+const theme = require "../constants/theme"
 
 --// Components
 const footer = require "@self/footer"
@@ -169,7 +172,7 @@ return function(props: props)
 	root = vide.create "Frame" {
 		Name = "backstage_window",
 		Visible = props.visible,
-		BackgroundColor3 = theme.background,
+		BackgroundColor3 = appearance.background,
 
 		BorderSizePixel = 0,
 		Active = true,
@@ -177,12 +180,16 @@ return function(props: props)
 		Position = root_position,
 		Size = root_size,
 
+		vide.create "UICorner" {
+			CornerRadius = px.udim(0, theme.radius * 2),
+		},
+
 		vide.create "UIStroke" {
-			Color = theme.stroke,
+			Color = appearance.stroke,
 			Transparency = theme.stroke_transparency,
 
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-			LineJoinMode = Enum.LineJoinMode.Miter,
+			LineJoinMode = Enum.LineJoinMode.Round,
 			Thickness = px(1),
 		},
 
@@ -191,8 +198,8 @@ return function(props: props)
 			BackgroundTransparency = 1,
 			ClipsDescendants = true,
 
-			Position = px.udim2(0, 0, 0, theme.title_height + theme.row_height),
-			Size = px.udim2(1, 0, 1, -theme.title_height - theme.row_height - footer_height),
+			Position = px.udim2(0, 0, 0, theme.title_height + theme.search_height),
+			Size = px.udim2(1, 0, 1, -theme.title_height - theme.search_height - footer_height),
 
 			props.content,
 		},

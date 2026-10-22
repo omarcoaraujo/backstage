@@ -4,7 +4,7 @@ const vide = require "../../../roblox_packages/vide"
 --// Utils
 const filter = require "../utils/filter"
 const px = require "../utils/px"
-const theme = require "../utils/theme"
+const theme = require "../constants/theme"
 
 --// Components
 const button = require "./button"

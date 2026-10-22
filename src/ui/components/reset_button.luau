@@ -1,14 +1,17 @@
 --// Packages
 const vide = require "../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../stores/appearance"
+
 --// Utils
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
-const theme = require "../utils/theme"
+const theme = require "../constants/theme"
 
 --// Constants
-const ICON_SIZE = 12
-const ICON = "rbxasset://textures/StudioSharedUI/Undo.png"
+const ICON_SIZE = 14
+const ICON = "rbxassetid://103271473486724"
 
 --// Types
 type props = {
@@ -35,8 +38,8 @@ return function(props: props)
 	end
 
 	const function color()
-		if hovered() and not overlay.active() then return theme.text end
-		return theme.text_muted
+		if hovered() and not overlay.active() then return appearance.text() end
+		return appearance.text_muted()
 	end
 
 	return vide.create "TextButton" {

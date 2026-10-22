@@ -1,11 +1,14 @@
 --// Packages
 const vide = require "../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../stores/appearance"
+
 --// Utils
 const filter = require "../utils/filter"
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
-const theme = require "../utils/theme"
+const theme = require "../constants/theme"
 
 --// Components
 const reset_button = require "./reset_button"
@@ -48,7 +51,7 @@ const function tick(child: Instance)
 		Position = px.udim2(0, BRANCH_OFFSET - theme.indent - shift, 0, theme.row_height / 2),
 		Size = px.udim2(0, theme.indent - BRANCH_OFFSET + TICK_REACH, 0, 1),
 
-		BackgroundColor3 = theme.divider,
+		BackgroundColor3 = appearance.divider,
 		BackgroundTransparency = BRANCH_TRANSPARENCY,
 		BorderSizePixel = 0,
 	}
@@ -124,10 +127,10 @@ return function(props: props)
 		return if expanded() then ARROW_DOWN else ARROW_RIGHT
 	end
 
-	const function header_color()
-		if overlay.active() then return theme.title_background end
-		if hovered() then return theme.hover end
-		return theme.title_background
+	const function header_transparency()
+		if overlay.active() then return 1 end
+		if hovered() then return 0.4 end
+		return 1
 	end
 
 	const header = vide.create "TextButton" {
@@ -137,12 +140,13 @@ return function(props: props)
 		Size = px.udim2(1, 0, 0, theme.row_height),
 		AutoButtonColor = false,
 
-		BackgroundColor3 = header_color,
+		BackgroundColor3 = appearance.hover,
+		BackgroundTransparency = header_transparency,
 		BorderSizePixel = 0,
 
 		FontFace = theme.font,
 		Text = props.name,
-		TextColor3 = theme.text,
+		TextColor3 = appearance.text,
 
 		TextSize = px(theme.text_size),
 		TextXAlignment = Enum.TextXAlignment.Left,
@@ -150,6 +154,10 @@ return function(props: props)
 		Activated = overlay.guard(toggle),
 		MouseEnter = on_enter,
 		MouseLeave = on_leave,
+
+		vide.create "UICorner" {
+			CornerRadius = px.udim(0, theme.radius),
+		},
 
 		vide.create "UIPadding" {
 			PaddingLeft = px.udim(0, theme.padding + ARROW_SIZE + ARROW_GAP),
@@ -165,7 +173,7 @@ return function(props: props)
 			BackgroundTransparency = 1,
 			Image = ARROW_IMAGE,
 
-			ImageColor3 = theme.text,
+			ImageColor3 = appearance.text,
 			ImageRectSize = Vector2.new(ARROW_FRAME, ARROW_FRAME),
 			ImageRectOffset = arrow_frame,
 		},
@@ -204,7 +212,7 @@ return function(props: props)
 				Position = px.udim2(0, BRANCH_OFFSET, 0, 0),
 				Size = branch_size,
 
-				BackgroundColor3 = theme.divider,
+				BackgroundColor3 = appearance.divider,
 				BackgroundTransparency = BRANCH_TRANSPARENCY,
 				BorderSizePixel = 0,
 			},

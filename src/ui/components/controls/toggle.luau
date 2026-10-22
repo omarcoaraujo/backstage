@@ -1,17 +1,17 @@
 --// Packages
 const vide = require "../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../stores/appearance"
+
 --// Utils
 const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
-const theme = require "../../utils/theme"
+const theme = require "../../constants/theme"
 
 --// Constants
 const BOX_SIZE = 14
 const MARK_SIZE = 8
-
-const IDLE_TRANSPARENCY = 0.6
-const HOVER_TRANSPARENCY = 0.2
 
 --// Types
 type props = {
@@ -35,10 +35,17 @@ return function(props: props)
 		hovered(false)
 	end
 
+	const function stroke_color()
+		if props.value() then return appearance.accent() end
+		return appearance.stroke()
+	end
+
 	const function stroke_transparency()
-		if overlay.active() then return IDLE_TRANSPARENCY end
-		if hovered() then return HOVER_TRANSPARENCY end
-		return IDLE_TRANSPARENCY
+		if props.value() then return theme.stroke_focus_transparency end
+		if overlay.active() then return theme.stroke_transparency end
+		if hovered() then return theme.stroke_hover_transparency end
+
+		return theme.stroke_transparency
 	end
 
 	return vide.create "TextButton" {
@@ -60,15 +67,19 @@ return function(props: props)
 			Position = UDim2.fromScale(1, 0.5),
 			Size = px.udim2(0, BOX_SIZE, 0, BOX_SIZE),
 
-			BackgroundColor3 = theme.field,
+			BackgroundColor3 = appearance.field,
 			BorderSizePixel = 0,
 
+			vide.create "UICorner" {
+				CornerRadius = px.udim(0, theme.radius),
+			},
+
 			vide.create "UIStroke" {
-				Color = theme.stroke,
+				Color = stroke_color,
 				Transparency = stroke_transparency,
 
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				LineJoinMode = Enum.LineJoinMode.Miter,
+				LineJoinMode = Enum.LineJoinMode.Round,
 				Thickness = px(1),
 			},
 
@@ -79,9 +90,13 @@ return function(props: props)
 				Position = UDim2.fromScale(0.5, 0.5),
 				Size = px.udim2(0, MARK_SIZE, 0, MARK_SIZE),
 
-				BackgroundColor3 = theme.text,
+				BackgroundColor3 = appearance.accent,
 				BorderSizePixel = 0,
 				Visible = props.value,
+
+				vide.create "UICorner" {
+					CornerRadius = px.udim(0, theme.radius / 2),
+				},
 			},
 		},
 	}

@@ -1,20 +1,23 @@
 --// Packages
 const vide = require "../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../stores/appearance"
+
 --// Utils
 const hex = require "../../utils/hex"
 const overlay = require "../../utils/overlay"
 const place = require "../../utils/place"
 const px = require "../../utils/px"
-const theme = require "../../utils/theme"
+const theme = require "../../constants/theme"
 
 --// Components
 const field = require "./field"
 const picker = require "@self/picker"
 
 --// Constants
-const SWATCH_STROKE_TRANSPARENCY = 0.6
-const FOCUS_TRANSPARENCY = 0.2
+const SWATCH_STROKE_TRANSPARENCY = 0.8
+const FOCUS_TRANSPARENCY = 0.15
 
 --// Types
 type props = {
@@ -130,12 +133,16 @@ return function(props: props)
 			BorderSizePixel = 0,
 			Text = "",
 
+			vide.create "UICorner" {
+				CornerRadius = px.udim(0, theme.radius),
+			},
+
 			vide.create "UIStroke" {
-				Color = theme.stroke,
+				Color = appearance.stroke,
 				Transparency = stroke_transparency,
 
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				LineJoinMode = Enum.LineJoinMode.Miter,
+				LineJoinMode = Enum.LineJoinMode.Round,
 				Thickness = px(1),
 			},
 

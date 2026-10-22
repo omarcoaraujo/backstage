@@ -4,16 +4,18 @@ const UserInputService = game:GetService "UserInputService"
 --// Packages
 const vide = require "../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../stores/appearance"
+
 --// Utils
 const overlay = require "../../utils/overlay"
 const pointer = require "../../utils/pointer"
 const px = require "../../utils/px"
-const theme = require "../../utils/theme"
 
 --// Constants
-const TRACK_HEIGHT = 2
-const KNOB_WIDTH = 6
-const KNOB_HEIGHT = 14
+const TRACK_HEIGHT = 3
+const KNOB_WIDTH = 10
+const KNOB_HEIGHT = 10
 
 const CAPTURE_SPAN = 20000
 const CAPTURE_Z_INDEX = 100000
@@ -105,15 +107,23 @@ return function(props: props)
 			Position = UDim2.fromScale(0, 0.5),
 			Size = px.udim2(1, 0, 0, TRACK_HEIGHT),
 
-			BackgroundColor3 = theme.divider,
+			BackgroundColor3 = appearance.divider,
 			BorderSizePixel = 0,
+
+			vide.create "UICorner" {
+				CornerRadius = UDim.new(1, 0),
+			},
 
 			vide.create "Frame" {
 				Name = "fill",
 				Size = fill_size,
 
-				BackgroundColor3 = theme.text_muted,
+				BackgroundColor3 = appearance.accent,
 				BorderSizePixel = 0,
+
+				vide.create "UICorner" {
+					CornerRadius = UDim.new(1, 0),
+				},
 			},
 
 			vide.create "Frame" {
@@ -123,8 +133,12 @@ return function(props: props)
 				Position = knob_position,
 				Size = px.udim2(0, KNOB_WIDTH, 0, KNOB_HEIGHT),
 
-				BackgroundColor3 = theme.text,
+				BackgroundColor3 = appearance.text,
 				BorderSizePixel = 0,
+
+				vide.create "UICorner" {
+					CornerRadius = UDim.new(1, 0),
+				},
 			},
 
 			vide.action(function(instance)

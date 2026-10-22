@@ -4,10 +4,13 @@ const UserInputService = game:GetService "UserInputService"
 --// Packages
 const vide = require "../../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../../stores/appearance"
+
 --// Utils
 const pointer = require "../../../utils/pointer"
 const px = require "../../../utils/px"
-const theme = require "../../../utils/theme"
+const theme = require "../../../constants/theme"
 
 --// Components
 const option = require "./option"
@@ -15,7 +18,7 @@ const option = require "./option"
 --// Constants
 const LAYER_Z_INDEX = 100000
 const SCROLLBAR_THICKNESS = 4
-const STROKE_TRANSPARENCY = 0.4
+const STROKE_TRANSPARENCY = 0.8
 
 --// Types
 type props = {
@@ -148,23 +151,27 @@ return function(props: props)
 			Position = UDim2.fromOffset(props.position.X, props.position.Y),
 			Size = UDim2.fromOffset(props.width, props.height),
 
-			BackgroundColor3 = theme.field,
+			BackgroundColor3 = appearance.field,
 			BorderSizePixel = 0,
 			Active = true,
 
 			AutomaticCanvasSize = Enum.AutomaticSize.Y,
 			CanvasSize = UDim2.fromScale(0, 0),
 
-			ScrollBarImageColor3 = theme.divider,
+			ScrollBarImageColor3 = appearance.divider,
 			ScrollBarThickness = px(SCROLLBAR_THICKNESS),
 			VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar,
 
+			vide.create "UICorner" {
+				CornerRadius = px.udim(0, theme.radius),
+			},
+
 			vide.create "UIStroke" {
-				Color = theme.stroke,
+				Color = appearance.stroke,
 				Transparency = STROKE_TRANSPARENCY,
 
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				LineJoinMode = Enum.LineJoinMode.Miter,
+				LineJoinMode = Enum.LineJoinMode.Round,
 				Thickness = px(1),
 			},
 

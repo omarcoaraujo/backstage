@@ -1,10 +1,21 @@
 --// Functions
-const function place(origin: Vector2, size: Vector2, height: number, gap: number, bounds: Vector2): Vector2
+const function place(
+	origin: Vector2,
+	size: Vector2,
+	height: number,
+	gap: number,
+	bounds: Vector2,
+	prefer_above: boolean?
+): Vector2
 	const below = origin.Y + size.Y + gap
-	if below + height <= bounds.Y then return Vector2.new(origin.X, below) end
-
 	const above = origin.Y - gap - height
-	if above >= 0 then return Vector2.new(origin.X, above) end
+
+	const fits_below = below + height <= bounds.Y
+	const fits_above = above >= 0
+
+	if prefer_above and fits_above then return Vector2.new(origin.X, above) end
+	if fits_below then return Vector2.new(origin.X, below) end
+	if fits_above then return Vector2.new(origin.X, above) end
 
 	return Vector2.new(origin.X, math.max(0, bounds.Y - height))
 end

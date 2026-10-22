@@ -1,17 +1,20 @@
 --// Packages
 const vide = require "../../../../../roblox_packages/vide"
 
+--// Stores
+const appearance = require "../../../stores/appearance"
+
 --// Utils
 const pointer = require "../../../utils/pointer"
 const px = require "../../../utils/px"
-const theme = require "../../../utils/theme"
+const theme = require "../../../constants/theme"
 
 --// Components
 const surface = require "./surface"
 
 --// Constants
 const LAYER_Z_INDEX = 100000
-const STROKE_TRANSPARENCY = 0.4
+const STROKE_TRANSPARENCY = 0.8
 
 const PANEL_WIDTH = 160
 const PANEL_PADDING = 6
@@ -124,7 +127,7 @@ const function component(props: props)
 			Position = panel_position,
 			Size = px.udim2(0, PANEL_WIDTH, 0, panel_height()),
 
-			BackgroundColor3 = theme.field,
+			BackgroundColor3 = appearance.field,
 			BorderSizePixel = 0,
 			Active = true,
 
@@ -132,12 +135,16 @@ const function component(props: props)
 				panel = instance :: Frame
 			end),
 
+			vide.create "UICorner" {
+				CornerRadius = px.udim(0, theme.radius),
+			},
+
 			vide.create "UIStroke" {
-				Color = theme.stroke,
+				Color = appearance.stroke,
 				Transparency = STROKE_TRANSPARENCY,
 
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-				LineJoinMode = Enum.LineJoinMode.Miter,
+				LineJoinMode = Enum.LineJoinMode.Round,
 				Thickness = px(1),
 			},
 
@@ -187,11 +194,11 @@ const function component(props: props)
 					BorderSizePixel = 0,
 
 					vide.create "UIStroke" {
-						Color = theme.stroke,
+						Color = appearance.stroke,
 						Transparency = 0,
 
 						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-						LineJoinMode = Enum.LineJoinMode.Miter,
+						LineJoinMode = Enum.LineJoinMode.Round,
 						Thickness = px(1),
 					},
 				},
@@ -217,11 +224,11 @@ const function component(props: props)
 					BorderSizePixel = 0,
 
 					vide.create "UIStroke" {
-						Color = theme.stroke,
+						Color = appearance.stroke,
 						Transparency = 0,
 
 						ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-						LineJoinMode = Enum.LineJoinMode.Miter,
+						LineJoinMode = Enum.LineJoinMode.Round,
 						Thickness = px(1),
 					},
 				},
