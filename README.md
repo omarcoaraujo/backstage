@@ -277,6 +277,12 @@ backstage serve --port 34891
 
 Enable **Allow HTTP Requests** in the game settings of the place. The tool listens only on `127.0.0.1`, finds each config by name across the project, and refuses a name that is declared in two files or a value that is not a literal. The folder defaults to the current one, and `backstage serve path/to/project` picks another. `--port` is optional, and the same number goes to `backstage.start { port = 34891 }` if you change it.
 
+#### The file on disk is the source of truth
+
+Backstage never keeps its own copy of your numbers. The default written in the script on disk is the truth, and the window is only a way to change it. A value you tune and the same value you type into the script end up in the same place, so there is nothing to reconcile: no export, no stored overrides, and nothing to forget about.
+
+The tool writes every change you make in the window into the file as you make it. The reset button is not about what is saved: it appears when a value differs from the one you started tuning from, and it takes you back to that value. Editing the script on disk is different. The number you type becomes the new starting point, so the window shows it as the original and there is nothing to go back to, and no reset button.
+
 #### Editing the script by hand
 
 The tool also watches your scripts. When you change a default by hand while the game is running, the new number is sent to the game: the value and its reset target change, and the window and every player follow. Edits the window made itself are not sent back. The tool follows the literals it can read, the same ones it can write, and a new value or a config that was not running when you started the game needs a restart.
