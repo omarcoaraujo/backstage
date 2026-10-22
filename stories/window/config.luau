@@ -46,7 +46,7 @@ return backstage.config("demo", {
 			height = { min = 0, max = 15, step = 0.1 },
 			speed = { min = 0.5, max = 40 },
 
-			mode = { choices = { "follow", "orbit", "cloud" } },
+			mode = { "follow", "orbit", "cloud" },
 			trail = {
 				length = { min = 0.1, max = 6, step = 0.1 },
 				fade = {

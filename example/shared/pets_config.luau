@@ -41,7 +41,7 @@ return backstage.config("pets", {
 }, {
 	limits = {
 		size = { min = 0.5, max = 8, step = 0.1 },
-		mode = { choices = { "follow", "orbit" } },
+		mode = { "follow", "orbit" },
 		stances = { follow = STANCE_LIMITS, orbit = STANCE_LIMITS },
 
 		trail = {

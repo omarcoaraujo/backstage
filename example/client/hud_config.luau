@@ -17,7 +17,7 @@ return backstage.config("hud", {
 	fade = 0.15,
 }, {
 	limits = {
-		corner = { choices = { "top_left", "top_right", "bottom_left", "bottom_right" } },
+		corner = { "top_left", "top_right", "bottom_left", "bottom_right" },
 		scale = { min = 0.5, max = 2, step = 0.05 },
 		fade = { min = 0, max = 1, step = 0.05 },
 	},

@@ -20,9 +20,30 @@ return {
 		assert((kinds.infer(Vector3.zero) :: kinds.descriptor).kind == "vector3")
 	end,
 
-	infer_prefers_choices_over_the_default_type = function()
-		const descriptor = kinds.infer("a", { choices = { "a", "b" } }) :: kinds.descriptor
+	infer_reads_a_list_of_strings_as_choices_for_a_string = function()
+		const descriptor = kinds.infer("a", { "a", "b" }) :: kinds.descriptor
 		assert(descriptor.kind == "choice")
+
+		assert(#(descriptor.choices :: { string }) == 2)
+		assert(kinds.coerce(descriptor, "b") == "b")
+		assert(kinds.coerce(descriptor, "c") == nil)
+	end,
+
+	infer_ignores_a_plain_list_for_a_number = function()
+		const descriptor = kinds.infer(1, { "a", "b" }) :: kinds.descriptor
+		assert(descriptor.kind == "number")
+	end,
+
+	infer_ignores_a_list_that_holds_something_else_than_strings = function()
+		const mixed = { "a" :: any, 2 }
+		const descriptor = kinds.infer("a", mixed) :: kinds.descriptor
+		assert(descriptor.kind == "string")
+	end,
+
+	infer_ignores_the_old_choices_field = function()
+		const old: unknown = { choices = { "a", "b" } }
+		const descriptor = kinds.infer("a", old) :: kinds.descriptor
+		assert(descriptor.kind == "string")
 	end,
 
 	infer_rejects_unsupported_values = function()
@@ -74,7 +95,7 @@ return {
 	end,
 
 	choice_only_accepts_listed_values = function()
-		const descriptor = kinds.infer("a", { choices = { "a", "b" } }) :: kinds.descriptor
+		const descriptor = kinds.infer("a", { "a", "b" }) :: kinds.descriptor
 		assert(kinds.coerce(descriptor, "b") == "b")
 
 		assert(kinds.coerce(descriptor, "c") == nil)

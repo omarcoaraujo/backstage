@@ -82,7 +82,7 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 			continue
 		end
 
-		const descriptor = kinds.infer(value, limit :: kinds.limit?)
+		const descriptor = kinds.infer(value, limit)
 		if not descriptor then error(`backstage: unsupported value for {member_path}`, 0) end
 
 		registry.add(member_path, key, path, descriptor, value :: kinds.value, text)

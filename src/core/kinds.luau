@@ -12,7 +12,6 @@ export type limit = {
 	max: number?,
 
 	step: number?,
-	choices: { string }?,
 }
 
 export type descriptor = {
@@ -26,9 +25,25 @@ export type descriptor = {
 }
 
 --// Functions
-const function infer(default: unknown, limit: limit?): descriptor?
-	if limit and limit.choices then return { kind = "choice", choices = limit.choices } end
+const function listed(input: unknown): { string }?
+	if type(input) ~= "table" then return nil end
+
+	const items = input :: { string }
+	if #items == 0 then return nil end
+
+	for _, item in items do
+		if type(item) ~= "string" then return nil end
+	end
+
+	return items
+end
+
+const function infer(default: unknown, input: unknown): descriptor?
 	const kind = typeof(default)
+	const options = if kind == "string" then listed(input) else nil
+
+	if options then return { kind = "choice", choices = options } end
+	const limit = if listed(input) then nil else input :: limit?
 
 	if kind == "number" then
 		return {

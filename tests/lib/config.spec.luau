@@ -25,7 +25,7 @@ const function options()
 	return {
 		limits = {
 			distance = { min = 0, max = 30, step = 0.1 },
-			mode = { choices = { "follow", "orbit" } },
+			mode = { "follow", "orbit" },
 			trail = { length = { min = 0.1, max = 6 } },
 		},
 
