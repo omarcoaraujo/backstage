@@ -1,8 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.11.1
 
 - The window title now shows the Backstage logo.
+- Buttons now end at the same edge as the fields above them.
 
 ## 0.11.0
 

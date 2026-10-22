@@ -43,7 +43,7 @@ At a glance:
 
 ```toml
 [dependencies]
-backstage = { name = "omarcoaraujo/backstage", version = "^0.11.0" }
+backstage = { name = "omarcoaraujo/backstage", version = "^0.11.1" }
 ```
 
 **The tool**, with [Rokit](https://github.com/rojo-rbx/rokit):
