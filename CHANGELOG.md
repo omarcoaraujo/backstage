@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.10.0
 
 - The window got a cleaner, minimal look, with softer borders, rounded corners and a blue accent.
 - Added a light theme, switched by a new button in the title bar, and a `theme` option on `start` to pick the one it opens with.
