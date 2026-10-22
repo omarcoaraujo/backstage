@@ -146,6 +146,21 @@ return {
 		assert(first.range.begin_column == second.range.begin_column)
 	end,
 
+	follows_the_key_to_the_argument_even_when_the_parameter_has_another_name = function()
+		const source = [[
+local function item(another_thing)
+	return { price = another_thing }
+end
+
+backstage.config("shop", { sword = item(10) })
+]]
+
+		const found = locate.locate(source, "shop.sword.price")
+		assert(found and found.tag == "number")
+		assert(found.range.begin_line == 5)
+		assert(locate.locate(source, "shop.sword.another_thing") == nil)
+	end,
+
 	refuses_a_call_to_something_that_is_not_a_local_function = function()
 		const found, reason = locate.locate('backstage.config("a", { b = make(1) })', "a.b.c")
 		assert(found == nil)

@@ -5,6 +5,7 @@
 - The window got a cleaner, minimal look, with softer borders, rounded corners and a blue accent.
 - Added a light theme, switched by a new button in the title bar, and a `theme` option on `start` to pick the one it opens with.
 - New reset icon.
+- Editing a number passed to a helper function by hand, like the `10` in `item(10, 2)`, now reaches the game too.
 - Editing a script by hand now also updates the window in the stories, not only in a play session.
 - Groups that were open stay open when a script is edited by hand while the game runs.
 - The reset button in the title bar no longer gets stuck visible after a script is edited by hand.

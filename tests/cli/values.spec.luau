@@ -44,6 +44,84 @@ return {
 		assert(changes[1].path == "pets.speed" and changes[1].value == 5)
 	end,
 
+	reads_the_arguments_of_a_helper_function = function()
+		const snapshot = read [[
+			local function item(price, weight)
+				return { price = price, weight = weight, stack = 4 }
+			end
+
+			backstage.config("shop", { sword = item(10, 2) })
+		]]
+
+		assert(snapshot["shop.sword.price"].value == 10)
+		assert(snapshot["shop.sword.weight"].value == 2)
+		assert(snapshot["shop.sword.stack"].value == 4)
+	end,
+
+	names_the_value_by_its_key_and_not_by_the_parameter = function()
+		const snapshot = read [[
+			local function item(another_thing)
+				return { price = another_thing }
+			end
+
+			backstage.config("shop", { sword = item(10) })
+		]]
+
+		assert(snapshot["shop.sword.price"].value == 10)
+		assert(snapshot["shop.sword.another_thing"] == nil)
+	end,
+
+	reads_helper_calls_inside_a_list = function()
+		const snapshot = read [[
+			local function item(price)
+				return { price = price }
+			end
+
+			backstage.config("shop", { items = { item(10), item(25) } })
+		]]
+
+		assert(snapshot["shop.items.1.price"].value == 10)
+		assert(snapshot["shop.items.2.price"].value == 25)
+	end,
+
+	skips_a_helper_argument_that_is_not_a_literal = function()
+		const snapshot = read [[
+			local function item(price)
+				return { price = price }
+			end
+
+			backstage.config("shop", { sword = item(base * 2) })
+		]]
+
+		assert(snapshot["shop.sword.price"] == nil)
+	end,
+
+	reports_the_change_of_a_helper_argument = function()
+		const helper = "local function item(price) return { price = price } end\n"
+		const before = read(helper .. 'backstage.config("shop", { sword = item(10) })')
+		const after = read(helper .. 'backstage.config("shop", { sword = item(12) })')
+		const changes = values.changes(before, after)
+
+		assert(#changes == 1)
+		assert(changes[1].path == "shop.sword.price" and changes[1].value == 12)
+	end,
+
+	reports_every_call_when_the_helper_body_changes = function()
+		const before = read [[
+			local function item(price) return { price = price, stack = 4 } end
+			backstage.config("shop", { sword = item(10), bow = item(20) })
+		]]
+
+		const after = read [[
+			local function item(price) return { price = price, stack = 8 } end
+			backstage.config("shop", { sword = item(10), bow = item(20) })
+		]]
+
+		const changes = values.changes(before, after)
+		assert(#changes == 2)
+		assert(changes[1].path == "shop.bow.stack" and changes[2].path == "shop.sword.stack")
+	end,
+
 	ignores_a_different_way_of_writing_the_same_value = function()
 		const before = read 'backstage.config("pets", { speed = 1 })'
 		const after = read 'backstage.config("pets", { speed = 1.0 })'

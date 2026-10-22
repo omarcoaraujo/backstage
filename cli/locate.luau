@@ -181,7 +181,17 @@ const function collect_calls(node, calls: { any })
 	end
 end
 
-const function collect_literals(table_node, prefix: string, found: { [string]: found })
+const function argument_for(entered, node)
+	if not entered or node.tag ~= "local" then return node end
+
+	const index = parameter_index(entered.func, node.token.text)
+	const argument = if index then entered.call.arguments[index] else nil
+
+	if not argument then return node end
+	return argument.node
+end
+
+const function collect_literals(root, table_node, prefix: string, found: { [string]: found }, entered)
 	local items = 0
 
 	for _, entry in table_node.entries do
@@ -198,20 +208,27 @@ const function collect_literals(table_node, prefix: string, found: { [string]: f
 		const path = `{prefix}.{key}`
 
 		if entry.value.tag == "table" then
-			collect_literals(entry.value, path, found)
+			collect_literals(root, entry.value, path, found, entered)
 			continue
 		end
 
-		if is_literal(entry.value) then
-			found[path] = { tag = entry.value.tag, range = to_range(entry.value.location) }
+		if entry.value.tag == "call" and not is_constructor(entry.value) then
+			const inside = enter_call(root, entry.value)
+			if inside then collect_literals(root, inside.returned, path, found, inside) end
+			continue
 		end
+
+		const value = argument_for(entered, entry.value)
+		if is_literal(value) then found[path] = { tag = value.tag, range = to_range(value.location) } end
 	end
 end
 
 const function literals(source: string): { [string]: found }
 	const found = {} :: { [string]: found }
 	const calls = {}
-	collect_calls(parser.parse(source).root, calls)
+
+	const root = parser.parse(source).root
+	collect_calls(root, calls)
 
 	for _, call in calls do
 		const first = call.arguments[1]
@@ -219,7 +236,7 @@ const function literals(source: string): { [string]: found }
 		const defaults = call.arguments[2]
 
 		if not name or not defaults or defaults.node.tag ~= "table" then continue end
-		collect_literals(defaults.node, name, found)
+		collect_literals(root, defaults.node, name, found, nil)
 	end
 
 	return found
