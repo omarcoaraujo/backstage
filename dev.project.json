@@ -5,9 +5,12 @@
     "ReplicatedStorage": {
       "backstage": { "$path": "src" },
       "roblox_packages": { "$path": "roblox_packages" },
-      "shared": { "$path": "example/shared" },
+      "data": { "$path": "example/data/shared" },
+      "ui": { "$path": "example/ui" },
+      "client_modules": { "$path": "example/client" },
       "stories": { "$path": "stories" }
     },
+
     "Workspace": {
       "$className": "Workspace",
       "Baseplate": {
@@ -19,13 +22,15 @@
         }
       }
     },
+
     "ServerScriptService": {
-      "server": { "$path": "example/server" }
+      "server": { "$path": "example/.server.luau" }
     },
+    
     "StarterPlayer": {
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "client": { "$path": "example/client" }
+        "client": { "$path": "example/.client.luau" }
       }
     }
   }

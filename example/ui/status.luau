@@ -7,7 +7,7 @@ const charm = require(ReplicatedStorage.roblox_packages.charm)
 
 --// Modules
 const backstage = require(ReplicatedStorage.backstage)
-const pets = require(ReplicatedStorage.shared.pets_config)
+const data = require(ReplicatedStorage.data)
 
 --// Constants
 const TOP_MARGIN = 16
@@ -17,6 +17,9 @@ const WIDTH = 320
 const TEXT_COLOR = Color3.fromRGB(220, 220, 225)
 const MUTED_COLOR = Color3.fromRGB(150, 150, 160)
 const FONT = Font.fromEnum(Enum.Font.GothamMedium)
+
+--// Variables
+const pets = data.pets
 
 --// Functions
 const function line(name: string, order: number, color: Color3)

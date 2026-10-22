@@ -145,7 +145,7 @@ In the window, every changed value shows a reset arrow. A group shows one that r
 Read the values as plain fields, always through the table `config` returns, so you see the latest edit:
 
 ```lua
-const config = require(path.to.pets_config)
+const config = require(path.to.pets)
 
 print(config.distance, config.trail.length)
 
@@ -172,7 +172,7 @@ charm.effect(function()
 end)
 ```
 
-This is what lets you tune things a per-frame loop could never reach, like a HUD that rebuilds only when a value changes. [`example/client/hud.luau`](example/client/hud.luau) is a Vide card whose corner, scale, colors, title and rows all follow the window.
+This is what lets you tune things a per-frame loop could never reach, like a HUD that rebuilds only when a value changes. [`example/ui/hud.luau`](example/ui/hud.luau) is a Vide card whose corner, scale, colors, title and rows all follow the window.
 
 Vide works with the copy Backstage installs. If your game uses another copy of Vide, or uses Charm, hand them to `start` so the copy that tracks is the one your code uses:
 
@@ -214,7 +214,7 @@ end)
 
 A group has values of different kinds inside, so `value` and `previous` are typed as `backstage.value`, which is `number | boolean | string | Color3 | Vector3`. Narrow it with `typeof` or by the `path`, when you need the exact kind. A single value keeps its own type: `on_change(config.size, ...)` gives you a `number`.
 
-To hear every change of every config, which is handy for a log or a debug overlay, use `backstage.on_any_change`. Its callback takes the same arguments as the group one: `(value, previous, path)`. Both return a function that disconnects them and do nothing outside Studio. [`example/client/status.luau`](example/client/status.luau) shows the two ways to react side by side: a Charm effect that rewrites a label from the values it reads, and `on_any_change` that shows the last change.
+To hear every change of every config, which is handy for a log or a debug overlay, use `backstage.on_any_change`. Its callback takes the same arguments as the group one: `(value, previous, path)`. Both return a function that disconnects them and do nothing outside Studio. [`example/ui/status.luau`](example/ui/status.luau) shows the two ways to react side by side: a Charm effect that rewrites a label from the values it reads, and `on_any_change` that shows the last change.
 
 ### 5. Opening the window
 
@@ -290,7 +290,7 @@ return backstage.config("shop", {
 
 ```lua
 return function(target)
-	require(path.to.pets_config)
+	require(path.to.pets)
 	return backstage.embed(target)
 end
 ```

@@ -6,8 +6,7 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 const vide = require(ReplicatedStorage.roblox_packages.vide)
 
 --// Modules
-const pets = require(ReplicatedStorage.shared.pets_config)
-const hud = require "./hud_config"
+const data = require(ReplicatedStorage.data)
 
 --// Constants
 const CARD_WIDTH = 190
@@ -28,6 +27,10 @@ const CORNERS = {
 	bottom_left = { anchor = Vector2.new(0, 1), position = UDim2.new(0, MARGIN, 1, -MARGIN) },
 	bottom_right = { anchor = Vector2.new(1, 1), position = UDim2.new(1, -MARGIN, 1, -MARGIN) },
 } :: { [string]: { anchor: Vector2, position: UDim2 } }
+
+--// Variables
+const pets = data.pets
+const hud = data.hud
 
 --// Functions
 const function trail_text()

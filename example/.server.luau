@@ -5,5 +5,5 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 const backstage = require(ReplicatedStorage.backstage)
 
 --// End
-require(ReplicatedStorage.shared.pets_config)
+require(ReplicatedStorage.data)
 backstage.start()

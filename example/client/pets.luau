@@ -5,16 +5,18 @@ const RunService = game:GetService "RunService"
 
 --// Modules
 const backstage = require(ReplicatedStorage.backstage)
-const config = require(ReplicatedStorage.shared.pets_config)
+const data = require(ReplicatedStorage.data)
 
 --// Constants
 const ORBIT_SPEED = 1.5
 const SWAY_SPEED = 3
 
 --// Variables
+const config = data.pets
+local angle = 0
+
 local pet = nil :: Part?
 local trail = nil :: Trail?
-local angle = 0
 
 --// Functions
 const function get_root(): BasePart?
@@ -78,7 +80,6 @@ end
 
 const function apply_tint(tint: Color3)
 	if not pet or not trail then return end
-
 	pet.Color = tint
 	trail.Color = ColorSequence.new(tint)
 end

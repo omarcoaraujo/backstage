@@ -4,7 +4,7 @@ const RunService = game:GetService "RunService"
 
 --// Modules
 const backstage = require(ReplicatedStorage.backstage)
-const config = require(ReplicatedStorage.shared.pets_config)
+const data = require(ReplicatedStorage.data)
 
 --// Constants
 const CAMERA_POSITION = Vector3.new(0, 14, 22)
@@ -13,6 +13,9 @@ const OWNER_SPEED = 0.6
 
 const ORBIT_SPEED = 1.5
 const SWAY_SPEED = 3
+
+--// Variables
+const config = data.pets
 
 --// Functions
 const function build_part(shape: Enum.PartType, parent: Instance): Part
