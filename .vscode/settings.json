@@ -1,3 +1,7 @@
 {
-    "luau-lsp.studioPlugin.port": 3670
+    "luau-lsp.studioPlugin.port": 3670,
+    "workbench.iconTheme": "charmed-warm",
+    "files.exclude": {
+        "**/*_packages": true
+    }
 }

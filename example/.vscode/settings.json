@@ -1,0 +1,6 @@
+{
+    "workbench.iconTheme": "charmed-warm",
+    "files.exclude": {
+        "**/*_packages": true
+    }
+}
