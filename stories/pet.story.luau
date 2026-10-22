@@ -10,7 +10,9 @@ const config = require(ReplicatedStorage.shared.pets_config)
 const CAMERA_POSITION = Vector3.new(0, 14, 22)
 const OWNER_RADIUS = 8
 const OWNER_SPEED = 0.6
+
 const ORBIT_SPEED = 1.5
+const SWAY_SPEED = 3
 
 --// Functions
 const function build_part(shape: Enum.PartType, parent: Instance): Part
@@ -25,14 +27,23 @@ const function build_part(shape: Enum.PartType, parent: Instance): Part
 	return part
 end
 
+const function resolve_stance()
+	if config.mode == "orbit" then return config.stances.orbit end
+	return config.stances.follow
+end
+
 const function resolve_goal(position: Vector3, forward: Vector3, angle: number): Vector3
+	const stance = resolve_stance()
+	const sway = Vector3.yAxis * math.sin(os.clock() * SWAY_SPEED) * stance.sway
+
 	if config.mode == "orbit" then
 		return position
-			+ Vector3.new(math.cos(angle), 0, math.sin(angle)) * config.distance
-			+ Vector3.yAxis * config.height
+			+ Vector3.new(math.cos(angle), 0, math.sin(angle)) * stance.distance
+			+ Vector3.yAxis * stance.height
+			+ sway
 	end
 
-	return position - forward * config.distance + Vector3.yAxis * config.height
+	return position - forward * stance.distance + Vector3.yAxis * stance.height + sway
 end
 
 const function build_world(target: Instance): (ViewportFrame, Part, Part)
@@ -82,7 +93,8 @@ return function(target: Instance)
 		const forward = Vector3.new(-math.sin(around), 0, math.cos(around))
 
 		owner.CFrame = CFrame.lookAt(position, position + forward)
-		pet.Position = pet.Position:Lerp(resolve_goal(position, forward, angle), math.min(config.speed * dt, 1))
+		pet.Position =
+			pet.Position:Lerp(resolve_goal(position, forward, angle), math.min(resolve_stance().speed * dt, 1))
 	end
 
 	apply_size(config.size)

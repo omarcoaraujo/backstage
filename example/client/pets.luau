@@ -9,6 +9,7 @@ const config = require(ReplicatedStorage.shared.pets_config)
 
 --// Constants
 const ORBIT_SPEED = 1.5
+const SWAY_SPEED = 3
 
 --// Variables
 local pet = nil :: Part?
@@ -21,15 +22,24 @@ const function get_root(): BasePart?
 	return character and character:FindFirstChild "HumanoidRootPart"
 end
 
+const function resolve_stance()
+	if config.mode == "orbit" then return config.stances.orbit end
+	return config.stances.follow
+end
+
 const function resolve_target(root: BasePart, dt: number)
+	const stance = resolve_stance()
+	const sway = Vector3.yAxis * math.sin(os.clock() * SWAY_SPEED) * stance.sway
+
 	if config.mode == "orbit" then
 		angle += dt * ORBIT_SPEED
 		return root.Position
-			+ Vector3.new(math.cos(angle), 0, math.sin(angle)) * config.distance
-			+ Vector3.yAxis * config.height
+			+ Vector3.new(math.cos(angle), 0, math.sin(angle)) * stance.distance
+			+ Vector3.yAxis * stance.height
+			+ sway
 	end
 
-	return root.Position - root.CFrame.LookVector * config.distance + Vector3.yAxis * config.height
+	return root.Position - root.CFrame.LookVector * stance.distance + Vector3.yAxis * stance.height + sway
 end
 
 const function build_pet()
@@ -91,7 +101,7 @@ const function step(dt: number)
 	const root = get_root()
 	if not pet or not trail or not root then return end
 
-	const alpha = math.min(config.speed * dt, 1)
+	const alpha = math.min(resolve_stance().speed * dt, 1)
 	pet.Position = pet.Position:Lerp(resolve_target(root, dt), alpha)
 
 	trail.Enabled = config.trail.enabled
