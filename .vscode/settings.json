@@ -5,6 +5,7 @@
     },
 
     "luau-lsp.studioPlugin.port": 3670,
+    "luau-lsp.sourcemap.rojoProjectFile": "dev.project.json",
     "files.exclude": {
         "**/*_packages": true
     }
