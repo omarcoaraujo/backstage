@@ -136,6 +136,47 @@ return {
 		assert(table.concat(keys, ",") == "distance,mode,respawn,trail")
 	end,
 
+	studio_array_reports_its_length = function()
+		fresh()
+
+		const pets = backstage.config("pets", {
+			tints = { Color3.new(1, 0, 0), Color3.new(0, 1, 0), Color3.new(0, 0, 1) },
+		})
+
+		assert(#pets.tints == 3)
+	end,
+
+	studio_group_with_text_keys_has_no_length = function()
+		fresh()
+		const pets = backstage.config("pets", defaults(), options())
+		assert(#(pets.trail :: any) == 0)
+	end,
+
+	studio_empty_array_has_no_length = function()
+		fresh()
+		const pets = backstage.config("pets", { tints = {} })
+		assert(#pets.tints == 0)
+	end,
+
+	studio_array_reads_by_index_and_iterates = function()
+		fresh()
+		const pets = backstage.config("pets", {
+			tints = { Color3.new(1, 0, 0), Color3.new(0, 1, 0), Color3.new(0, 0, 1) },
+		})
+
+		assert(pets.tints[2] == Color3.new(0, 1, 0))
+		registry.set("pets.tints.2", Color3.new(1, 1, 1))
+		assert(pets.tints[2] == Color3.new(1, 1, 1))
+
+		local seen = 0
+		for _, color in pets.tints do
+			assert(typeof(color) == "Color3")
+			seen += 1
+		end
+
+		assert(seen == 3)
+	end,
+
 	button_fires_its_listeners = function()
 		fresh()
 
