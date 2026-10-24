@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.2
+
+- An array inside a config now reports its real length with `#`, instead of 0.
+
 ## 0.11.1
 
 - The window title now shows the Backstage logo.
