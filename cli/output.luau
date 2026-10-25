@@ -44,7 +44,7 @@ return {
 
 	pushed = pushed,
 	applied = applied,
-	
+
 	usage = usage,
 	serving = serving,
 }
