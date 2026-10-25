@@ -1,5 +1,5 @@
 name = "omarcoaraujo/backstage"
-version = "0.13.0"
+version = "0.14.0"
 description = "Live tuning panel for Roblox Studio: edit game values in real time"
 license = "MIT"
 authors = ["omarcoaraujo <omarcoaraujo@outlook.com>"]
