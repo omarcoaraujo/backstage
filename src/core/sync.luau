@@ -3,6 +3,7 @@ const Players = game:GetService "Players"
 const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
 --// Modules
+const holders = require "./holders"
 const mode = require "./mode"
 const presence = require "./presence"
 const registry = require "./registry"
@@ -40,6 +41,7 @@ end
 
 const function serve(given: server_remote?)
 	const remote = given or create_remote()
+	holders.reset()
 
 	const function send_snapshot(player: Player)
 		remote:FireClient(player, "snapshot", registry.snapshot())
@@ -57,7 +59,16 @@ const function serve(given: server_remote?)
 		end
 
 		if kind == "cursor" then
-			remote:FireAllClients("cursor", player.UserId, player.DisplayName, presence.valid(path))
+			const state = presence.valid(path)
+			const owner = if state and state.hold then state.hold.owner else nil
+
+			if holders.claim(player.UserId, owner) then
+				remote:FireAllClients("cursor", player.UserId, player.DisplayName, state)
+				return
+			end
+
+			const pointer = if state and state.cursor then { cursor = state.cursor } else nil
+			remote:FireAllClients("cursor", player.UserId, player.DisplayName, pointer)
 			return
 		end
 
@@ -68,8 +79,11 @@ const function serve(given: server_remote?)
 		end
 
 		if kind ~= "edit" then return end
-		if registry.set(path, value) then return end
 
+		const holder = holders.holder(path)
+		const refused = holder ~= nil and holder ~= player.UserId
+
+		if not refused and registry.set(path, value) then return end
 		const current = registry.get(path)
 		if current ~= nil then remote:FireClient(player, "changed", path, current) end
 	end
@@ -83,6 +97,7 @@ const function serve(given: server_remote?)
 	end
 
 	const function on_leaving(player: Player)
+		holders.release(player.UserId)
 		remote:FireAllClients("cursor", player.UserId, player.DisplayName, nil)
 	end
 

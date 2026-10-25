@@ -7,7 +7,8 @@ const registry = require(ReplicatedStorage.backstage.core.registry)
 const sync = require(ReplicatedStorage.backstage.core.sync)
 
 --// Constants
-const PLAYER = {} :: any
+const PLAYER = { UserId = 1, DisplayName = "one" } :: any
+const OTHER = { UserId = 2, DisplayName = "two" } :: any
 
 --// Types
 type sent = { kind: string, args: { any } }
@@ -59,10 +60,14 @@ const function server_remote()
 		assert(handler)(PLAYER, ...)
 	end
 
+	const function fire_as(player: any, ...)
+		assert(handler)(player, ...)
+	end
+
 	registry.reset()
 	sync.serve(remote)
 
-	return log, fire
+	return log, fire, fire_as
 end
 
 const function client_remote()
@@ -124,6 +129,46 @@ return {
 		fire("edit", "pets.speed", 7)
 		assert(registry.get "pets.speed" == 7)
 		assert(#log == 1 and log[1].kind == "all" and log[1].args[1] == "changed")
+	end,
+
+	server_refuses_an_edit_on_a_value_another_player_holds = function()
+		const log, _, fire_as = server_remote()
+		declare_speed(1)
+
+		fire_as(PLAYER, "cursor", { hold = { owner = "pets.speed", part = { "control", "slider" } } })
+		fire_as(OTHER, "edit", "pets.speed", 7)
+
+		assert(registry.get "pets.speed" == 1)
+		assert(log[#log].kind == "client" and log[#log].args[1] == "changed" and log[#log].args[3] == 1)
+	end,
+
+	server_lets_the_holder_edit = function()
+		const _, _, fire_as = server_remote()
+		declare_speed(1)
+
+		fire_as(PLAYER, "cursor", { hold = { owner = "pets.speed", part = {} } })
+		fire_as(PLAYER, "edit", "pets.speed", 7)
+
+		assert(registry.get "pets.speed" == 7)
+	end,
+
+	server_frees_the_value_when_the_holder_lets_go = function()
+		const _, _, fire_as = server_remote()
+		declare_speed(1)
+
+		fire_as(PLAYER, "cursor", { hold = { owner = "pets.speed", part = {} } })
+		fire_as(PLAYER, "cursor", nil)
+		
+		fire_as(OTHER, "edit", "pets.speed", 7)
+		assert(registry.get "pets.speed" == 7)
+	end,
+
+	server_does_not_show_the_hold_of_a_player_that_lost_the_claim = function()
+		const log, _, fire_as = server_remote()
+		fire_as(PLAYER, "cursor", { hold = { owner = "pets.speed", part = {} } })
+		
+		fire_as(OTHER, "cursor", { hold = { owner = "pets.speed", part = {} } })
+		assert(log[#log].args[2] == 2 and log[#log].args[4] == nil)
 	end,
 
 	server_sends_back_the_current_value_of_a_refused_edit = function()

@@ -1,4 +1,5 @@
 --// Services
+const Players = game:GetService "Players"
 const RunService = game:GetService "RunService"
 
 --// Packages
@@ -20,7 +21,6 @@ const LABEL_SIZE = 12
 const LABEL_OFFSET = 15
 
 const OUTLINE_THICKNESS = 2
-const OUTLINE_GAP = 2
 
 const LAYER_Z_INDEX = 200000
 const FOLLOW_SPEED = 22
@@ -34,6 +34,7 @@ type props = {
 type shown = {
 	root: Frame,
 	outline: Frame,
+	blocker: Frame,
 
 	destroy: () -> (),
 	position: Vector2?,
@@ -60,6 +61,27 @@ const function build_outline(color: Color3)
 			LineJoinMode = Enum.LineJoinMode.Round,
 		},
 	}
+end
+
+const function build_blocker()
+	return vide.create "Frame" {
+		Name = "blocker",
+		BackgroundTransparency = 1,
+
+		Active = true,
+		Visible = false,
+	}
+end
+
+const function fit(target: Frame, element: GuiObject, origin: Vector2)
+	const left = math.round(element.AbsolutePosition.X - origin.X)
+	const top = math.round(element.AbsolutePosition.Y - origin.Y)
+
+	target.Position = UDim2.fromOffset(left, top)
+	target.Size = UDim2.fromOffset(
+		math.round(element.AbsolutePosition.X - origin.X + element.AbsoluteSize.X) - left,
+		math.round(element.AbsolutePosition.Y - origin.Y + element.AbsoluteSize.Y) - top
+	)
 end
 
 const function build_cursor(entry: presence.entry, color: Color3)
@@ -110,7 +132,7 @@ end
 
 const function build(entry: presence.entry)
 	const color = color_of(entry.user)
-	return { cursor = build_cursor(entry, color), outline = build_outline(color) }
+	return { cursor = build_cursor(entry, color), outline = build_outline(color), blocker = build_blocker() }
 end
 
 --// Component
@@ -128,6 +150,7 @@ return function(props: props)
 
 		current.root:Destroy()
 		current.outline:Destroy()
+		current.blocker:Destroy()
 	end
 
 	const function sync_users()
@@ -143,8 +166,15 @@ return function(props: props)
 
 			built.cursor.Parent = layer
 			built.outline.Parent = layer
+			built.blocker.Parent = layer
 
-			shown[entry.user] = { root = built.cursor, outline = built.outline, destroy = destroy }
+			shown[entry.user] = {
+				root = built.cursor,
+				outline = built.outline,
+				
+				blocker = built.blocker,
+				destroy = destroy,
+			}
 		end
 
 		for user in shown do
@@ -186,18 +216,38 @@ return function(props: props)
 			return
 		end
 
-		const gap = px(OUTLINE_GAP)()
 		const corner = element:FindFirstChildOfClass "UICorner"
 		const own_corner = current.outline:FindFirstChildOfClass "UICorner"
+		if own_corner then own_corner.CornerRadius = if corner then corner.CornerRadius else UDim.new(0, 0) end
 
-		if own_corner then
-			own_corner.CornerRadius = if corner then corner.CornerRadius + UDim.new(0, gap) else UDim.new(0, 0)
+		fit(current.outline, element, origin)
+		current.outline.Visible = true
+	end
+
+	const function follow_block(current: shown, entry: presence.entry, origin: Vector2, view: GuiObject)
+		const own = Players.LocalPlayer
+		const element = if entry.hold then pointer_target.resolve(props.anchors, entry.hold) else nil
+		const center = if element then element.AbsolutePosition + element.AbsoluteSize / 2 else nil
+
+		if not entry.hold or not element or not center or (own and entry.user == own.UserId) then
+			current.blocker.Visible = false
+			return
 		end
 
-		current.outline.Position =
-			UDim2.fromOffset(element.AbsolutePosition.X - origin.X - gap, element.AbsolutePosition.Y - origin.Y - gap)
-		current.outline.Size = UDim2.fromOffset(element.AbsoluteSize.X + gap * 2, element.AbsoluteSize.Y + gap * 2)
-		current.outline.Visible = true
+		const row = props.anchors.rows[entry.hold.owner]
+		const covered = if row
+				and row.frame:IsA "GuiObject"
+				and pointer_target.visible(row.frame)
+			then row.frame
+			else element
+
+		if not pointer_target.inside(view, center) then
+			current.blocker.Visible = false
+			return
+		end
+
+		fit(current.blocker, covered, origin)
+		current.blocker.Visible = true
 	end
 
 	const function follow(delta: number)
@@ -213,6 +263,7 @@ return function(props: props)
 
 			follow_cursor(current, entry, origin, viewport, blend)
 			follow_outline(current, entry, origin, viewport)
+			follow_block(current, entry, origin, viewport)
 		end
 	end
 

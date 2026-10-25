@@ -146,6 +146,8 @@ return table.freeze {
 	resolve = resolve,
 
 	inside = inside,
+	visible = visible,
+	
 	anchor_of = anchor_of,
 	owner_attribute = OWNER_ATTRIBUTE,
 }

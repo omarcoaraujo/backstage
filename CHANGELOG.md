@@ -4,6 +4,8 @@
 
 - When more than one person has the window open, each one now sees the others' cursors with their names, on the same value.
 - What someone is dragging, typing in, pressing or has open gets an outline in their color on everyone else's window.
+- While someone is using a value, nobody else can change it: the row is blocked for the others until they let go.
+- The outline now sits exactly on the edge of the control.
 
 ## 0.13.0
 
