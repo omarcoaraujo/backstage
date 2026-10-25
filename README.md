@@ -318,14 +318,16 @@ backstage.start { places = { 1234567890 } }
 
 The server alone decides, Studio included. The client waits for the game to load and follows the server: it turns on only if the server created the Backstage remote, so it needs no list and cannot turn Backstage on by itself. A `config` read on the server before `start` on a live place returns the frozen defaults and never updates.
 
-On those places, and only there, the server and every player share the same window: an edit from one player reaches the server and all the others, and each player sees the others' cursors with their names, attached to the group and the value they are over. The control someone is using gets an outline in their color, and while they hold it nobody else can change that value: the row is blocked on the other windows, and the server refuses edits from anyone but whoever grabbed it first. Anywhere else outside Studio it stays off. Because a live server cannot reach the tool on your computer, nothing is saved to the scripts. Press the `{}` button next to the theme button to see the changed values as lines such as `pets.distance = 8`, select them and copy them. To write them into the scripts, give the text to the tool, either from a file or piped in:
+On those places, and only there, the server and every player share the same window: an edit from one player reaches the server and all the others, and each player sees the others' cursors with their names, attached to the group and the value they are over. The control someone is using gets an outline in their color, and while they hold it nobody else can change that value: the row is blocked on the other windows, and the server refuses edits from anyone but whoever grabbed it first. Anywhere else outside Studio it stays off. Because a live server cannot reach the tool on your computer, nothing is saved to the scripts. Press the export button next to the theme button to see the changed values as lines such as `pets.distance = 8`, select them and copy them. To write them into the scripts, run the tool in your project folder, paste the text and press Enter on an empty line:
 
 ```sh
-backstage apply . --file export.txt
+backstage apply
 ```
 
-```powershell
-Get-Clipboard | backstage apply .
+Or give it a file with the text:
+
+```sh
+backstage apply --file export.txt
 ```
 
 It writes each value into the default of its config, refuses the ones it cannot place with the reason, and lists the lines it could not read. Never allow your production place: every player in it could edit values and press buttons.

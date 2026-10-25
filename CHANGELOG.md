@@ -4,8 +4,9 @@
 
 - When more than one person has the window open, each one now sees the others' cursors with their names, on the same value.
 - What someone is dragging, typing in, pressing or has open gets an outline in their color on everyone else's window.
-- While someone is using a value, nobody else can change it: the row is blocked for the others until they let go.
-- The outline now sits exactly on the edge of the control.
+- While someone is using a value, nobody else can change it: the row is dimmed and the controls ignore the others until they let go.
+- The `apply` command now asks you to paste the values, so it works without a pipe or a file.
+- The export button has a new icon.
 
 ## 0.13.0
 

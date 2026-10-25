@@ -110,8 +110,27 @@ const function readable(message: unknown)
 	return (string.gsub(first, "^%S+:%d+: ", ""))
 end
 
+const function read_pasted()
+	const lines = {}
+
+	while true do
+		const ok, chunk = pcall(io.input)
+		if not ok or chunk == nil then break end
+
+		const blank = string.match(chunk, "^%s*$") ~= nil
+		if blank and #lines > 0 then break end
+		if not blank then table.insert(lines, chunk) end
+	end
+
+	return table.concat(lines, "\n")
+end
+
 const function read_export(file: string?)
-	if not file then return io.input() or "" end
+	if not file then
+		output.waiting()
+		return read_pasted()
+	end
+
 	if not fs.exists(file) then fail(`"{file}" does not exist`) end
 	return fs.readFileToString(file)
 end

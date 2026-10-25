@@ -14,7 +14,7 @@ const DISPLAY_ORDER = 1000
 --// Types
 export type options = {
 	key: Enum.KeyCode?,
-	
+
 	ctrl: boolean?,
 	port: number?,
 

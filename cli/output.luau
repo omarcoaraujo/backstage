@@ -26,6 +26,10 @@ const function applied(count: number, root: string)
 	print(`{tint.cyan.bold "backstage"} wrote {tint.bold(tostring(count))} {noun} to the scripts in {tint.bold(root)}`)
 end
 
+const function waiting()
+	print(`{tint.cyan.bold "backstage"} paste the exported values, then press {tint.bold "Enter"} on an empty line`)
+end
+
 const function usage()
 	print(`{tint.dim "usage:"} {USAGE}`)
 end
@@ -44,6 +48,7 @@ return {
 
 	pushed = pushed,
 	applied = applied,
+	waiting = waiting,
 
 	usage = usage,
 	serving = serving,
