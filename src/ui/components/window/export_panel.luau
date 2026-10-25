@@ -20,16 +20,43 @@ type props = {
 
 --// Component
 return function(props: props)
+	local box = nil :: TextBox?
+
 	const function shown_text()
 		const text = props.text()
 		if text == "" then return EMPTY_TEXT end
 		return text
 	end
 
-	const function select_all(box: TextBox)
+	const function select_all()
+		if not box then return end
 		box.SelectionStart = 1
 		box.CursorPosition = #box.Text + 1
 	end
+
+	const text_box = vide.create "TextBox" {
+		Name = "text",
+		Size = UDim2.fromScale(1, 1),
+
+		BackgroundTransparency = 1,
+		FontFace = theme.font,
+
+		Text = shown_text,
+		TextColor3 = appearance.text,
+		TextSize = px(theme.text_size),
+
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+
+		MultiLine = true,
+		TextEditable = false,
+		ClearTextOnFocus = false,
+
+		TextWrapped = false,
+		Focused = select_all,
+	}
+
+	box = text_box
 
 	return vide.create "Frame" {
 		Name = "export_panel",
@@ -49,26 +76,6 @@ return function(props: props)
 			PaddingBottom = px.udim(0, theme.padding),
 		},
 
-		vide.create "TextBox" {
-			Name = "text",
-			Size = UDim2.fromScale(1, 1),
-
-			BackgroundTransparency = 1,
-			FontFace = theme.font,
-
-			Text = shown_text,
-			TextColor3 = appearance.text,
-			TextSize = px(theme.text_size),
-
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextYAlignment = Enum.TextYAlignment.Top,
-
-			MultiLine = true,
-			TextEditable = false,
-			ClearTextOnFocus = false,
-
-			TextWrapped = false,
-			Focused = select_all,
-		},
+		text_box,
 	}
 end
