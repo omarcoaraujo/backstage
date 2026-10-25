@@ -19,6 +19,7 @@ const AXIS_TRANSPARENCY = 0.3
 type props = {
 	value: () -> Vector3,
 	on_change: (value: Vector3) -> (),
+	locked: (() -> boolean)?,
 }
 
 --// Functions
@@ -104,7 +105,7 @@ return function(props: props)
 					FlexMode = Enum.UIFlexMode.Fill,
 				},
 
-				number_input { value = value, on_change = on_change },
+				number_input { value = value, on_change = on_change, locked = props.locked },
 			},
 		}
 	end

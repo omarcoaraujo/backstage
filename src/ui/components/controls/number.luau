@@ -16,7 +16,9 @@ type props = {
 
 	min: number?,
 	max: number?,
+
 	step: number?,
+	locked: (() -> boolean)?,
 }
 
 --// Component
@@ -40,7 +42,9 @@ return function(props: props)
 
 				min = min,
 				max = max,
+
 				step = props.step,
+				locked = props.locked,
 			},
 		} or nil,
 
@@ -52,7 +56,7 @@ return function(props: props)
 			Size = px.udim2(0, theme.input_width, 1, 0),
 
 			BackgroundTransparency = 1,
-			number_input { value = props.value, on_change = props.on_change },
+			number_input { value = props.value, on_change = props.on_change, locked = props.locked },
 		},
 	}
 end

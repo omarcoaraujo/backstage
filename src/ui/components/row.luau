@@ -3,6 +3,7 @@ const vide = require "../../../roblox_packages/vide"
 
 --// Stores
 const appearance = require "../stores/appearance"
+const locks = require "../stores/locks"
 
 --// Utils
 const filter = require "../utils/filter"
@@ -15,6 +16,7 @@ const reset_button = require "./reset_button"
 
 --// Constants
 const LABEL_SHARE = 0.45
+const LOCKED_TRANSPARENCY = 0.45
 
 --// Types
 type props = {
@@ -24,6 +26,7 @@ type props = {
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
+	locked: (() -> boolean)?,
 }
 
 --// Component
@@ -43,6 +46,10 @@ return function(props: props)
 
 	const function on_reset()
 		if props.on_reset then props.on_reset() end
+	end
+
+	const function dimmed()
+		return locks.check(props.locked)
 	end
 
 	const frame = vide.create "Frame" {
@@ -86,6 +93,18 @@ return function(props: props)
 			right = theme.padding / 2,
 			visible = reset_visible,
 			on_reset = on_reset,
+		},
+
+		vide.create "Frame" {
+			Name = "locked",
+			Size = UDim2.fromScale(1, 1),
+
+			BackgroundColor3 = appearance.background,
+			BackgroundTransparency = LOCKED_TRANSPARENCY,
+			BorderSizePixel = 0,
+
+			Visible = dimmed,
+			ZIndex = 2,
 		},
 	}
 

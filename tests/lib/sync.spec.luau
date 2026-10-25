@@ -158,7 +158,7 @@ return {
 
 		fire_as(PLAYER, "cursor", { hold = { owner = "pets.speed", part = {} } })
 		fire_as(PLAYER, "cursor", nil)
-		
+
 		fire_as(OTHER, "edit", "pets.speed", 7)
 		assert(registry.get "pets.speed" == 7)
 	end,
@@ -166,7 +166,7 @@ return {
 	server_does_not_show_the_hold_of_a_player_that_lost_the_claim = function()
 		const log, _, fire_as = server_remote()
 		fire_as(PLAYER, "cursor", { hold = { owner = "pets.speed", part = {} } })
-		
+
 		fire_as(OTHER, "cursor", { hold = { owner = "pets.speed", part = {} } })
 		assert(log[#log].args[2] == 2 and log[#log].args[4] == nil)
 	end,

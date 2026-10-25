@@ -8,6 +8,7 @@ const field = require "./field"
 type props = {
 	value: () -> number,
 	on_change: (value: number) -> (),
+	locked: (() -> boolean)?,
 }
 
 --// Component
@@ -22,5 +23,5 @@ return function(props: props)
 		props.on_change(parsed)
 	end
 
-	return field { text = text, on_commit = on_commit }
+	return field { text = text, on_commit = on_commit, locked = props.locked }
 end

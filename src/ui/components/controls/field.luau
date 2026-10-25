@@ -3,6 +3,7 @@ const vide = require "../../../../roblox_packages/vide"
 
 --// Stores
 const appearance = require "../../stores/appearance"
+const locks = require "../../stores/locks"
 
 --// Utils
 const activity = require "../../utils/activity"
@@ -17,6 +18,7 @@ type props = {
 	text: () -> string,
 	on_commit: (typed: string) -> (),
 	alignment: Enum.TextXAlignment?,
+	locked: (() -> boolean)?,
 }
 
 --// Component
@@ -32,7 +34,16 @@ return function(props: props)
 	end
 
 	const function on_focused()
+		if locks.check(props.locked) and box then
+			box:ReleaseFocus()
+			return
+		end
+
 		focused(true)
+	end
+
+	const function editable()
+		return not locks.check(props.locked)
 	end
 
 	const function on_focus_lost()
@@ -71,6 +82,7 @@ return function(props: props)
 		ClipsDescendants = true,
 
 		ClearTextOnFocus = false,
+		TextEditable = editable,
 		FontFace = theme.font,
 
 		Text = props.text,

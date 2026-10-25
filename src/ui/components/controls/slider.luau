@@ -6,6 +6,7 @@ const vide = require "../../../../roblox_packages/vide"
 
 --// Stores
 const appearance = require "../../stores/appearance"
+const locks = require "../../stores/locks"
 
 --// Utils
 const activity = require "../../utils/activity"
@@ -28,7 +29,9 @@ type props = {
 
 	min: number,
 	max: number,
+
 	step: number?,
+	locked: (() -> boolean)?,
 }
 
 --// Functions
@@ -56,7 +59,7 @@ return function(props: props)
 	end
 
 	const function on_press(input: InputObject)
-		if overlay.active() or not pointer.is_press(input) then return end
+		if overlay.active() or locks.check(props.locked) or not pointer.is_press(input) then return end
 		dragging(true)
 		seek(input)
 	end
@@ -67,6 +70,11 @@ return function(props: props)
 
 	const function on_capture_changed(input: InputObject)
 		if not dragging() or not pointer.is_motion(input) then return end
+
+		if locks.check(props.locked) then
+			dragging(false)
+			return
+		end
 
 		if
 			input.UserInputType == Enum.UserInputType.MouseMovement

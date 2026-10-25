@@ -3,6 +3,7 @@ const vide = require "../../../../roblox_packages/vide"
 
 --// Stores
 const appearance = require "../../stores/appearance"
+const locks = require "../../stores/locks"
 
 --// Utils
 const activity = require "../../utils/activity"
@@ -24,6 +25,7 @@ const FOCUS_TRANSPARENCY = 0.15
 type props = {
 	value: () -> Color3,
 	on_change: (value: Color3) -> (),
+	locked: (() -> boolean)?,
 }
 
 --// Component
@@ -95,6 +97,7 @@ return function(props: props)
 
 	const function on_activated()
 		if overlay.active() and not opened() then return end
+		if locks.check(props.locked) and not opened() then return end
 
 		if opened() then
 			close()
@@ -148,7 +151,6 @@ return function(props: props)
 			},
 
 			Activated = on_activated,
-
 			vide.action(capture),
 			activity.mark(opened),
 		},
@@ -164,7 +166,7 @@ return function(props: props)
 				FlexMode = Enum.UIFlexMode.Fill,
 			},
 
-			field { text = text, on_commit = on_commit },
+			field { text = text, on_commit = on_commit, locked = props.locked },
 		},
 	}
 end

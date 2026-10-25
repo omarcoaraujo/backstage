@@ -3,6 +3,7 @@ const vide = require "../../../../roblox_packages/vide"
 
 --// Stores
 const appearance = require "../../stores/appearance"
+const locks = require "../../stores/locks"
 
 --// Utils
 const activity = require "../../utils/activity"
@@ -18,6 +19,7 @@ const MARK_SIZE = 8
 type props = {
 	value: () -> boolean,
 	on_change: (value: boolean) -> (),
+	locked: (() -> boolean)?,
 }
 
 --// Component
@@ -26,6 +28,7 @@ return function(props: props)
 	const pressed = vide.source(false)
 
 	const function on_activated()
+		if locks.check(props.locked) then return end
 		props.on_change(not props.value())
 	end
 
@@ -39,7 +42,7 @@ return function(props: props)
 	end
 
 	const function on_down()
-		if overlay.active() then return end
+		if overlay.active() or locks.check(props.locked) then return end
 		pressed(true)
 	end
 

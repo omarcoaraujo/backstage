@@ -3,6 +3,7 @@ const vide = require "../../../../roblox_packages/vide"
 
 --// Stores
 const appearance = require "../../stores/appearance"
+const locks = require "../../stores/locks"
 
 --// Utils
 const activity = require "../../utils/activity"
@@ -23,7 +24,9 @@ const PADDING = 4
 type props = {
 	value: () -> string,
 	on_change: (value: string) -> (),
+
 	choices: { string },
+	locked: (() -> boolean)?,
 }
 
 --// Component
@@ -89,6 +92,7 @@ return function(props: props)
 
 	const function on_activated()
 		if overlay.active() and not opened() then return end
+		if locks.check(props.locked) and not opened() then return end
 
 		if opened() then
 			close()

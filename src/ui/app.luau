@@ -6,6 +6,9 @@ const exporter = require "../core/export"
 const kinds = require "../core/kinds"
 const registry = require "../core/registry"
 
+--// Stores
+const locks = require "./stores/locks"
+
 --// Utils
 const pointer_target = require "./utils/pointer_target"
 const px = require "./utils/px"
@@ -133,6 +136,7 @@ return function(props: props)
 	const function restorable(entry: registry.entry, value: () -> unknown, content: unknown)
 		const frame = row {
 			label = entry.name,
+			locked = locks.of_path(entry.path),
 			content = content,
 			hint = entry.hint,
 
@@ -153,7 +157,9 @@ return function(props: props)
 	const function entry_row(entry: registry.entry)
 		const path = entry.path
 		const kind = entry.descriptor.kind
+
 		const text_value = vide.source(entry.value :: string)
+		const locked = locks.of_path(path)
 
 		const function on_change(value: unknown)
 			registry.set(path, value)
@@ -176,6 +182,7 @@ return function(props: props)
 					min = entry.descriptor.min,
 					max = entry.descriptor.max,
 					step = entry.descriptor.step,
+					locked = locked,
 				}
 			)
 		end
@@ -187,7 +194,7 @@ return function(props: props)
 				value(next_value :: boolean)
 			end)
 
-			return restorable(entry, value, toggle { value = value, on_change = on_change })
+			return restorable(entry, value, toggle { value = value, on_change = on_change, locked = locked })
 		end
 
 		if kind == "color" then
@@ -197,7 +204,7 @@ return function(props: props)
 				value(next_value :: Color3)
 			end)
 
-			return restorable(entry, value, color { value = value, on_change = on_change })
+			return restorable(entry, value, color { value = value, on_change = on_change, locked = locked })
 		end
 
 		if kind == "vector3" then
@@ -207,7 +214,7 @@ return function(props: props)
 				value(next_value :: Vector3)
 			end)
 
-			return restorable(entry, value, vector3 { value = value, on_change = on_change })
+			return restorable(entry, value, vector3 { value = value, on_change = on_change, locked = locked })
 		end
 
 		bind(path, function(next_value)
@@ -218,11 +225,17 @@ return function(props: props)
 			return restorable(
 				entry,
 				text_value,
-				choice { value = text_value, on_change = on_change, choices = entry.descriptor.choices or {} }
+				choice {
+					value = text_value,
+					on_change = on_change,
+
+					choices = entry.descriptor.choices or {},
+					locked = locked,
+				}
 			)
 		end
 
-		return restorable(entry, text_value, text { value = text_value, on_change = on_change })
+		return restorable(entry, text_value, text { value = text_value, on_change = on_change, locked = locked })
 	end
 
 	const function build_buttons(entries: { registry.button_entry })

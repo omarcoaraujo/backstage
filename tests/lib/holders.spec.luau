@@ -9,7 +9,7 @@ return {
 	first_to_claim_holds = function()
 		holders.reset()
 		assert(holders.claim(1, "pets.speed"))
-		
+
 		assert(not holders.claim(2, "pets.speed"))
 		assert(holders.holder "pets.speed" == 1)
 	end,
@@ -33,7 +33,7 @@ return {
 	claiming_nothing_frees_the_user = function()
 		holders.reset()
 		holders.claim(1, "pets.speed")
-		
+
 		assert(holders.claim(1, nil))
 		assert(holders.holder "pets.speed" == nil)
 	end,
@@ -42,7 +42,7 @@ return {
 		holders.reset()
 		holders.claim(1, "pets.speed")
 		holders.claim(2, "pets.size")
-		
+
 		assert(not holders.claim(2, "pets.speed"))
 		assert(holders.holder "pets.size" == nil)
 	end,
@@ -50,7 +50,7 @@ return {
 	release_frees_the_user = function()
 		holders.reset()
 		holders.claim(1, "pets.speed")
-		
+
 		holders.release(1)
 		assert(holders.holder "pets.speed" == nil)
 	end,

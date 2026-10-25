@@ -1,5 +1,4 @@
 --// Services
-const Players = game:GetService "Players"
 const RunService = game:GetService "RunService"
 
 --// Packages
@@ -34,7 +33,6 @@ type props = {
 type shown = {
 	root: Frame,
 	outline: Frame,
-	blocker: Frame,
 
 	destroy: () -> (),
 	position: Vector2?,
@@ -60,16 +58,6 @@ const function build_outline(color: Color3)
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 			LineJoinMode = Enum.LineJoinMode.Round,
 		},
-	}
-end
-
-const function build_blocker()
-	return vide.create "Frame" {
-		Name = "blocker",
-		BackgroundTransparency = 1,
-
-		Active = true,
-		Visible = false,
 	}
 end
 
@@ -132,7 +120,7 @@ end
 
 const function build(entry: presence.entry)
 	const color = color_of(entry.user)
-	return { cursor = build_cursor(entry, color), outline = build_outline(color), blocker = build_blocker() }
+	return { cursor = build_cursor(entry, color), outline = build_outline(color) }
 end
 
 --// Component
@@ -150,7 +138,6 @@ return function(props: props)
 
 		current.root:Destroy()
 		current.outline:Destroy()
-		current.blocker:Destroy()
 	end
 
 	const function sync_users()
@@ -166,15 +153,8 @@ return function(props: props)
 
 			built.cursor.Parent = layer
 			built.outline.Parent = layer
-			built.blocker.Parent = layer
 
-			shown[entry.user] = {
-				root = built.cursor,
-				outline = built.outline,
-				
-				blocker = built.blocker,
-				destroy = destroy,
-			}
+			shown[entry.user] = { root = built.cursor, outline = built.outline, destroy = destroy }
 		end
 
 		for user in shown do
@@ -224,32 +204,6 @@ return function(props: props)
 		current.outline.Visible = true
 	end
 
-	const function follow_block(current: shown, entry: presence.entry, origin: Vector2, view: GuiObject)
-		const own = Players.LocalPlayer
-		const element = if entry.hold then pointer_target.resolve(props.anchors, entry.hold) else nil
-		const center = if element then element.AbsolutePosition + element.AbsoluteSize / 2 else nil
-
-		if not entry.hold or not element or not center or (own and entry.user == own.UserId) then
-			current.blocker.Visible = false
-			return
-		end
-
-		const row = props.anchors.rows[entry.hold.owner]
-		const covered = if row
-				and row.frame:IsA "GuiObject"
-				and pointer_target.visible(row.frame)
-			then row.frame
-			else element
-
-		if not pointer_target.inside(view, center) then
-			current.blocker.Visible = false
-			return
-		end
-
-		fit(current.blocker, covered, origin)
-		current.blocker.Visible = true
-	end
-
 	const function follow(delta: number)
 		lift()
 		if not layer or not viewport then return end
@@ -263,7 +217,6 @@ return function(props: props)
 
 			follow_cursor(current, entry, origin, viewport, blend)
 			follow_outline(current, entry, origin, viewport)
-			follow_block(current, entry, origin, viewport)
 		end
 	end
 
