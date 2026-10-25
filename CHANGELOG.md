@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.1
+
+- Numbers with a very small step, like 0.0001, keep all their decimals in the window and in the export, and no longer show as changed when nobody touched them.
+
 ## 0.14.0
 
 - When more than one person has the window open, each one now sees the others' cursors with their names, on the same value.
