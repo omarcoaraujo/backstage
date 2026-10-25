@@ -7,12 +7,15 @@ const kinds = require "../core/kinds"
 const registry = require "../core/registry"
 
 --// Utils
+const pointer_target = require "./utils/pointer_target"
 const px = require "./utils/px"
+const share_pointer = require "./utils/share_pointer"
 
 --// Components
 const buttons = require "./components/buttons"
 const choice = require "./components/controls/choice"
 const color = require "./components/controls/color"
+const cursors = require "./components/cursors"
 const group = require "./components/group"
 const list = require "./components/list"
 const number = require "./components/controls/number"
@@ -29,6 +32,7 @@ type props = {
 
 	visible: () -> boolean,
 	on_close: () -> (),
+	cursors: boolean?,
 
 	position: Vector2?,
 	size: Vector2?,
@@ -89,6 +93,7 @@ return function(props: props)
 
 	const appliers = {} :: { [string]: (value: kinds.value) -> () }
 	const opened = {} :: { [string]: boolean }
+	const anchors = { rows = {}, groups = {} } :: pointer_target.anchors
 
 	const frame = list {}
 	const revision = vide.source(0)
@@ -126,7 +131,7 @@ return function(props: props)
 	end
 
 	const function restorable(entry: registry.entry, value: () -> unknown, content: unknown)
-		return row {
+		const frame = row {
 			label = entry.name,
 			content = content,
 			hint = entry.hint,
@@ -139,6 +144,10 @@ return function(props: props)
 				registry.restore(entry.path)
 			end,
 		}
+
+		frame:SetAttribute(pointer_target.owner_attribute, entry.path)
+		anchors.rows[entry.path] = { frame = frame, group = entry.group }
+		return frame
 	end
 
 	const function entry_row(entry: registry.entry)
@@ -261,7 +270,7 @@ return function(props: props)
 			table.insert(content, build_branch(source.groups[child_name], child_name, `{path}.{child_name}`))
 		end
 
-		return group {
+		const frame = group {
 			name = name,
 			open = opened[path],
 			content = content,
@@ -270,6 +279,10 @@ return function(props: props)
 			dirty = dirty,
 			on_reset = on_reset,
 		}
+
+		frame:SetAttribute(pointer_target.owner_attribute, path)
+		anchors.groups[path] = frame
+		return frame
 	end
 
 	const function tree()
@@ -298,6 +311,9 @@ return function(props: props)
 		clear()
 
 		table.clear(appliers)
+		table.clear(anchors.rows)
+
+		table.clear(anchors.groups)
 		const destroy, content = vide.root(tree)
 
 		destroy_tree = destroy
@@ -313,6 +329,17 @@ return function(props: props)
 	vide.cleanup(clear)
 
 	rebuild()
+
+	const viewport = vide.create "Frame" {
+		Name = "viewport",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+
+		frame,
+		if props.cursors then cursors { anchors = anchors } else nil,
+	}
+
+	if props.cursors then vide.cleanup(share_pointer(anchors, viewport, props.visible)) end
 	return window {
 		title = props.title,
 		footer = props.footer,
@@ -324,7 +351,7 @@ return function(props: props)
 		size = props.size,
 
 		on_geometry = props.on_geometry,
-		content = frame,
+		content = viewport,
 
 		dirty = any_dirty,
 		on_reset = restore_all,

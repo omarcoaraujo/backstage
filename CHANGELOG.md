@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- When more than one person has the window open, each one now sees the others' cursors with their names, on the same value.
+- What someone is dragging, typing in, pressing or has open gets an outline in their color on everyone else's window.
+
 ## 0.13.0
 
 - The tool has a new `apply` command that writes the values from the export button into your scripts.

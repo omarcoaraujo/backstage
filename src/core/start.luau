@@ -5,6 +5,7 @@ const RunService = game:GetService "RunService"
 --// Modules
 const bridge = require "./bridge"
 const mode = require "./mode"
+const presence = require "./presence"
 const shortcut = require "./shortcut"
 const sync = require "./sync"
 
@@ -18,7 +19,9 @@ export type options = {
 
 	port: number?,
 	theme: ("dark" | "light")?,
+
 	places: { number }?,
+	echo: number?,
 
 	vide: unknown?,
 	charm: unknown?,
@@ -52,7 +55,9 @@ const function start(options: options?)
 	const version = require "../version"
 	if options and options.theme then appearance.light(options.theme == "light") end
 
-	const player_gui = Players.LocalPlayer:WaitForChild "PlayerGui"
+	const player = Players.LocalPlayer
+	const player_gui = player:WaitForChild "PlayerGui"
+	if options and options.echo then presence.show_own(player.UserId, player.DisplayName, options.echo) end
 	const visible = vide.source(false)
 
 	const function close()
@@ -78,6 +83,7 @@ const function start(options: options?)
 
 				visible = visible,
 				on_close = close,
+				cursors = true,
 			},
 		}
 	end, player_gui)

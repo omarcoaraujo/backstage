@@ -5,6 +5,7 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
+const activity = require "../../utils/activity"
 const hex = require "../../utils/hex"
 const overlay = require "../../utils/overlay"
 const place = require "../../utils/place"
@@ -147,7 +148,9 @@ return function(props: props)
 			},
 
 			Activated = on_activated,
+
 			vide.action(capture),
+			activity.mark(opened),
 		},
 
 		vide.create "Frame" {

@@ -1,8 +1,10 @@
 --// Services
+const Players = game:GetService "Players"
 const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
 --// Modules
 const mode = require "./mode"
+const presence = require "./presence"
 const registry = require "./registry"
 
 --// Constants
@@ -54,6 +56,11 @@ const function serve(given: server_remote?)
 			return
 		end
 
+		if kind == "cursor" then
+			remote:FireAllClients("cursor", player.UserId, player.DisplayName, presence.valid(path))
+			return
+		end
+
 		if type(path) ~= "string" then return end
 		if kind == "press" then
 			registry.press(path)
@@ -75,7 +82,13 @@ const function serve(given: server_remote?)
 		remote:FireAllClients("snapshot", registry.snapshot())
 	end
 
+	const function on_leaving(player: Player)
+		remote:FireAllClients("cursor", player.UserId, player.DisplayName, nil)
+	end
+
 	remote.OnServerEvent:Connect(on_event)
+	Players.PlayerRemoving:Connect(on_leaving)
+
 	registry.on_change(on_changed)
 	registry.on_register(on_registered)
 end
@@ -84,9 +97,17 @@ const function connect(given: client_remote?)
 	const remote = given or find_remote()
 	if not remote then return false end
 
-	const function on_event(kind: unknown, path: unknown, value: unknown)
+	const function on_event(kind: unknown, path: unknown, value: unknown, extra: unknown)
 		if kind == "snapshot" then
 			registry.import(path :: registry.snapshot)
+			return
+		end
+
+		if kind == "cursor" then
+			const own = Players.LocalPlayer
+			if own and path == own.UserId then return end
+
+			presence.set(path :: number, value :: string, presence.valid(extra))
 			return
 		end
 
@@ -107,8 +128,13 @@ const function connect(given: client_remote?)
 		remote:FireServer("declare", local_only)
 	end
 
+	const function share_cursor(state: presence.state?)
+		remote:FireServer("cursor", state)
+	end
+
 	remote.OnClientEvent:Connect(on_event)
 	registry.connect_remote { edit = edit, press = press }
+	presence.connect_remote(share_cursor)
 
 	registry.on_register(declare)
 	remote:FireServer "ready"

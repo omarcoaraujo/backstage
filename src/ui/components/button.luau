@@ -5,6 +5,7 @@ const vide = require "../../../roblox_packages/vide"
 const appearance = require "../stores/appearance"
 
 --// Utils
+const activity = require "../utils/activity"
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../constants/theme"
@@ -139,6 +140,8 @@ return function(props: props)
 			LineJoinMode = Enum.LineJoinMode.Round,
 			Thickness = px(1),
 		},
+
+		activity.mark(pressed),
 	}
 
 	root = content

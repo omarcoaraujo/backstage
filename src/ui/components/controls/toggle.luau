@@ -5,6 +5,7 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
+const activity = require "../../utils/activity"
 const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
 const theme = require "../../constants/theme"
@@ -22,6 +23,7 @@ type props = {
 --// Component
 return function(props: props)
 	const hovered = vide.source(false)
+	const pressed = vide.source(false)
 
 	const function on_activated()
 		props.on_change(not props.value())
@@ -33,6 +35,16 @@ return function(props: props)
 
 	const function on_leave()
 		hovered(false)
+		pressed(false)
+	end
+
+	const function on_down()
+		if overlay.active() then return end
+		pressed(true)
+	end
+
+	const function on_up()
+		pressed(false)
 	end
 
 	const function stroke_color()
@@ -60,12 +72,16 @@ return function(props: props)
 		MouseEnter = on_enter,
 		MouseLeave = on_leave,
 
+		MouseButton1Down = on_down,
+		MouseButton1Up = on_up,
+
 		vide.create "Frame" {
 			Name = "box",
 			AnchorPoint = Vector2.new(1, 0.5),
 
 			Position = UDim2.fromScale(1, 0.5),
 			Size = px.udim2(0, BOX_SIZE, 0, BOX_SIZE),
+			activity.mark(pressed),
 
 			BackgroundColor3 = appearance.field,
 			BorderSizePixel = 0,

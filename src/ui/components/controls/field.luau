@@ -5,6 +5,7 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
+const activity = require "../../utils/activity"
 const px = require "../../utils/px"
 const theme = require "../../constants/theme"
 
@@ -101,6 +102,8 @@ return function(props: props)
 
 		vide.changed("AbsoluteSize", size),
 		vide.changed("TextBounds", bounds),
+
 		vide.action(capture),
+		activity.mark(focused),
 	}
 end

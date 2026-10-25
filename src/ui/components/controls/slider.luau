@@ -8,6 +8,7 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
+const activity = require "../../utils/activity"
 const overlay = require "../../utils/overlay"
 const pointer = require "../../utils/pointer"
 const px = require "../../utils/px"
@@ -139,6 +140,8 @@ return function(props: props)
 				vide.create "UICorner" {
 					CornerRadius = UDim.new(1, 0),
 				},
+
+				activity.mark(dragging),
 			},
 
 			vide.action(function(instance)
