@@ -2,7 +2,8 @@
 const tint = require "./luau_packages/tint"
 
 --// Constants
-const USAGE = "backstage serve [project folder] [--port <number>]"
+const USAGE =
+	"backstage serve [project folder] [--port <number>]\n       backstage apply [project folder] [--file <export>]"
 
 --// Functions
 const function failure(message: string, hint: string?)
@@ -18,6 +19,11 @@ const function pushed(paths: { string })
 	for _, path in paths do
 		print(`{tint.cyan.bold "backstage"} {tint.bold(path)} changed in the script, sent to the game`)
 	end
+end
+
+const function applied(count: number, root: string)
+	const noun = if count == 1 then "value" else "values"
+	print(`{tint.cyan.bold "backstage"} wrote {tint.bold(tostring(count))} {noun} to the scripts in {tint.bold(root)}`)
 end
 
 const function usage()
@@ -37,6 +43,8 @@ return {
 	warning = warning,
 
 	pushed = pushed,
+	applied = applied,
+	
 	usage = usage,
 	serving = serving,
 }

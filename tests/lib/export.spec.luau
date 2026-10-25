@@ -29,6 +29,11 @@ return {
 		assert(text == 'pets.mode = "orbit"')
 	end,
 
+	escapes_quotes_and_new_lines = function()
+		const text = exporter.text { { path = "pets.name", value = 'say "hi"\nbye', default = "" } }
+		assert(text == 'pets.name = "say \\"hi\\"\\nbye"')
+	end,
+
 	writes_colors_and_vectors = function()
 		const text = exporter.text {
 			{ path = "pets.tint", value = Color3.fromRGB(255, 128, 0), default = Color3.new() },

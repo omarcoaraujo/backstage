@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.0
+
+- The tool has a new `apply` command that writes the values from the export button into your scripts.
+- The export panel no longer shows an error when you click the text.
+
 ## 0.12.0
 
 - Backstage can now run on places you choose with the `places` option of `start`, shared by the server and every player.

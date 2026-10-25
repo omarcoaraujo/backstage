@@ -6,6 +6,7 @@ const suites = {
 	apply = require "./apply.spec",
 	guard = require "./guard.spec",
 	locate = require "./locate.spec",
+	parse = require "./parse.spec",
 	save = require "./save.spec",
 	scan = require "./scan.spec",
 	values = require "./values.spec",

@@ -16,10 +16,15 @@ const function channel(value: number)
 	return tostring(math.round(value * 255))
 end
 
+const function quoted(value: string)
+	const escaped = string.gsub(string.gsub(string.gsub(value, "\\", "\\\\"), '"', '\\"'), "\n", "\\n")
+	return `"{escaped}"`
+end
+
 const function literal(value: kinds.value)
 	if type(value) == "number" then return number(value) end
 	if type(value) == "boolean" then return tostring(value) end
-	if type(value) == "string" then return string.format("%q", value) end
+	if type(value) == "string" then return quoted(value) end
 
 	if typeof(value) == "Color3" then
 		const color = value :: Color3

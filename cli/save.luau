@@ -82,15 +82,12 @@ const function rewrite(state: state, file: string, edits: { edit })
 	return result :: { refusal }
 end
 
-const function save_edits(root: string, state: state, message: string)
-	const ok, payload = pcall(json.deserialize, message)
-	if not ok or type(payload) ~= "table" or type(payload.edits) ~= "table" then return nil end
-
+const function save(root: string, state: state, edits: { edit })
 	local names = index_names(state.index)
 	const refusals = {} :: { refusal }
 	const by_file = {} :: { [string]: { edit } }
 
-	for _, edit in payload.edits do
+	for _, edit in edits do
 		if locate.owning_name(names, edit.path) then continue end
 
 		state.index = scan.scan(root)
@@ -98,32 +95,39 @@ const function save_edits(root: string, state: state, message: string)
 		break
 	end
 
-	for name, edits in group_by_config(payload.edits, names) do
+	for name, group in group_by_config(edits, names) do
 		const files = state.index[name]
 		if not files then
-			refuse_all(edits, `config "{name}" is not in the project`, refusals)
+			refuse_all(group, `config "{name}" is not in the project`, refusals)
 			continue
 		end
 
 		if #files > 1 then
-			refuse_all(edits, `config "{name}" is declared in {#files} files: {table.concat(files, ", ")}`, refusals)
+			refuse_all(group, `config "{name}" is declared in {#files} files: {table.concat(files, ", ")}`, refusals)
 			continue
 		end
 
 		const file_edits = by_file[files[1]] or {}
-		table.move(edits, 1, #edits, #file_edits + 1, file_edits)
+		table.move(group, 1, #group, #file_edits + 1, file_edits)
 		by_file[files[1]] = file_edits
 	end
 
-	for file, edits in by_file do
-		const refused = rewrite(state, file, edits)
+	for file, file_edits in by_file do
+		const refused = rewrite(state, file, file_edits)
 		table.move(refused, 1, #refused, #refusals + 1, refusals)
 	end
 
 	return refusals
 end
 
+const function save_edits(root: string, state: state, message: string)
+	const ok, payload = pcall(json.deserialize, message)
+	if not ok or type(payload) ~= "table" or type(payload.edits) ~= "table" then return nil end
+	return save(root, state, payload.edits)
+end
+
 --// End
 return {
+	save = save,
 	save_edits = save_edits,
 }

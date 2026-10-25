@@ -43,7 +43,7 @@ At a glance:
 
 ```toml
 [dependencies]
-backstage = { name = "omarcoaraujo/backstage", version = "^0.12.0" }
+backstage = { name = "omarcoaraujo/backstage", version = "^0.13.0" }
 ```
 
 **The tool**, with [Rokit](https://github.com/rojo-rbx/rokit):
@@ -318,7 +318,17 @@ backstage.start { places = { 1234567890 } }
 
 The server alone decides, Studio included. The client waits for the game to load and follows the server: it turns on only if the server created the Backstage remote, so it needs no list and cannot turn Backstage on by itself. A `config` read on the server before `start` on a live place returns the frozen defaults and never updates.
 
-On those places, and only there, the server and every player share the same window: an edit from one player reaches the server and all the others. Anywhere else outside Studio it stays off. Because a live server cannot reach the tool on your computer, nothing is saved to the scripts. Press the `{}` button next to the theme button to see the changed values as lines such as `pets.distance = 8`, select them, copy them and apply them to the defaults yourself. Never allow your production place: every player in it could edit values and press buttons.
+On those places, and only there, the server and every player share the same window: an edit from one player reaches the server and all the others. Anywhere else outside Studio it stays off. Because a live server cannot reach the tool on your computer, nothing is saved to the scripts. Press the `{}` button next to the theme button to see the changed values as lines such as `pets.distance = 8`, select them and copy them. To write them into the scripts, give the text to the tool, either from a file or piped in:
+
+```sh
+backstage apply . --file export.txt
+```
+
+```powershell
+Get-Clipboard | backstage apply .
+```
+
+It writes each value into the default of its config, refuses the ones it cannot place with the reason, and lists the lines it could not read. Never allow your production place: every player in it could edit values and press buttons.
 
 ## How it works
 

@@ -1,19 +1,23 @@
 --// Modules
 const fs = require "@std/fs"
+const io = require "@std/io"
 const output = require "@self/output"
+const parse_export = require "@self/parse"
 const process = require "@std/process"
+const save = require "@self/save"
 const scan = require "@self/scan"
 const server = require "@self/server"
 
 --// Constants
-const COMMAND = "serve"
+const SERVE = "serve"
+const APPLY = "apply"
 const DEFAULT_ROOT = "."
 
 const MIN_PORT = 1
 const MAX_PORT = 65535
 
 --// Types
-type options = { root: string, port: number?, problem: string? }
+type options = { root: string, port: number?, file: string?, problem: string? }
 
 --// Functions
 const function valid_port(port: number?)
@@ -23,13 +27,27 @@ end
 
 const function parse(args: { string }): options
 	const options = { root = DEFAULT_ROOT } :: options
+	const command = args[2]
+
 	local chose_root = false
 	local index = 3
 
 	while index <= #args do
 		const argument = args[index]
 
-		if argument == "--port" then
+		if argument == "--file" and command == APPLY then
+			const file = args[index + 1]
+			if not file or string.sub(file, 1, 2) == "--" then
+				options.problem = "--file needs the path of a file with the exported values"
+				return options
+			end
+
+			options.file = file
+			index += 2
+			continue
+		end
+
+		if argument == "--port" and command == SERVE then
 			const port = tonumber(args[index + 1])
 			if not valid_port(port) then
 				options.problem =
@@ -92,13 +110,38 @@ const function readable(message: unknown)
 	return (string.gsub(first, "^%S+:%d+: ", ""))
 end
 
+const function read_export(file: string?)
+	if not file then return io.input() or "" end
+	if not fs.exists(file) then fail(`"{file}" does not exist`) end
+	return fs.readFileToString(file)
+end
+
+const function apply_export(options: options)
+	const edits, problems = parse_export.parse(read_export(options.file))
+
+	for _, problem in problems do
+		output.warning(problem)
+	end
+
+	const state = { index = scan.scan(options.root), literals = {}, saving = 0 } :: save.state
+	const refusals = save.save(options.root, state, edits)
+
+	for _, refusal in refusals do
+		output.warning(`{refusal.path} was not written: {refusal.reason}`)
+	end
+
+	output.applied(#edits - #refusals, options.root)
+	process.exit(if #problems + #refusals > 0 then 1 else 0)
+end
+
 --// End
 if process.args[2] == nil then
 	output.usage()
 	process.exit(1)
 end
 
-if process.args[2] ~= COMMAND then reject(`unknown command "{process.args[2]}"`) end
+const command = process.args[2]
+if command ~= SERVE and command ~= APPLY then reject(`unknown command "{command}"`) end
 const options = parse(process.args)
 
 if options.problem then reject(options.problem) end
@@ -110,6 +153,7 @@ if fs.type(options.root) ~= "dir" then
 	fail(`"{options.root}" is not a folder`, "give the folder that holds your Roblox project, like backstage serve .")
 end
 
+if command == APPLY then apply_export(options) end
 const port = options.port or server.DEFAULT_PORT
 const started, running = pcall(server.serve, options.root, port)
 
