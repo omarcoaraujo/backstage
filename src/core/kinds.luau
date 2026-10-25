@@ -63,6 +63,10 @@ const function infer(default: unknown, input: unknown): descriptor?
 	return nil
 end
 
+const function decimals(descriptor: descriptor)
+	return precision.of_limits(descriptor.step, descriptor.min)
+end
+
 const function snap(value: number, descriptor: descriptor)
 	const base = descriptor.min or 0
 	local result = value
@@ -72,7 +76,11 @@ const function snap(value: number, descriptor: descriptor)
 		result = tonumber(string.format(`%.{PRECISION}g`, result)) :: number
 	end
 
-	return math.clamp(precision.round(result), descriptor.min or -math.huge, descriptor.max or math.huge)
+	return math.clamp(
+		precision.round(result, decimals(descriptor)),
+		descriptor.min or -math.huge,
+		descriptor.max or math.huge
+	)
 end
 
 const function coerce(descriptor: descriptor, value: unknown): value?
@@ -119,4 +127,5 @@ end
 return table.freeze {
 	infer = infer,
 	coerce = coerce,
+	decimals = decimals,
 }

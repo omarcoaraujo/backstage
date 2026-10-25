@@ -24,9 +24,13 @@ const function slot(): slot
 	return created
 end
 
-const function same(first: kinds.value?, second: kinds.value?): boolean
+const function same(first: kinds.value?, second: kinds.value?, decimals: number?): boolean
 	if first == second then return true end
-	if type(first) == "number" and type(second) == "number" then return math.abs(first - second) < NUMBER_TOLERANCE end
+
+	if type(first) == "number" and type(second) == "number" then
+		const tolerance = if decimals then math.min(NUMBER_TOLERANCE, 0.5 * 10 ^ -decimals) else NUMBER_TOLERANCE
+		return math.abs(first - second) < tolerance
+	end
 
 	if typeof(first) == "Vector3" and typeof(second) == "Vector3" then
 		return ((first :: any) - (second :: any)).Magnitude < NUMBER_TOLERANCE
@@ -53,10 +57,10 @@ const function forget(path: string)
 	state.saved[path] = nil
 end
 
-const function resolve(path: string, default: kinds.value): kinds.value
+const function resolve(path: string, default: kinds.value, decimals: number?): kinds.value
 	const state = slot()
 	const original = state.original[path]
-	if original ~= nil and same(state.saved[path], default) then return original end
+	if original ~= nil and same(state.saved[path], default, decimals) then return original end
 
 	state.original[path] = default
 	state.saved[path] = nil

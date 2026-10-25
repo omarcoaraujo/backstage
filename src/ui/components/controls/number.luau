@@ -18,6 +18,7 @@ type props = {
 	max: number?,
 
 	step: number?,
+	decimals: number?,
 	locked: (() -> boolean)?,
 }
 
@@ -56,7 +57,13 @@ return function(props: props)
 			Size = px.udim2(0, theme.input_width, 1, 0),
 
 			BackgroundTransparency = 1,
-			number_input { value = props.value, on_change = props.on_change, locked = props.locked },
+			number_input {
+				value = props.value,
+				on_change = props.on_change,
+
+				decimals = props.decimals,
+				locked = props.locked,
+			},
 		},
 	}
 end

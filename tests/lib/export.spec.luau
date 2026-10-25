@@ -3,6 +3,7 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
 --// Modules
 const exporter = require(ReplicatedStorage.backstage.core.export)
+const kinds = require(ReplicatedStorage.backstage.core.kinds)
 
 --// Specs
 return {
@@ -41,6 +42,30 @@ return {
 		}
 
 		assert(text == "pets.tint = Color3.fromRGB(255, 128, 0)\npets.offset = Vector3.new(0, 1.5, 0)")
+	end,
+
+	keeps_the_decimals_of_a_fine_step = function()
+		const descriptor = kinds.infer(0.0025, { min = 0.0005, max = 0.02, step = 0.0001 }) :: kinds.descriptor
+		const decimals = kinds.decimals(descriptor)
+
+		const min_turn_speed = kinds.coerce(descriptor, 0.0025) :: number
+		const max_turn_speed = kinds.coerce(descriptor, 0.0075) :: number
+
+		assert(min_turn_speed == 0.0025)
+		assert(max_turn_speed == 0.0075)
+
+		const unchanged = exporter.text {
+			{ path = "pets.min_turn_speed", value = min_turn_speed, default = 0.0025, decimals = decimals },
+			{ path = "pets.max_turn_speed", value = max_turn_speed, default = 0.0075, decimals = decimals },
+		}
+
+		assert(unchanged == "")
+		const edited = exporter.text {
+			{ path = "pets.min_turn_speed", value = 0.0025, default = 0.001, decimals = decimals },
+			{ path = "pets.max_turn_speed", value = 0.0075, default = 0.001, decimals = decimals },
+		}
+
+		assert(edited == "pets.min_turn_speed = 0.0025\npets.max_turn_speed = 0.0075")
 	end,
 
 	is_empty_when_nothing_changed = function()

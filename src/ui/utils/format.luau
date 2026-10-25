@@ -5,10 +5,8 @@ const precision = require "../../core/precision"
 const hex = require "./hex"
 
 --// Functions
-const function number(value: number): string
-	const rounded = precision.round(value)
-	if rounded == 0 then return "0" end
-	return (string.gsub(string.format(`%.{precision.decimals}f`, rounded), "%.?0+$", ""))
+const function number(value: number, decimals: number?): string
+	return precision.text(value, decimals)
 end
 
 const function vector3(value: Vector3): string

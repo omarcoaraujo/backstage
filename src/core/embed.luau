@@ -58,8 +58,7 @@ const function embed(parent: Instance, options: options?): () -> ()
 		for _, entry in registry.list() do
 			if settled[entry.path] then continue end
 			settled[entry.path] = true
-
-			registry.rebase(entry.path, baseline.resolve(entry.path, entry.default))
+			registry.rebase(entry.path, baseline.resolve(entry.path, entry.default, kinds.decimals(entry.descriptor)))
 		end
 	end
 

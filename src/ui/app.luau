@@ -127,7 +127,13 @@ return function(props: props)
 		const changed = {}
 
 		for _, entry in registry.list() do
-			table.insert(changed, { path = entry.path, value = entry.value, default = entry.default })
+			table.insert(changed, {
+				path = entry.path,
+				value = entry.value,
+
+				default = entry.default,
+				decimals = kinds.decimals(entry.descriptor),
+			})
 		end
 
 		return exporter.text(changed)
@@ -178,11 +184,13 @@ return function(props: props)
 				number {
 					value = value,
 					on_change = on_change,
+					locked = locked,
 
 					min = entry.descriptor.min,
 					max = entry.descriptor.max,
+
 					step = entry.descriptor.step,
-					locked = locked,
+					decimals = kinds.decimals(entry.descriptor),
 				}
 			)
 		end

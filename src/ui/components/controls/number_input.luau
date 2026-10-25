@@ -8,13 +8,15 @@ const field = require "./field"
 type props = {
 	value: () -> number,
 	on_change: (value: number) -> (),
+
+	decimals: number?,
 	locked: (() -> boolean)?,
 }
 
 --// Component
 return function(props: props)
 	const function text()
-		return format.number(props.value())
+		return format.number(props.value(), props.decimals)
 	end
 
 	const function on_commit(typed: string)

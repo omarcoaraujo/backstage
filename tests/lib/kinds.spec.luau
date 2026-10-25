@@ -76,6 +76,19 @@ return {
 		assert(kinds.coerce(descriptor, 0.0004) == 0)
 	end,
 
+	number_decimals_follow_the_step = function()
+		assert(kinds.decimals(number { step = 0.0001 }) == 4)
+		assert(kinds.decimals(number { step = 0.5 }) == 1)
+		assert(kinds.decimals(number { step = 1 }) == 0)
+		assert(kinds.decimals(number()) == 3)
+	end,
+
+	number_keeps_the_decimals_of_its_step = function()
+		const descriptor = number { min = 0.0005, max = 0.02, step = 0.0001 }
+		assert(kinds.coerce(descriptor, 0.0025) == 0.0025)
+		assert(kinds.coerce(descriptor, 0.0075) == 0.0075)
+	end,
+
 	number_keeps_the_limits_after_rounding = function()
 		const descriptor = number { min = 0, max = 1.0004 }
 		assert(kinds.coerce(descriptor, 5) == 1.0004)
