@@ -13,6 +13,6 @@ const pets = require(ReplicatedStorage.client_modules.pets)
 const app = require(ReplicatedStorage.ui.app)
 
 --// End
-backstage.start { vide = vide, charm = charm, echo = 0.4 }
+backstage.start { vide = vide, charm = charm }
 app.mount()
 pets.spawn()

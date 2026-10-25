@@ -101,15 +101,4 @@ return {
 		assert(sent and sent.cursor and sent.cursor.x == 0.25)
 		presence.reset()
 	end,
-
-	shows_the_own_state_after_the_delay = function()
-		presence.reset()
-		presence.show_own(9, "me", 0)
-
-		presence.publish(pointer(0.5))
-		task.wait(0.1)
-
-		assert(#presence.list() == 1 and presence.list()[1].name == "me")
-		presence.reset()
-	end,
 }

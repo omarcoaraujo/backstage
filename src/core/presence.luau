@@ -28,18 +28,10 @@ export type entry = {
 	hold: hold?,
 }
 
-type echo = {
-	user: number,
-	name: string,
-	delay: number,
-}
-
 --// Variables
 const entries = {} :: { [number]: entry }
 const listeners = {} :: { () -> () }
-
 local publisher = nil :: ((state: state?) -> ())?
-local echo = nil :: echo?
 
 --// Functions
 const function finite(value: unknown)
@@ -109,22 +101,12 @@ const function set(user: number, name: string, next_state: state?)
 end
 
 const function publish(next_state: state?)
-	if publisher then publisher(next_state) end
-	const current = echo
-
-	if not current then return end
-
-	task.delay(current.delay, function()
-		set(current.user, current.name, next_state)
-	end)
+	if not publisher then return end
+	publisher(next_state)
 end
 
 const function connect_remote(handler: ((state: state?) -> ())?)
 	publisher = handler
-end
-
-const function show_own(user: number, name: string, delay: number)
-	echo = { user = user, name = name, delay = delay }
 end
 
 const function list()
@@ -153,19 +135,16 @@ end
 const function reset()
 	table.clear(entries)
 	table.clear(listeners)
-
 	publisher = nil
-	echo = nil
 end
 
 --// End
 return table.freeze {
 	valid = valid,
 	set = set,
-	publish = publish,
 
+	publish = publish,
 	connect_remote = connect_remote,
-	show_own = show_own,
 
 	list = list,
 	on_change = on_change,
