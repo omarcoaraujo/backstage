@@ -36,7 +36,7 @@ const function start(options: options?)
 
 	if RunService:IsServer() then
 		sync.serve()
-		bridge.serve(if options then options.port else nil, { keep = true })
+		if mode.studio() then bridge.serve(if options then options.port else nil, { keep = true }) end
 		return
 	end
 

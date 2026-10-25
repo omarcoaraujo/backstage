@@ -11,6 +11,7 @@ const theme = require "../../constants/theme"
 
 --// Components
 const reset_button = require "../reset_button"
+const export_button = require "./export_button"
 const logo = require "./logo"
 const theme_button = require "./theme_button"
 
@@ -29,6 +30,7 @@ type props = {
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
+	on_export: (() -> ())?,
 }
 
 --// Component
@@ -49,6 +51,10 @@ return function(props: props)
 
 	const function on_reset()
 		if props.on_reset then props.on_reset() end
+	end
+
+	const function on_export()
+		if props.on_export then props.on_export() end
 	end
 
 	const function close_transparency()
@@ -119,9 +125,14 @@ return function(props: props)
 		},
 
 		reset_button {
-			right = theme.title_inset * 2 + theme.title_button * 2,
+			right = theme.title_inset * 2.5 + theme.title_button * 3,
 			visible = reset_visible,
 			on_reset = on_reset,
+		},
+
+		export_button {
+			right = theme.title_inset * 2 + theme.title_button * 2,
+			on_export = on_export,
 		},
 
 		theme_button {

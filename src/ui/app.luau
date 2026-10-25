@@ -2,6 +2,7 @@
 const vide = require "../../roblox_packages/vide"
 
 --// Modules
+const exporter = require "../core/export"
 const kinds = require "../core/kinds"
 const registry = require "../core/registry"
 
@@ -112,6 +113,16 @@ return function(props: props)
 
 	const function restore_all()
 		registry.restore_group()
+	end
+
+	const function export_text()
+		const changed = {}
+
+		for _, entry in registry.list() do
+			table.insert(changed, { path = entry.path, value = entry.value, default = entry.default })
+		end
+
+		return exporter.text(changed)
 	end
 
 	const function restorable(entry: registry.entry, value: () -> unknown, content: unknown)
@@ -317,5 +328,6 @@ return function(props: props)
 
 		dirty = any_dirty,
 		on_reset = restore_all,
+		export_text = export_text,
 	}
 end

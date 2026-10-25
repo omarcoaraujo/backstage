@@ -229,6 +229,18 @@ return {
 		end))
 	end,
 
+	allowed_place_keeps_backstage_active = function()
+		fresh()
+
+		mode.restore()
+		mode.allow { game.PlaceId + 1 }
+		assert(mode.active() == game:GetService("RunService"):IsStudio())
+
+		mode.allow { game.PlaceId }
+		assert(mode.active())
+		mode.restore()
+	end,
+
 	production_buttons_are_inert = function()
 		fresh()
 

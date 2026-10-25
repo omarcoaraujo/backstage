@@ -14,6 +14,7 @@ const resize_rect = require "../utils/resize_rect"
 const theme = require "../constants/theme"
 
 --// Components
+const export_panel = require "@self/export_panel"
 const footer = require "@self/footer"
 const handles = require "@self/handles"
 const search = require "@self/search"
@@ -52,6 +53,7 @@ type props = {
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
+	export_text: (() -> string)?,
 }
 
 --// Functions
@@ -78,6 +80,9 @@ return function(props: props)
 	const position = vide.source(props.position)
 	const size = vide.source(props.size or DEFAULT_SIZE * px.scale())
 	const drag = vide.source(nil :: drag?)
+
+	const exporting = vide.source(false)
+	const exported = vide.source ""
 
 	const function bounds()
 		const parent = if root then root.Parent :: GuiBase2d? else nil
@@ -195,7 +200,18 @@ return function(props: props)
 
 	const function close()
 		position(props.position)
+		exporting(false)
 		props.on_close()
+	end
+
+	const function toggle_export()
+		if exporting() then
+			exporting(false)
+			return
+		end
+
+		if props.export_text then exported(props.export_text()) end
+		exporting(true)
 	end
 
 	root = vide.create "Frame" {
@@ -235,6 +251,12 @@ return function(props: props)
 
 		search(),
 
+		export_panel {
+			visible = exporting,
+			text = exported,
+			footer_height = footer_height,
+		},
+
 		footer {
 			text = props.footer or "",
 			visible = props.footer ~= nil,
@@ -249,6 +271,7 @@ return function(props: props)
 
 			dirty = props.dirty,
 			on_reset = props.on_reset,
+			on_export = if props.export_text then toggle_export else nil,
 		},
 
 		handles {

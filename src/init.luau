@@ -45,4 +45,5 @@ return table.freeze {
 
 	enable = mode.enable,
 	disable = mode.disable,
+	allow = mode.allow,
 }

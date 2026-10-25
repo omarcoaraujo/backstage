@@ -308,9 +308,15 @@ A storybook reloads the story whenever the script changes, and that shapes how `
 
 `start` and `embed` do nothing outside Studio, and `config` returns a frozen copy of the defaults, so the values you declared are the ones the game ships with. There is no UI, no remote, no listener and no signal. It is not literally free: the library is still loaded, each `config` keeps one frozen copy of its defaults, and `config`, `button` and `on_change` check once per call whether Studio is running. Nothing runs after that, and reading a value is a plain table read. Use `backstage.disable()` to test that mode inside Studio, and `backstage.enable()` to force the Studio mode. Never ship a call to `enable`: on a live server it would let any player edit values and press buttons, because the server trusts every edit it receives while Backstage is on.
 
-### Team Test
+### Tuning on a live server
 
-Team Test is not supported. Its server runs on Roblox's machines, so it cannot reach the tool on your computer and your edits would never be saved to the scripts. If the server does not start Backstage there, the client gives up after a few seconds and never opens the window. Play, and Clients and Servers with more than one player, run the server on your computer and work normally.
+Call `backstage.allow` with the place ids where Backstage may run, before any `config`:
+
+```luau
+backstage.allow { 1234567890 }
+```
+
+On those places, and only there, the server and every player share the same window: an edit from one player reaches the server and all the others. Anywhere else outside Studio it stays off. Because a live server cannot reach the tool on your computer, nothing is saved to the scripts. Press the `{}` button next to the theme button to see the changed values as lines such as `pets.distance = 8`, select them, copy them and apply them to the defaults yourself. Never allow your production place: every player in it could edit values and press buttons.
 
 ## How it works
 
