@@ -10,8 +10,9 @@ const px = require "../../utils/px"
 const theme = require "../../constants/theme"
 
 --// Constants
-const ICON_SIZE = 12
-const STROKE = 1.5
+const ICON_SIZE = 16
+const ICON = "rbxassetid://112746140543671"
+const IDLE_TRANSPARENCY = 0.35
 
 --// Types
 type props = {
@@ -37,23 +38,9 @@ return function(props: props)
 		return 1
 	end
 
-	const function icon_color()
-		if hovered() and not overlay.active() then return appearance.text() end
-		return appearance.text_muted()
-	end
-
-	const function bar(x: number, y: number, width: number, height: number, rotation: number)
-		return vide.create "Frame" {
-			Name = "bar",
-			AnchorPoint = Vector2.new(0.5, 0.5),
-
-			Position = px.udim2(0, x, 0, y),
-			Size = px.udim2(0, width, 0, height),
-
-			BackgroundColor3 = icon_color,
-			BorderSizePixel = 0,
-			Rotation = rotation,
-		}
+	const function icon_transparency()
+		if hovered() and not overlay.active() then return 0 end
+		return IDLE_TRANSPARENCY
 	end
 
 	return vide.create "TextButton" {
@@ -80,21 +67,18 @@ return function(props: props)
 			CornerRadius = px.udim(0, theme.radius),
 		},
 
-		vide.create "Frame" {
+		vide.create "ImageLabel" {
 			Name = "icon",
 			AnchorPoint = Vector2.new(0.5, 0.5),
 
 			Position = UDim2.fromScale(0.5, 0.5),
 			Size = px.udim2(0, ICON_SIZE, 0, ICON_SIZE),
+
 			BackgroundTransparency = 1,
+			Image = ICON,
 
-			bar(6, 3.5, STROKE, 7, 0),
-			bar(4.25, 6.25, 5, STROKE, 45),
-			bar(7.75, 6.25, 5, STROKE, -45),
-
-			bar(6, 11.25, 10, STROKE, 0),
-			bar(1.25, 9.5, STROKE, 3.5, 0),
-			bar(10.75, 9.5, STROKE, 3.5, 0),
+			ImageColor3 = appearance.text,
+			ImageTransparency = icon_transparency,
 		},
 	}
 end
