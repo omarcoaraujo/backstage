@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Backstage can now run on places you choose with `backstage.allow`, shared by the server and every player.
+- Backstage can now run on places you choose with the `places` option of `start`, shared by the server and every player.
 - A new button next to the theme button shows the changed values, ready to copy into the game.
 
 ## 0.11.2

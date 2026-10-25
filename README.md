@@ -310,11 +310,13 @@ A storybook reloads the story whenever the script changes, and that shapes how `
 
 ### Tuning on a live server
 
-Call `backstage.allow` with the place ids where Backstage may run, before any `config`:
+Pass the place ids where Backstage may run to `start` on the server, before any `config` is read:
 
 ```luau
-backstage.allow { 1234567890 }
+backstage.start { places = { 1234567890 } }
 ```
+
+The server alone decides, Studio included. The client waits for the game to load and follows the server: it turns on only if the server created the Backstage remote, so it needs no list and cannot turn Backstage on by itself. A `config` read on the server before `start` on a live place returns the frozen defaults and never updates.
 
 On those places, and only there, the server and every player share the same window: an edit from one player reaches the server and all the others. Anywhere else outside Studio it stays off. Because a live server cannot reach the tool on your computer, nothing is saved to the scripts. Press the `{}` button next to the theme button to see the changed values as lines such as `pets.distance = 8`, select them, copy them and apply them to the defaults yourself. Never allow your production place: every player in it could edit values and press buttons.
 

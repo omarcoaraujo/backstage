@@ -2,10 +2,11 @@
 const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
 --// Modules
+const mode = require "./mode"
 const registry = require "./registry"
 
 --// Constants
-const REMOTE_NAME = "backstage_sync"
+const REMOTE_NAME = mode.remote_name
 const REMOTE_TIMEOUT = 10
 
 --// Types

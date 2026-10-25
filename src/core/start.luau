@@ -18,6 +18,7 @@ export type options = {
 
 	port: number?,
 	theme: ("dark" | "light")?,
+	places: { number }?,
 
 	vide: unknown?,
 	charm: unknown?,
@@ -28,6 +29,7 @@ local started = false
 
 --// Functions
 const function start(options: options?)
+	if options and options.places then mode.allow(options.places) end
 	if started or not mode.active() then return end
 	started = true
 
