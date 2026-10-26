@@ -1,5 +1,6 @@
 --// Modules
 const apply = require "./apply"
+const entries = require "./entries"
 const fs = require "@std/fs"
 const json = require "@std/json"
 const locate = require "./locate"
@@ -12,11 +13,9 @@ const MAX_READS = 3
 --// Types
 type edit = apply.edit
 type refusal = apply.refusal
-export type state = {
-	index: scan.index,
-	literals: { [string]: values.snapshot },
-	saving: number,
-}
+
+export type change = { kind: string, path: string, from: string? }
+export type state = { index: scan.index, literals: { [string]: values.snapshot }, saving: number }
 
 --// Functions
 const function index_names(index: scan.index)
@@ -120,14 +119,88 @@ const function save(root: string, state: state, edits: { edit })
 	return refusals
 end
 
+const function restructure_file(state: state, file: string, change: change): string?
+	const source = fs.readFileToString(file)
+	local updated, reason = nil :: string?, nil :: string?
+
+	if change.kind == "add" and change.from then
+		updated, reason = entries.add(source, change.path, change.from)
+	elseif change.kind == "remove" then
+		updated, reason = entries.remove(source, change.path)
+	else
+		return "expected an add with a sibling to copy, or a remove"
+	end
+
+	if not updated then return reason end
+	fs.writeStringToFile(file, updated)
+
+	state.literals[file] = values.read(updated)
+	return nil
+end
+
+const function restructure_safely(state: state, file: string, change: change)
+	state.saving += 1
+	const ok, result = pcall(restructure_file, state, file, change)
+	state.saving -= 1
+
+	if not ok then error(result, 0) end
+	return result :: string?
+end
+
+const function restructure(root: string, state: state, changes: { change })
+	local names = index_names(state.index)
+	const refusals = {} :: { refusal }
+
+	for _, change in changes do
+		if locate.owning_name(names, change.path) then continue end
+
+		state.index = scan.scan(root)
+		names = index_names(state.index)
+		break
+	end
+
+	for _, change in changes do
+		const name = config_name(names, change.path)
+		const files = state.index[name]
+
+		if not files then
+			table.insert(refusals, { path = change.path, reason = `config "{name}" is not in the project` })
+			continue
+		end
+
+		if #files > 1 then
+			table.insert(refusals, {
+				path = change.path,
+				reason = `config "{name}" is declared in {#files} files: {table.concat(files, ", ")}`,
+			})
+
+			continue
+		end
+
+		const reason = restructure_safely(state, files[1], change)
+		if reason then table.insert(refusals, { path = change.path, reason = reason }) end
+	end
+
+	return refusals
+end
+
 const function save_edits(root: string, state: state, message: string)
 	const ok, payload = pcall(json.deserialize, message)
-	if not ok or type(payload) ~= "table" or type(payload.edits) ~= "table" then return nil end
-	return save(root, state, payload.edits)
+	if not ok or type(payload) ~= "table" then return nil end
+
+	if type(payload.edits) ~= "table" and type(payload.changes) ~= "table" then return nil end
+	const refusals = if type(payload.changes) == "table" then restructure(root, state, payload.changes) else {}
+
+	if type(payload.edits) ~= "table" then return refusals end
+	const refused = save(root, state, payload.edits)
+
+	table.move(refused, 1, #refused, #refusals + 1, refusals)
+	return refusals
 end
 
 --// End
 return {
 	save = save,
 	save_edits = save_edits,
+	restructure = restructure,
 }

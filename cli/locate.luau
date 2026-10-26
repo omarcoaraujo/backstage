@@ -256,36 +256,70 @@ const function literals(source: string): { [string]: found }
 	return found
 end
 
-const function locate(source: string, path: string): (found?, string?)
+const function open(source: string, path: string)
 	const names = config_names(source)
 	const name = owning_name(names, path)
 	if not name then return nil, `config "{string.match(path, "^[^%.]+")}" not found` end
 
-	const segments = string.split(string.sub(path, #name + 2), ".")
 	const root = parser.parse(source).root
-
 	const call = find_config_call(root, name)
+
 	if not call then return nil, `config "{name}" not found` end
-
 	const defaults = call.arguments[2]
-	if not defaults or defaults.node.tag ~= "table" then return nil, `config "{name}" has no defaults table` end
 
-	local current = defaults.node
+	if not defaults or defaults.node.tag ~= "table" then return nil, `config "{name}" has no defaults table` end
+	return { root = root, defaults = defaults.node, segments = string.split(string.sub(path, #name + 2), ".") }
+end
+
+const function descend(root, start, segments: { string }, count: number)
+	local current = start
 	local entered = nil
 
-	for _, segment in segments do
+	for index = 1, count do
+		const segment = segments[index]
+
 		if current.tag == "call" then
 			entered = enter_call(root, current)
-			if not entered then return nil, `"{segment}" is inside a call that does not return a table literal` end
+			if not entered then return nil, nil, `"{segment}" is inside a call that does not return a table literal` end
 			current = entered.returned
 		end
 
-		if current.tag ~= "table" then return nil, `"{segment}" is inside a value that is not a table` end
+		if current.tag ~= "table" then return nil, nil, `"{segment}" is inside a value that is not a table` end
 		const entry = find_entry(current, segment)
 
-		if not entry then return nil, `"{segment}" not found in the defaults` end
+		if not entry then return nil, nil, `"{segment}" not found in the defaults` end
 		current = unwrap_cast(entry.value)
 	end
+
+	return current, entered
+end
+
+const function entry(source: string, path: string)
+	const opened, reason = open(source, path)
+	if not opened then return nil, reason end
+
+	const segments = opened.segments
+	const last = segments[#segments]
+
+	local owner, entered, failure = descend(opened.root, opened.defaults, segments, #segments - 1)
+	if not owner then return nil, failure end
+
+	if owner.tag == "call" then
+		entered = enter_call(opened.root, owner)
+		if not entered then return nil, `"{last}" is inside a call that does not return a table literal` end
+		owner = entered.returned
+	end
+
+	if owner.tag ~= "table" then return nil, `"{last}" is inside a value that is not a table` end
+	return { owner = owner, entry = find_entry(owner, last), entered = entered }
+end
+
+const function locate(source: string, path: string): (found?, string?)
+	const opened, reason = open(source, path)
+	if not opened then return nil, reason end
+
+	local current, entered, failure = descend(opened.root, opened.defaults, opened.segments, #opened.segments)
+	if not current then return nil, failure end
 
 	if entered and current.tag == "local" then
 		const index = parameter_index(entered.func, current.token.text)
@@ -300,7 +334,10 @@ end
 --// End
 return {
 	locate = locate,
+	entry = entry,
+
 	literals = literals,
+	to_range = to_range,
 
 	config_names = config_names,
 	owning_name = owning_name,

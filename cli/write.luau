@@ -50,6 +50,10 @@ const function line_start(source: string, line: number)
 	return start
 end
 
+const function offset(source: string, line: number, column: number)
+	return line_start(source, line) + column - 1
+end
+
 const function slice(source: string, range)
 	const first = line_start(source, range.begin_line) + range.begin_column - 1
 	const last = line_start(source, range.end_line) + range.end_column - 1
@@ -66,5 +70,7 @@ end
 return {
 	literal = literal,
 	replace = replace,
+
+	offset = offset,
 	slice = slice,
 }
