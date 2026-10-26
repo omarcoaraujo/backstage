@@ -125,6 +125,14 @@ const function enter_call(root, call)
 	return { call = call, func = func, returned = returned }
 end
 
+const function entry_key(entry): string?
+	if entry.kind == "record" then return entry.key.text end
+	if entry.kind ~= "general" then return nil end
+
+	if entry.key.tag == "number" then return tostring(entry.key.value) end
+	return string_text(entry.key)
+end
+
 const function find_entry(table_node, key: string)
 	const position = tonumber(key)
 	local items = 0
@@ -136,10 +144,15 @@ const function find_entry(table_node, key: string)
 			continue
 		end
 
-		if entry.key and entry.key.text == key then return entry end
+		if entry_key(entry) == key then return entry end
 	end
 
 	return nil
+end
+
+const function unwrap_cast(node)
+	if node.tag ~= "cast" then return node end
+	return unwrap_cast(node.operand)
 end
 
 const function is_negative_number(node)
@@ -188,7 +201,7 @@ const function argument_for(entered, node)
 	const argument = if index then entered.call.arguments[index] else nil
 
 	if not argument then return node end
-	return argument.node
+	return unwrap_cast(argument.node)
 end
 
 const function collect_literals(root, table_node, prefix: string, found: { [string]: found }, entered)
@@ -200,25 +213,26 @@ const function collect_literals(root, table_node, prefix: string, found: { [stri
 		if entry.kind == "list" then
 			items += 1
 			key = tostring(items)
-		elseif entry.key then
-			key = entry.key.text
+		else
+			key = entry_key(entry)
 		end
 
 		if not key then continue end
 		const path = `{prefix}.{key}`
+		const entry_value = unwrap_cast(entry.value)
 
-		if entry.value.tag == "table" then
-			collect_literals(root, entry.value, path, found, entered)
+		if entry_value.tag == "table" then
+			collect_literals(root, entry_value, path, found, entered)
 			continue
 		end
 
-		if entry.value.tag == "call" and not is_constructor(entry.value) then
-			const inside = enter_call(root, entry.value)
+		if entry_value.tag == "call" and not is_constructor(entry_value) then
+			const inside = enter_call(root, entry_value)
 			if inside then collect_literals(root, inside.returned, path, found, inside) end
 			continue
 		end
 
-		const value = argument_for(entered, entry.value)
+		const value = argument_for(entered, entry_value)
 		if is_literal(value) then found[path] = { tag = value.tag, range = to_range(value.location) } end
 	end
 end
@@ -270,13 +284,13 @@ const function locate(source: string, path: string): (found?, string?)
 		const entry = find_entry(current, segment)
 
 		if not entry then return nil, `"{segment}" not found in the defaults` end
-		current = entry.value
+		current = unwrap_cast(entry.value)
 	end
 
 	if entered and current.tag == "local" then
 		const index = parameter_index(entered.func, current.token.text)
 		const argument = if index then entered.call.arguments[index] else nil
-		if argument then current = argument.node end
+		if argument then current = unwrap_cast(argument.node) end
 	end
 
 	if not is_literal(current) then return nil, `"{path}" is not a literal` end

@@ -49,6 +49,27 @@ return {
 		assert(pets.trail.length == 3)
 	end,
 
+	studio_indexes_and_iterates_sparse_numeric_keys = function()
+		fresh()
+		const skins = backstage.config(
+			"skins",
+			{ [1] = { price = 1 }, [8] = { price = 8 }, [10] = { price = 10 }, [11] = { price = 11 } }
+		)
+
+		assert(skins[10].price == 10)
+		assert(skins[9] == nil)
+		assert(#skins == 0)
+
+		const seen = {}
+		for key, skin in skins do
+			table.insert(seen, `{key}:{skin.price}`)
+		end
+
+		table.sort(seen)
+		assert(table.concat(seen, ",") == "10:10,11:11,1:1,8:8")
+		assert(registry.get "skins.10.price" == 10)
+	end,
+
 	studio_rejects_writes_from_game_code = function()
 		fresh()
 		const pets = backstage.config("pets", defaults(), options())

@@ -42,6 +42,26 @@ backstage.config("shop", {
 })
 ]]
 
+const KEYED = [[
+backstage.config("skin", {
+	{ rarity = "common" },
+	[10] = {
+		rarity = "legendary",
+	},
+	[8] = { rarity = "rare" },
+	["wide key"] = { size = 3 },
+})
+]]
+
+const CAST = [[
+backstage.config("skin", {
+	one = {
+		rarity = "legendary" :: rarity_data.name,
+		size = 2 :: number,
+	},
+})
+]]
+
 const CONFIGS = [[
 backstage.config("pets", {})
 backstage.config("world", {})
@@ -86,6 +106,46 @@ return {
 	counts_only_list_items_by_position = function()
 		const found = locate.locate(SOURCE, "pets.mixed.2")
 		assert(found and found.tag == "string")
+	end,
+
+	finds_a_value_by_a_key_in_brackets = function()
+		const found = locate.locate(KEYED, "skin.10.rarity")
+		assert(found and found.tag == "string")
+		assert(found.range.begin_line == 4)
+	end,
+
+	keeps_list_items_working_next_to_keys_in_brackets = function()
+		const first = locate.locate(KEYED, "skin.1.rarity")
+		const bracket = locate.locate(KEYED, "skin.8.rarity")
+
+		assert(first and first.range.begin_line == 2)
+		assert(bracket and bracket.range.begin_line == 6)
+	end,
+
+	finds_a_value_by_a_string_key_in_brackets = function()
+		const found = locate.locate(KEYED, "skin.wide key.size")
+		assert(found and found.tag == "number")
+	end,
+
+	treats_a_value_with_a_cast_as_a_literal = function()
+		const found = locate.locate(CAST, "skin.one.rarity")
+		assert(found and found.tag == "string")
+		assert(found.range.begin_line == 3)
+	end,
+
+	points_the_range_at_the_value_and_not_at_the_cast = function()
+		const found = locate.locate(CAST, "skin.one.rarity")
+		assert(found)
+		assert(
+			string.sub(string.split(CAST, "\n")[3], found.range.begin_column, found.range.end_column - 1)
+				== '"legendary"'
+		)
+	end,
+
+	finds_a_cast_value_by_the_scan = function()
+		const found = locate.literals(CAST)
+		assert(found["skin.one.rarity"] and found["skin.one.rarity"].tag == "string")
+		assert(found["skin.one.size"] and found["skin.one.size"].tag == "number")
 	end,
 
 	refuses_a_position_past_the_list = function()
