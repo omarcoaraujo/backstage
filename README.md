@@ -16,6 +16,10 @@ Stop editing a number, pressing play and waiting to see it. Declare a value once
   <img src="docs/readonly.png" alt="Read-only values and expandable tables" width="32%">
 </p>
 
+<p align="center">
+  <video src="docs/backstage.mp4" width="40%" controls muted loop></video>
+</p>
+
 The read-only rows and expandable tables are built and shown in the UI stories, but `config` does not produce them yet. They arrive with store support.
 
 ---
