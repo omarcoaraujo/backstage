@@ -134,6 +134,55 @@ return {
 		bridge.reset()
 	end,
 
+	sends_a_new_catalog_entry_with_the_entry_it_was_copied_from = function()
+		const clients = start()
+		registry.add_group({}, "shop", {
+			add = function(key: string)
+				return `shop.{key}`, "shop.1"
+			end,
+
+			remove = function(key: string)
+				return `shop.{key}`
+			end,
+		})
+
+		clients[1].open()
+		registry.add_item("shop", "3")
+		task.wait(SETTLE)
+
+		const changes = HttpService:JSONDecode(clients[1].sent[1]).changes
+		assert(#changes == 1)
+
+		assert(changes[1].kind == "add" and changes[1].path == "shop.3" and changes[1].from == "shop.1")
+		bridge.reset()
+	end,
+
+	drops_the_pending_edits_of_an_entry_that_was_removed = function()
+		const clients = start()
+		registry.add("shop.3.price", "price", "shop.3", kinds.infer(1) :: kinds.descriptor, 1)
+		registry.add_group({}, "shop", {
+			add = function(key: string)
+				return `shop.{key}`, "shop.1"
+			end,
+
+			remove = function(key: string)
+				return `shop.{key}`
+			end,
+		})
+
+		clients[1].open()
+		registry.set("shop.3.price", 9)
+
+		registry.remove_item("shop", "3")
+		task.wait(SETTLE)
+
+		const message = HttpService:JSONDecode(clients[1].sent[1])
+		assert(#message.edits == 0)
+
+		assert(#message.changes == 1 and message.changes[1].kind == "remove")
+		bridge.reset()
+	end,
+
 	holds_the_edits_until_the_connection_opens = function()
 		const clients = start()
 		registry.set("pets.speed", 4)

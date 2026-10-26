@@ -44,6 +44,8 @@ export type deps = {
 
 --// Variables
 const pending = {} :: { [string]: unknown }
+const pending_changes = {} :: { registry.change }
+
 local socket = nil :: client?
 local url = `{HOST}:{DEFAULT_PORT}`
 
@@ -157,11 +159,13 @@ const function flush()
 		if edit then table.insert(edits, edit) end
 	end
 
+	const changes = table.clone(pending_changes)
 	table.clear(pending)
+	table.clear(pending_changes)
 
-	if #edits > 0 then
+	if #edits > 0 or #changes > 0 then
 		touch()
-		socket:Send(HttpService:JSONEncode { edits = edits })
+		socket:Send(HttpService:JSONEncode { edits = edits, changes = changes })
 	end
 
 	const done = on_flushed
@@ -300,9 +304,25 @@ const function on_change(path: string, value: unknown)
 	schedule_flush()
 end
 
+const function on_structure(change: registry.change)
+	if change.kind == "remove" then
+		for path in pending do
+			if path == change.path or registry.inside(path, change.path) then pending[path] = nil end
+		end
+	end
+
+	table.insert(pending_changes, change)
+	touch()
+
+	if dormant and not holding then connect() end
+	schedule_flush()
+end
+
 const function reset()
 	generation += 1
 	table.clear(pending)
+
+	table.clear(pending_changes)
 	close_socket()
 
 	if stop_listening then stop_listening() end
@@ -330,7 +350,7 @@ end
 
 const function finish()
 	if not serving or finishing then return end
-	if next(pending) == nil then
+	if next(pending) == nil and #pending_changes == 0 then
 		reset()
 		return
 	end
@@ -388,7 +408,14 @@ const function serve(port: number?, given: deps?)
 	holding = given ~= nil and given.hold == true
 	keeping = given ~= nil and given.keep == true
 
-	stop_listening = registry.on_change(on_change)
+	const stop_changes = registry.on_change(on_change)
+	const stop_structure = registry.on_structure(on_structure)
+
+	stop_listening = function()
+		stop_changes()
+		stop_structure()
+	end
+
 	serving = true
 	connect()
 end

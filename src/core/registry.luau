@@ -51,10 +51,11 @@ export type remote = {
 }
 
 export type catalog = {
-	add: (key: string) -> boolean,
-	remove: (key: string) -> boolean,
+	add: (key: string) -> (string?, string?),
+	remove: (key: string) -> string?,
 }
 
+export type change = { kind: string, path: string, from: string? }
 type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
 
 --// Variables
@@ -63,6 +64,7 @@ const buttons = {} :: { [string]: button_entry }
 const listeners = {} :: { listener }
 
 const register_listeners = {} :: { () -> () }
+const structure_listeners = {} :: { (change: change) -> () }
 const groups = {} :: { [unknown]: string }
 
 const catalogs = {} :: { [string]: catalog? }
@@ -223,19 +225,35 @@ const function remove(prefix: string)
 	end
 end
 
+const function changed_structure(change: change)
+	for _, listener in table.clone(structure_listeners) do
+		listener(change)
+	end
+end
+
 const function add_item(path: string, key: string)
 	const catalog = catalogs[path]
-	if not catalog or not catalog.add(key) then return false end
+	if not catalog then return false end
 
+	const added, from = catalog.add(key)
+	if not added then return false end
+
+	changed_structure { kind = "add", path = added, from = from }
 	announce()
+
 	return true
 end
 
 const function remove_item(path: string, key: string)
 	const catalog = catalogs[path]
-	if not catalog or not catalog.remove(key) then return false end
+	if not catalog then return false end
 
+	const removed = catalog.remove(key)
+	if not removed then return false end
+
+	changed_structure { kind = "remove", path = removed }
 	announce()
+
 	return true
 end
 
@@ -363,6 +381,15 @@ const function on_register(listener: () -> ())
 	end
 end
 
+const function on_structure(listener: (change: change) -> ())
+	table.insert(structure_listeners, listener)
+
+	return function()
+		const index = table.find(structure_listeners, listener)
+		if index then table.remove(structure_listeners, index) end
+	end
+end
+
 const function list()
 	const result = {}
 
@@ -389,6 +416,7 @@ const function reset()
 
 	table.clear(listeners)
 	table.clear(register_listeners)
+	table.clear(structure_listeners)
 
 	table.clear(groups)
 	table.clear(catalogs)
@@ -437,6 +465,7 @@ return table.freeze {
 	on_change = on_change,
 
 	on_register = on_register,
+	on_structure = on_structure,
 	list = list,
 
 	list_buttons = list_buttons,

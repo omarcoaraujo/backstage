@@ -148,24 +148,24 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		members[key] = { kind = "entry", path = member_path }
 	end
 
-	const function grow(key: string)
+	const function grow(key: string): (string?, string?)
 		const numbered = type(template) == "number"
 		const name = if numbered then tonumber(key) :: any else key
-		if name == nil or members[name] ~= nil then return false end
+		if name == nil or members[name] ~= nil then return nil, nil end
 
 		add_member(name, clone_defaults(source[template :: string]))
-		return true
+		return `{path}.{name}`, `{path}.{template}`
 	end
 
-	const function shrink(key: string)
+	const function shrink(key: string): string?
 		const numbered = type(template) == "number"
 		const name = if numbered then tonumber(key) :: any else key
-		if name == nil or members[name] == nil then return false end
+		if name == nil or members[name] == nil then return nil end
 
 		members[name] = nil
 		registry.remove(`{path}.{name}`)
 
-		return true
+		return `{path}.{name}`
 	end
 
 	const function index(_, key: string)
