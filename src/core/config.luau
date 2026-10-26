@@ -65,10 +65,56 @@ const function resolve(
 	return value
 end
 
-const function build_group(source: node, limits: tree?, hints: tree?, path: string)
-	const members = {} :: { [string]: member }
+const function signature(value: unknown): string
+	if type(value) ~= "table" then return typeof(value) end
+	if button.is_button(value) then return "button" end
+
+	const parts = {}
+	for key, child in value :: node do
+		table.insert(parts, `{key}:{signature(child)}`)
+	end
+
+	table.sort(parts)
+	return `\{{table.concat(parts, ",")}\}`
+end
+
+const function template_of(source: node): string?
+	local template = nil :: string?
+	local expected = nil :: string?
+	local count = 0
 
 	for key, value in source do
+		if type(value) ~= "table" and type(key) ~= "number" then return nil end
+
+		const current = signature(value)
+		if expected ~= nil and current ~= expected then return nil end
+
+		template = key
+		expected = current
+		count += 1
+	end
+
+	if count < 2 then return nil end
+	return template
+end
+
+const function clone_defaults(value: unknown): unknown
+	if type(value) ~= "table" then return value end
+	if button.is_button(value) then return button.create() end
+
+	const copy = {}
+	for key, child in value :: node do
+		copy[key] = clone_defaults(child)
+	end
+
+	return copy
+end
+
+const function build_group(source: node, limits: tree?, hints: tree?, path: string)
+	const members = {} :: { [string]: member }
+	const template = template_of(source)
+
+	const function add_member(key: string, value: unknown)
 		const member_path = `{path}.{key}`
 		const limit = each.resolve(limits, key)
 
@@ -80,7 +126,7 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 			registry.add_button(member_path, key, path, pressable, text)
 
 			members[key] = { kind = "button", button = pressable }
-			continue
+			return
 		end
 
 		if type(value) == "table" then
@@ -89,17 +135,37 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 				proxy = build_group(value :: node, limit :: tree?, hint :: tree?, member_path),
 			}
 
-			continue
+			return
 		end
 
 		const descriptor = kinds.infer(value, limit)
 		if not descriptor then
 			members[key] = { kind = "plain", value = value }
-			continue
+			return
 		end
 
 		registry.add(member_path, key, path, descriptor, value :: kinds.value, text)
 		members[key] = { kind = "entry", path = member_path }
+	end
+
+	const function grow(key: string)
+		const numbered = type(template) == "number"
+		const name = if numbered then tonumber(key) :: any else key
+		if name == nil or members[name] ~= nil then return false end
+
+		add_member(name, clone_defaults(source[template :: string]))
+		return true
+	end
+
+	const function shrink(key: string)
+		const numbered = type(template) == "number"
+		const name = if numbered then tonumber(key) :: any else key
+		if name == nil or members[name] == nil then return false end
+
+		members[name] = nil
+		registry.remove(`{path}.{name}`)
+
+		return true
 	end
 
 	const function index(_, key: string)
@@ -133,8 +199,12 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		return count
 	end
 
+	for key, value in source do
+		add_member(key, value)
+	end
+
 	const proxy = setmetatable({}, { __index = index, __newindex = read_only, __iter = iterate, __len = length })
-	registry.add_group(proxy, path)
+	registry.add_group(proxy, path, if template ~= nil then { add = grow, remove = shrink } else nil)
 
 	return proxy :: any
 end

@@ -160,6 +160,95 @@ return {
 		end
 	end,
 
+	studio_recognizes_a_catalog_by_the_shape_of_its_entries = function()
+		fresh()
+
+		backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [2] = { price = 500 } },
+			prices = { [1] = 10, [2] = 20 },
+			pet = { size = 1, mode = "follow" },
+			solo = { [1] = { price = 100 } },
+		})
+
+		assert(registry.is_catalog "shop.skins")
+		assert(registry.is_catalog "shop.prices")
+
+		assert(not registry.is_catalog "shop.pet")
+		assert(not registry.is_catalog "shop.solo")
+	end,
+
+	studio_adds_a_catalog_entry_with_the_shape_of_its_siblings = function()
+		fresh()
+
+		const shop = backstage.config("shop", {
+			skins = { [1] = { rarity = "common", price = 100 }, [2] = { rarity = "rare", price = 500 } },
+		}, {
+			limits = backstage.each { price = { min = 0, max = 50 } },
+		})
+
+		assert(registry.add_item("shop.skins", "11"))
+		assert(shop.skins[11].price == 100 or shop.skins[11].price == 500)
+		assert(registry.get "shop.skins.11.rarity" ~= nil)
+
+		assert(not registry.add_item("shop.skins", "11"))
+		assert(not registry.add_item("shop.skins", "nope"))
+
+		const seen = {}
+
+		for key in shop.skins do
+			table.insert(seen, key)
+		end
+
+		assert(#seen == 3)
+	end,
+
+	studio_adds_a_scalar_catalog_entry = function()
+		fresh()
+
+		const shop = backstage.config("shop", { prices = { [1] = 10, [2] = 20 } })
+		assert(registry.add_item("shop.prices", "3"))
+
+		assert(shop.prices[3] ~= nil)
+		assert(registry.get "shop.prices.3" ~= nil)
+	end,
+
+	studio_removes_a_catalog_entry = function()
+		fresh()
+
+		const shop = backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [2] = { price = 500 } },
+		})
+
+		assert(registry.remove_item("shop.skins", "2"))
+		assert(shop.skins[2] == nil)
+
+		assert(registry.get "shop.skins.2.price" == nil)
+		assert(registry.get "shop.skins.1.price" == 100)
+		assert(not registry.remove_item("shop.skins", "2"))
+	end,
+
+	studio_only_catalogs_accept_entries = function()
+		fresh()
+		backstage.config("shop", { pet = { size = 1, mode = "follow" } })
+
+		assert(not registry.add_item("shop.pet", "color"))
+		assert(not registry.remove_item("shop.pet", "size"))
+	end,
+
+	studio_announces_a_new_catalog_entry = function()
+		fresh()
+		backstage.config("shop", { prices = { [1] = 10, [2] = 20 } })
+
+		local announced = 0
+		registry.on_register(function()
+			announced += 1
+		end)
+
+		registry.add_item("shop.prices", "3")
+		registry.remove_item("shop.prices", "3")
+		assert(announced == 2)
+	end,
+
 	studio_each_applies_limits_to_every_entry = function()
 		fresh()
 

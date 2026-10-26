@@ -50,6 +50,11 @@ export type remote = {
 	press: (path: string) -> (),
 }
 
+export type catalog = {
+	add: (key: string) -> boolean,
+	remove: (key: string) -> boolean,
+}
+
 type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
 
 --// Variables
@@ -59,6 +64,8 @@ const listeners = {} :: { listener }
 
 const register_listeners = {} :: { () -> () }
 const groups = {} :: { [unknown]: string }
+
+const catalogs = {} :: { [string]: catalog? }
 local remote = nil :: remote?
 
 --// Functions
@@ -115,8 +122,13 @@ const function add_button(path: string, name: string, group: string, source: but
 	}
 end
 
-const function add_group(proxy: unknown, path: string)
+const function add_group(proxy: unknown, path: string, catalog: catalog?)
 	groups[proxy] = path
+	catalogs[path] = catalog
+end
+
+const function is_catalog(path: string)
+	return catalogs[path] ~= nil
 end
 
 const function group_path(proxy: unknown): string?
@@ -195,6 +207,36 @@ end
 const function inside(path: string, prefix: string?)
 	if not prefix then return true end
 	return string.sub(path, 1, #prefix + 1) == `{prefix}.`
+end
+
+const function remove(prefix: string)
+	for path in entries do
+		if path == prefix or inside(path, prefix) then entries[path] = nil end
+	end
+
+	for path in buttons do
+		if path == prefix or inside(path, prefix) then buttons[path] = nil end
+	end
+
+	for path in catalogs do
+		if path == prefix or inside(path, prefix) then catalogs[path] = nil end
+	end
+end
+
+const function add_item(path: string, key: string)
+	const catalog = catalogs[path]
+	if not catalog or not catalog.add(key) then return false end
+
+	announce()
+	return true
+end
+
+const function remove_item(path: string, key: string)
+	const catalog = catalogs[path]
+	if not catalog or not catalog.remove(key) then return false end
+
+	announce()
+	return true
 end
 
 const function dirty(prefix: string?)
@@ -347,7 +389,9 @@ const function reset()
 
 	table.clear(listeners)
 	table.clear(register_listeners)
+
 	table.clear(groups)
+	table.clear(catalogs)
 
 	tracker.reset()
 	remote = nil
@@ -359,6 +403,12 @@ return table.freeze {
 	add_button = add_button,
 
 	add_group = add_group,
+	is_catalog = is_catalog,
+
+	add_item = add_item,
+	remove_item = remove_item,
+
+	remove = remove,
 	rebase = rebase,
 
 	get = get,
