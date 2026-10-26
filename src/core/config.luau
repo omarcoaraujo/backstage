@@ -1,5 +1,6 @@
 --// Modules
 const button = require "./button"
+const each = require "./each"
 const kinds = require "./kinds"
 const mode = require "./mode"
 const registry = require "./registry"
@@ -7,7 +8,7 @@ const tracker = require "./tracker"
 
 --// Types
 type tree = { [string]: unknown }
-export type options<limits> = { limits: limits?, hints: { [string]: any }? }
+export type options<limits, hints = { [string]: any }> = { limits: limits?, hints: hints? }
 type node = { [string]: kinds.value | button.button | node }
 
 type member =
@@ -67,9 +68,9 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 
 	for key, value in source do
 		const member_path = `{path}.{key}`
-		const limit = if limits then limits[key] else nil
+		const limit = each.resolve(limits, key)
 
-		const hint = if hints then hints[key] else nil
+		const hint = each.resolve(hints, key)
 		const text = if type(hint) == "string" then hint else nil
 
 		if type(value) == "table" and button.is_button(value) then
@@ -178,7 +179,7 @@ const function warn_shadowed(name: string, defaults: tree)
 	declared[name] = defaults
 end
 
-const function config<settings, limits>(name: string, defaults: settings, options: options<limits>?): settings
+const function config<settings, limits, hints>(name: string, defaults: settings, options: options<limits, hints>?): settings
 	if not mode.active() then return freeze_copy(defaults) end
 	warn_shadowed(name, defaults :: any)
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- One limit or hint can now cover every entry of a list, like all the skins, instead of being written again for each one.
+
 ## 0.14.2
 
 - The `apply` command now saves values that sit under a numbered key like `[10] = { ... }`, and values written with a type after them, like `"legendary" :: name`.

@@ -143,6 +143,87 @@ return {
 		assert(registry.get "pets.mode" == "follow")
 	end,
 
+	studio_each_applies_limits_to_every_entry = function()
+		fresh()
+
+		backstage.config("skins", {
+			[1] = { price = 100 },
+			[10] = { price = 200 },
+		}, {
+			limits = backstage.each { price = { min = 0, max = 50 } },
+		})
+
+		assert(registry.set("skins.1.price", 999))
+		assert(registry.get "skins.1.price" == 50)
+
+		assert(registry.set("skins.10.price", 999))
+		assert(registry.get "skins.10.price" == 50)
+	end,
+
+	studio_each_explicit_key_wins = function()
+		fresh()
+
+		backstage.config("skins", {
+			[1] = { price = 100 },
+			[2] = { price = 100 },
+		}, {
+			limits = backstage.each({ price = { min = 0, max = 50 } }, {
+				[2] = { price = { max = 500 } },
+			}),
+		})
+
+		assert(registry.set("skins.1.price", 999))
+		assert(registry.get "skins.1.price" == 50)
+
+		assert(registry.set("skins.2.price", 999))
+		assert(registry.get "skins.2.price" == 500)
+	end,
+
+	studio_each_merges_explicit_into_shared = function()
+		fresh()
+
+		backstage.config("skins", {
+			[1] = { price = 100 },
+		}, {
+			limits = backstage.each({ price = { min = 10, max = 50 } }, {
+				[1] = { price = { max = 500 } },
+			}),
+		})
+
+		assert(registry.set("skins.1.price", 1))
+		assert(registry.get "skins.1.price" == 10)
+	end,
+
+	studio_each_works_in_a_nested_group = function()
+		fresh()
+
+		backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [2] = { price = 100 } },
+		}, {
+			limits = {
+				skins = backstage.each { price = { min = 0, max = 50 } },
+			},
+		})
+
+		assert(registry.set("shop.skins.2.price", 999))
+		assert(registry.get "shop.skins.2.price" == 50)
+	end,
+
+	studio_each_applies_hints_to_every_entry = function()
+		fresh()
+
+		backstage.config("skins", {
+			[1] = { price = 100 },
+			[2] = { price = 100 },
+		}, {
+			hints = backstage.each { price = "Coins to buy" },
+		})
+
+		for _, entry in registry.list() do
+			assert(entry.hint == "Coins to buy")
+		end
+	end,
+
 	studio_iterates_in_key_order = function()
 		fresh()
 
