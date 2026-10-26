@@ -3,6 +3,7 @@
 ## Unreleased
 
 - One limit or hint can now cover every entry of a list, like all the skins, instead of being written again for each one.
+- A value the window cannot edit, like an animation or a model, no longer breaks the config: it is simply not shown, and the game reads it as usual.
 
 ## 0.14.2
 

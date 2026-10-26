@@ -123,7 +123,7 @@ return backstage.config("pets", {
 
 How it is read:
 
-- **The kind comes from the default:** number, boolean, string, `Color3` or `Vector3`. A `backstage.button()` becomes a button.
+- **The kind comes from the default:** number, boolean, string, `Color3` or `Vector3`. A `backstage.button()` becomes a button. Any other value, like an `Instance` or a `Content`, is handed back as it is and does not show in the window.
 - **Limits** depend on the kind. A number takes `min`, `max` and `step`. A string takes a list of options, like `mode = { "follow", "orbit" }`, and becomes a choice. They are enforced on every edit, and numbers and vectors keep three decimals.
 - **Nested tables become groups**, drawn with a line that shows the nesting. A dot in the config name nests it too: `backstage.config("pet.drops", ...)` and `backstage.config("pet.skins", ...)` both show up inside one `pet` group.
 - **Every value has a path,** like `pets.trail.length`. You will see it in the window, in `on_change` and in the tool.

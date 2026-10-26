@@ -15,6 +15,7 @@ type member =
 	{ kind: "group", proxy: node }
 	| { kind: "entry", path: string }
 	| { kind: "button", button: button.button }
+	| { kind: "plain", value: unknown }
 
 --// Variables
 const declared = {} :: { [string]: tree }
@@ -49,12 +50,13 @@ const function resolve(
 	source: string?,
 	line: number?,
 	caller: unknown
-): (kinds.value | button.button | node)?
+): unknown
 	const found = members[key]
 	if not found then return nil end
 
 	if found.kind == "group" then return found.proxy end
 	if found.kind == "button" then return found.button end
+	if found.kind == "plain" then return found.value end
 
 	const value = registry.get(found.path)
 	if value == nil then return nil end
@@ -91,7 +93,10 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		end
 
 		const descriptor = kinds.infer(value, limit)
-		if not descriptor then error(`backstage: unsupported value for {member_path}`, 0) end
+		if not descriptor then
+			members[key] = { kind = "plain", value = value }
+			continue
+		end
 
 		registry.add(member_path, key, path, descriptor, value :: kinds.value, text)
 		members[key] = { kind = "entry", path = member_path }

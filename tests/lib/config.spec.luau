@@ -143,6 +143,23 @@ return {
 		assert(registry.get "pets.mode" == "follow")
 	end,
 
+	studio_passes_through_values_it_does_not_understand = function()
+		fresh()
+
+		const emote = Vector2.new(3, 4)
+		const emotes = backstage.config("emotes", {
+			[1] = { cooldown = 2, offset = emote },
+		})
+
+		assert(emotes[1].offset == emote)
+		assert(registry.get "emotes.1.cooldown" == 2)
+		assert(registry.get "emotes.1.offset" == nil)
+
+		for _, entry in registry.list() do
+			assert(entry.path ~= "emotes.1.offset")
+		end
+	end,
+
 	studio_each_applies_limits_to_every_entry = function()
 		fresh()
 
