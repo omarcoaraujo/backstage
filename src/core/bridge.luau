@@ -4,6 +4,7 @@ const HttpService = game:GetService "HttpService"
 --// Modules
 const kinds = require "./kinds"
 const registry = require "./registry"
+const script_entries = require "./script_entries"
 
 --// Constants
 const HOST = "ws://127.0.0.1"
@@ -220,9 +221,39 @@ const function push_edits(edits: { unknown })
 	return true
 end
 
-const function apply_pushed(edits: { unknown })
+const function added_paths(items: { unknown })
+	const paths = {} :: { string }
+
+	for _, item in items do
+		if type(item) ~= "table" then continue end
+		const path = (item :: { path: unknown }).path
+		if type(path) == "string" then table.insert(paths, path) end
+	end
+
+	return paths
+end
+
+const function removed_paths(items: { unknown })
+	const paths = {} :: { string }
+
+	for _, item in items do
+		if type(item) == "string" then table.insert(paths, item) end
+	end
+
+	return paths
+end
+
+const function apply_pushed(edits: { unknown }, added: { unknown }, removed: { unknown })
 	pushing = true
-	const ok, reason = pcall(push_edits, edits)
+
+	const ok, reason = pcall(function()
+		script_entries.remove(removed_paths(removed))
+		script_entries.add(added_paths(added))
+
+		push_edits(added)
+		push_edits(edits)
+	end)
+
 	pushing = false
 
 	if not ok then warn(`[backstage] could not apply the change made in the script: {reason}`) end
@@ -233,9 +264,15 @@ const function report(message: string)
 	const ok, reply = pcall(HttpService.JSONDecode, HttpService, message)
 	if not ok or type(reply) ~= "table" then return end
 
-	if type(reply.pushed) == "table" then apply_pushed(reply.pushed) end
-	if type(reply.refused) ~= "table" then return end
+	if type(reply.pushed) == "table" then
+		apply_pushed(
+			reply.pushed,
+			if type(reply.added) == "table" then reply.added else {},
+			if type(reply.removed) == "table" then reply.removed else {}
+		)
+	end
 
+	if type(reply.refused) ~= "table" then return end
 	for _, refusal in reply.refused do
 		warn(`[backstage] could not save {refusal.path} to the script: {refusal.reason}`)
 	end
@@ -305,6 +342,7 @@ const function on_change(path: string, value: unknown)
 end
 
 const function on_structure(change: registry.change)
+	if pushing then return end
 	if change.kind == "remove" then
 		for path in pending do
 			if path == change.path or registry.inside(path, change.path) then pending[path] = nil end

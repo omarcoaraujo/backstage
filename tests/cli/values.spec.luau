@@ -133,4 +133,32 @@ return {
 		const after = read 'backstage.config("pets", { speed = 1, size = 2 })'
 		assert(#values.changes(before, after) == 0)
 	end,
+
+	structure_reports_the_values_that_appeared_with_their_literals = function()
+		const before = read 'backstage.config("pets", { speed = 1 })'
+		const after = read 'backstage.config("pets", { speed = 1, size = 2, name = "Rex" })'
+
+		const added, removed = values.structure(before, after)
+		assert(#removed == 0 and #added == 2)
+
+		assert(added[1].path == "pets.name" and added[1].kind == "string" and added[1].value == "Rex")
+		assert(added[2].path == "pets.size" and added[2].kind == "number" and added[2].value == 2)
+	end,
+
+	structure_reports_the_values_that_disappeared = function()
+		const before = read 'backstage.config("pets", { speed = 1, size = 2, age = 3 })'
+		const after = read 'backstage.config("pets", { speed = 1 })'
+
+		const added, removed = values.structure(before, after)
+		assert(#added == 0)
+		assert(#removed == 2 and removed[1] == "pets.age" and removed[2] == "pets.size")
+	end,
+
+	structure_reports_nothing_when_only_a_value_changed = function()
+		const before = read 'backstage.config("pets", { speed = 1 })'
+		const after = read 'backstage.config("pets", { speed = 9 })'
+
+		const added, removed = values.structure(before, after)
+		assert(#added == 0 and #removed == 0)
+	end,
 }

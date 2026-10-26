@@ -129,9 +129,37 @@ const function changes(previous: snapshot, current: snapshot): { apply.edit }
 	return changed
 end
 
+const function structure(previous: snapshot, current: snapshot): ({ apply.edit }, { string })
+	const added = {} :: { apply.edit }
+	const removed = {} :: { string }
+
+	for path, after in current do
+		if previous[path] then continue end
+
+		const copy: unknown = table.clone(after)
+		const edit = copy :: apply.edit
+
+		edit.path = path
+		table.insert(added, edit)
+	end
+
+	for path in previous do
+		if not current[path] then table.insert(removed, path) end
+	end
+
+	table.sort(added, function(left, right)
+		return left.path < right.path
+	end)
+
+	table.sort(removed)
+	return added, removed
+end
+
 --// End
 return {
 	read = read,
 	changes = changes,
+
+	structure = structure,
 	same = same,
 }

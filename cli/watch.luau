@@ -12,7 +12,7 @@ const values = require "./values"
 const SETTLE = 0.15
 
 --// Types
-export type notify = (edits: { apply.edit }) -> ()
+export type notify = (edits: { apply.edit }, added: { apply.edit }, removed: { string }) -> ()
 
 --// Functions
 const function remember_all(state: save.state)
@@ -29,18 +29,19 @@ const function remember_all(state: save.state)
 	end
 end
 
-const function refresh(state: save.state, file: string): { apply.edit }
+const function refresh(state: save.state, file: string): ({ apply.edit }, { apply.edit }, { string })
 	const readable, source = pcall(fs.readFileToString, file)
-	if not readable then return {} end
+	if not readable then return {}, {}, {} end
 
 	const parsed, current = pcall(values.read, source)
-	if not parsed then return {} end
+	if not parsed then return {}, {}, {} end
 
 	const previous = state.literals[file]
 	state.literals[file] = current
 
-	if not previous then return {} end
-	return values.changes(previous, current)
+	if not previous then return {}, {}, {} end
+	const added, removed = values.structure(previous, current)
+	return values.changes(previous, current), added, removed
 end
 
 const function start(root: string, state: save.state, notify: notify)
@@ -65,6 +66,9 @@ const function start(root: string, state: save.state, notify: notify)
 
 	const function flush()
 		const edits = {} :: { apply.edit }
+		const added = {} :: { apply.edit }
+
+		const removed = {} :: { string }
 		const files = table.clone(pending)
 		table.clear(pending)
 
@@ -75,12 +79,15 @@ const function start(root: string, state: save.state, notify: notify)
 
 		for file in files do
 			if not scan.has_extension(file) then continue end
-			const changed = refresh(state, file)
+			const changed, appeared, vanished = refresh(state, file)
+
 			table.move(changed, 1, #changed, #edits + 1, edits)
+			table.move(appeared, 1, #appeared, #added + 1, added)
+			table.move(vanished, 1, #vanished, #removed + 1, removed)
 		end
 
-		if #edits == 0 then return end
-		notify(edits)
+		if #edits == 0 and #added == 0 and #removed == 0 then return end
+		notify(edits, added, removed)
 	end
 
 	const function settle()

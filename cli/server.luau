@@ -22,15 +22,21 @@ const function serve(root: string, port: number?)
 	const state = { index = scan.scan(root), literals = {}, saving = 0 } :: save.state
 	const sockets = {}
 
-	const function push(edits: { apply.edit })
+	const function push(edits: { apply.edit }, added: { apply.edit }, removed: { string })
 		const paths = {}
 
 		for _, edit in edits do
 			table.insert(paths, edit.path)
 		end
 
+		for _, edit in added do
+			table.insert(paths, edit.path)
+		end
+
+		table.move(removed, 1, #removed, #paths + 1, paths)
+
 		for socket in sockets do
-			reply(socket, { pushed = edits })
+			reply(socket, { pushed = edits, added = added, removed = removed })
 		end
 
 		output.pushed(paths)

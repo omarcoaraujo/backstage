@@ -157,6 +157,92 @@ return {
 		bridge.reset()
 	end,
 
+	creates_the_entry_that_appeared_in_the_script_without_sending_it_back = function()
+		const clients = start()
+		const created = {} :: { string }
+
+		registry.add_group({}, "shop", {
+			add = function(key: string)
+				table.insert(created, key)
+				registry.add(`shop.{key}.price`, "price", `shop.{key}`, kinds.infer(1) :: kinds.descriptor, 1)
+
+				return `shop.{key}`, "shop.1"
+			end,
+
+			remove = function(key: string)
+				return `shop.{key}`
+			end,
+		})
+
+		clients[1].open()
+		clients[1].receive(HttpService:JSONEncode {
+			pushed = {},
+			added = { { path = "shop.3.price", kind = "number", value = 7 } },
+			removed = {},
+		})
+
+		task.wait(SETTLE)
+		assert(#created == 1 and created[1] == "3")
+
+		assert(registry.get "shop.3.price" == 7)
+		assert(#clients[1].sent == 0)
+		bridge.reset()
+	end,
+
+	removes_the_entry_that_disappeared_from_the_script_without_sending_it_back = function()
+		const clients = start()
+		const removed = {} :: { string }
+
+		registry.add("shop.2.price", "price", "shop.2", kinds.infer(1) :: kinds.descriptor, 1)
+		registry.add_group({}, "shop", {
+			add = function(key: string)
+				return `shop.{key}`, "shop.1"
+			end,
+
+			remove = function(key: string)
+				table.insert(removed, key)
+				registry.remove(`shop.{key}`)
+
+				return `shop.{key}`
+			end,
+		})
+
+		clients[1].open()
+		clients[1].receive(HttpService:JSONEncode { pushed = {}, added = {}, removed = { "shop.2.price" } })
+		task.wait(SETTLE)
+
+		assert(#removed == 1 and removed[1] == "2")
+		assert(registry.get "shop.2.price" == nil)
+
+		assert(#clients[1].sent == 0)
+		bridge.reset()
+	end,
+
+	keeps_an_entry_that_still_has_values_in_the_script = function()
+		const clients = start()
+		const removed = {} :: { string }
+
+		registry.add("shop.2.price", "price", "shop.2", kinds.infer(1) :: kinds.descriptor, 1)
+		registry.add("shop.2.rarity", "rarity", "shop.2", kinds.infer "a" :: kinds.descriptor, "a")
+		registry.add_group({}, "shop", {
+			add = function(key: string)
+				return `shop.{key}`, "shop.1"
+			end,
+
+			remove = function(key: string)
+				table.insert(removed, key)
+				return `shop.{key}`
+			end,
+		})
+
+		clients[1].open()
+		clients[1].receive(HttpService:JSONEncode { pushed = {}, added = {}, removed = { "shop.2.price" } })
+		task.wait(SETTLE)
+
+		assert(#removed == 0)
+		bridge.reset()
+	end,
+
 	drops_the_pending_edits_of_an_entry_that_was_removed = function()
 		const clients = start()
 		registry.add("shop.3.price", "price", "shop.3", kinds.infer(1) :: kinds.descriptor, 1)
