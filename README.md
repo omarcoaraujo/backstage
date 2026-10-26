@@ -141,6 +141,27 @@ To explain a value or a button, add a `hints` table shaped like `limits`. The te
 }
 ```
 
+When a group has many entries with the same shape, like a catalog, wrap the shared rules in `backstage.each` instead of repeating them for every entry. They apply to every entry at that level, for `limits` and for `hints`:
+
+```lua
+return backstage.config("skins", {
+	[1] = { rarity = "common", price = 100 },
+	[2] = { rarity = "rare", price = 500 },
+	[10] = { rarity = "legendary", price = 4000 },
+}, {
+	limits = backstage.each({
+		rarity = { "common", "rare", "legendary" },
+		price = { min = 0, max = 10000, step = 50 },
+	}, {
+		[10] = { price = { max = 50000 } },
+	}),
+
+	hints = backstage.each { price = "Coins needed to buy the skin" },
+})
+```
+
+The second argument is optional and holds the entries that differ. A key you write there wins over the shared rule, and when both are tables they are merged, so skin `10` above keeps the `min` and `step` and only raises the `max`. A list of options is replaced whole instead of merged. `each` also works one level down, as in `limits = { skins = backstage.each { ... } }`.
+
 In the window, every changed value shows a reset arrow. A group shows one that resets everything inside it, and the title bar shows one that resets the whole window. A search bar filters the tree by name.
 
 ### 2. Reading values
