@@ -19,6 +19,14 @@ const STANCE_HINTS = {
 	sway = "How much the pet bobs up and down, shared by every stance",
 }
 
+const SKIN_LIMITS = {
+	rarity = { "common", "rare", "legendary" },
+	scale = { min = 0.5, max = 3, step = 0.1 },
+}
+
+--// Types
+type rarity = "common" | "rare" | "legendary"
+
 --// Functions
 const function stance(distance: number, height: number, speed: number)
 	return { distance = distance, height = height, speed = speed, sway = 0.4 }
@@ -38,11 +46,19 @@ return backstage.config("pets", {
 	},
 
 	trail = { enabled = true, length = 1.5 },
+
+	skins = {
+		[1] = { rarity = "common" :: rarity, scale = 1 },
+		[8] = { rarity = "rare" :: rarity, scale = 1.2 },
+		[10] = { rarity = "legendary" :: rarity, scale = 1.5 },
+	},
 }, {
 	limits = {
 		size = { min = 0.5, max = 8, step = 0.1 },
 		mode = { "follow", "orbit" },
+
 		stances = { follow = STANCE_LIMITS, orbit = STANCE_LIMITS },
+		skins = { [1] = SKIN_LIMITS, [8] = SKIN_LIMITS, [10] = SKIN_LIMITS },
 
 		trail = {
 			length = { min = 0.1, max = 6, step = 0.1 },
