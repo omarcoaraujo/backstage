@@ -30,7 +30,14 @@ const function sorted_keys(source: { [string]: member })
 		table.insert(keys, key)
 	end
 
-	table.sort(keys)
+	table.sort(keys, function(left: unknown, right: unknown)
+		if type(left) == "number" and type(right) == "number" then return left < right end
+		if type(left) == "number" then return true end
+		if type(right) == "number" then return false end
+
+		return (left :: string) < (right :: string)
+	end)
+
 	return keys
 end
 
