@@ -38,6 +38,27 @@ backstage.config("shop", {
 })
 ]]
 
+const EMPTY = [[
+backstage.config("shop", {})
+]]
+
+const EMPTY_MULTILINE = [[
+backstage.config("shop", {
+})
+]]
+
+const SINGLE = [[
+backstage.config("shop", {
+	[1] = { price = 100 },
+})
+]]
+
+const SINGLE_INLINE = [[
+backstage.config("pets", {
+	trail = { a = 1 },
+})
+]]
+
 --// Functions
 const function mentions(reason: string?, text: string)
 	return reason ~= nil and string.find(reason, text, 1, true) ~= nil
@@ -184,5 +205,33 @@ backstage.config("shop", {
 		const result, reason = entries.remove(CATALOG, "shop.9")
 		assert(result == nil)
 		assert(mentions(reason, "not found"))
+	end,
+
+	add_refuses_an_empty_table_because_there_is_no_template = function()
+		const result, reason = entries.add(EMPTY, "shop.1", "shop.2")
+		assert(result == nil)
+		assert(mentions(reason, "not found"))
+	end,
+
+	add_refuses_an_empty_table_over_several_lines = function()
+		const result, reason = entries.add(EMPTY_MULTILINE, "shop.1", "shop.2")
+		assert(result == nil)
+		assert(mentions(reason, "not found"))
+	end,
+
+	remove_refuses_from_an_empty_table = function()
+		const result, reason = entries.remove(EMPTY, "shop.1")
+		assert(result == nil)
+		assert(mentions(reason, "not found"))
+	end,
+
+	remove_leaves_an_empty_table_when_the_only_entry_goes = function()
+		const result = entries.remove(SINGLE, "shop.1")
+		assert(result == EMPTY_MULTILINE)
+	end,
+
+	remove_leaves_an_empty_table_on_one_line_when_the_only_entry_goes = function()
+		const result = entries.remove(SINGLE_INLINE, "pets.trail.a")
+		assert(string.find(result :: string, "trail = {  },", 1, true))
 	end,
 }
