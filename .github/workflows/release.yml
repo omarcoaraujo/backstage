@@ -85,3 +85,28 @@ jobs:
 
       - name: Publish
         run: pesde publish -y
+
+  publish_wally:
+    name: Publish the library to Wally
+    runs-on: ubuntu-latest
+    needs: [check]
+    if: github.event_name == 'release'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the package
+        run: bash scripts/wally_build.sh
+
+      - name: Log in to Wally
+        run: wally login --token "$WALLY_AUTH"
+        env:
+          WALLY_AUTH: ${{ secrets.WALLY_AUTH }}
+
+      - name: Publish
+        run: wally publish --project-path build/wally

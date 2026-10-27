@@ -35,6 +35,24 @@ jobs:
       - name: Run the specs
         run: lute run tests/cli/run.luau
 
+  wally:
+    name: Wally package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rokit
+        uses: CompeyDev/setup-rokit@v0.1.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the package
+        run: bash scripts/wally_build.sh
+
+      - name: Pack it
+        run: wally package --project-path build/wally --output build/backstage-wally.zip
+
   analyze:
     name: Type check
     runs-on: ubuntu-latest
