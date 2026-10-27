@@ -20,17 +20,17 @@ const window = require(ReplicatedStorage.backstage.ui.components.window)
 --// Constants
 const TITLE = "Not saved to the script"
 
---// Variables
-local sent = 0
-
 --// Functions
 const function not_a_literal()
 	notice.show(TITLE, "error", '"pets.stances.follow.speed" is not a literal')
 end
 
 const function without_room()
-	sent += 1
-	notice.show(TITLE, "error", `shop.{sent}: closes on the same line as its last entry, so the script cannot grow it`)
+	notice.show(
+		"Entry not added to the script",
+		"error",
+		`"shop" closes on the same line as its last entry, so the script cannot grow it`
+	)
 end
 
 const function only_a_title()

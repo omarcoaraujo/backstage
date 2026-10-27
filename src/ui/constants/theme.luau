@@ -59,10 +59,14 @@ return table.freeze {
 	footer_text_size = 11,
 
 	toast_width = 300,
-	toast_logo = 32,
+	toast_logo = 16,
 
-	toast_title_size = 13,
-	toast_detail_size = 11,
+	toast_header_size = 13,
+	toast_header_gap = 10,
+	toast_title_size = 16,
+
+	toast_detail_size = 13,
+	toast_detail_mix = 0.6,
 
 	field_height = 20,
 	input_width = 56,

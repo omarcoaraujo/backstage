@@ -8,9 +8,10 @@ const theme = require "../constants/theme"
 const FALLBACK_LINE_HEIGHT = 1.3
 
 --// Functions
-const function measure_text(text: string, weight: Enum.FontWeight, size: number, width: number): number
+const function measure_text(text: string, weight: Enum.FontWeight, size: number, width: number, rich: boolean?): number
 	const params = Instance.new "GetTextBoundsParams"
 	params.Text = text
+	params.RichText = rich == true
 
 	params.Font = Font.new(theme.font.Family, weight)
 	params.Size = size

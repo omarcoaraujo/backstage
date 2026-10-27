@@ -6,10 +6,13 @@ const appearance = require "../stores/appearance"
 const notices = require "../stores/notices"
 
 --// Utils
+const hex = require "../utils/hex"
 const px = require "../utils/px"
+const rich_text = require "../utils/rich_text"
 const theme = require "../constants/theme"
 
 --// Constants
+const HEADER = "Backstage"
 const LAYER_Z_INDEX = 100000
 const EXIT_DELAY = 0.5
 
@@ -22,7 +25,7 @@ const logo = require "./window/logo"
 --// Types
 type line_props = {
 	name: string,
-	text: string,
+	text: string | () -> string,
 
 	position: UDim2,
 	size: UDim2,
@@ -30,6 +33,9 @@ type line_props = {
 	font_size: number,
 	color: () -> Color3,
 	weight: Enum.FontWeight,
+
+	vertical: Enum.TextYAlignment?,
+	rich: boolean?,
 }
 
 --// Functions
@@ -41,6 +47,16 @@ const function title_color(kind: string)
 	end
 end
 
+const function emphasized(detail: string)
+	return function()
+		return rich_text(detail, hex.to_hex(appearance.text()))
+	end
+end
+
+const function softened()
+	return appearance.text_muted():Lerp(appearance.text(), theme.toast_detail_mix)
+end
+
 const function line(props: line_props)
 	return vide.create "TextLabel" {
 		Name = props.name,
@@ -49,14 +65,16 @@ const function line(props: line_props)
 
 		BackgroundTransparency = 1,
 		FontFace = Font.new(theme.font.Family, props.weight),
+
 		Text = props.text,
+		RichText = props.rich == true,
 
 		TextColor3 = props.color,
 		TextSize = props.font_size,
 
 		TextWrapped = true,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		TextYAlignment = Enum.TextYAlignment.Top,
+		TextYAlignment = props.vertical or Enum.TextYAlignment.Top,
 	}
 end
 
@@ -67,15 +85,14 @@ const function build(toast: notices.toast, index: () -> number, present: () -> b
 	const stroke = px(1)()
 
 	const logo_size = px(theme.toast_logo)()
-	const indent = logo_size + px(theme.logo_gap)()
-	const inner_width = width - padding * 2 - indent
+	const header_indent = padding + logo_size + px(theme.logo_gap)()
+	const inner_width = width - padding * 2
 
 	const detail_gap = if toast.detail then px(theme.gap / 2)() else 0
 	const text_height = toast.title_height + detail_gap + toast.detail_height
 
-	const body_height = math.max(logo_size, text_height)
-	const height = padding * 2 + body_height
-	const text_top = padding + math.floor((body_height - text_height) / 2)
+	const text_top = padding + logo_size + px(theme.toast_header_gap)()
+	const height = text_top + text_height + padding
 
 	const shown = vide.spring(function()
 		return if present() then 1 else 0
@@ -119,14 +136,27 @@ const function build(toast: notices.toast, index: () -> number, present: () -> b
 
 		logo {
 			size = theme.toast_logo,
-			position = px.udim2(0, theme.padding, 0.5, -theme.toast_logo / 2),
+			position = px.udim2(0, theme.padding, 0, theme.padding),
+		},
+
+		line {
+			name = "header",
+			text = HEADER,
+
+			position = UDim2.fromOffset(header_indent, padding),
+			size = UDim2.fromOffset(width - header_indent - padding, logo_size),
+
+			font_size = px(theme.toast_header_size)(),
+			color = appearance.text,
+			weight = Enum.FontWeight.Regular,
+			vertical = Enum.TextYAlignment.Center,
 		},
 
 		line {
 			name = "title",
 			text = toast.text,
 
-			position = UDim2.fromOffset(padding + indent, text_top),
+			position = UDim2.fromOffset(padding, text_top),
 			size = UDim2.fromOffset(inner_width, toast.title_height),
 
 			font_size = px(theme.toast_title_size)(),
@@ -137,13 +167,14 @@ const function build(toast: notices.toast, index: () -> number, present: () -> b
 		if toast.detail
 			then line {
 				name = "detail",
-				text = toast.detail,
+				text = emphasized(toast.detail),
+				rich = true,
 
-				position = UDim2.fromOffset(padding + indent, text_top + toast.title_height + detail_gap),
+				position = UDim2.fromOffset(padding, text_top + toast.title_height + detail_gap),
 				size = UDim2.fromOffset(inner_width, toast.detail_height),
 
 				font_size = px(theme.toast_detail_size)(),
-				color = appearance.text,
+				color = softened,
 				weight = Enum.FontWeight.Regular,
 			}
 			else nil,
@@ -155,6 +186,7 @@ const function build(toast: notices.toast, index: () -> number, present: () -> b
 
 			BackgroundTransparency = 1,
 			AutoButtonColor = false,
+
 			Active = true,
 			Text = "",
 
