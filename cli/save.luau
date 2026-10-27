@@ -164,7 +164,12 @@ const function restructure(root: string, state: state, changes: { change })
 		const files = state.index[name]
 
 		if not files then
-			table.insert(refusals, { path = change.path, reason = `config "{name}" is not in the project` })
+			table.insert(refusals, {
+				path = change.path,
+				reason = `config "{name}" is not in the project`,
+				kind = change.kind,
+			})
+
 			continue
 		end
 
@@ -172,13 +177,14 @@ const function restructure(root: string, state: state, changes: { change })
 			table.insert(refusals, {
 				path = change.path,
 				reason = `config "{name}" is declared in {#files} files: {table.concat(files, ", ")}`,
+				kind = change.kind,
 			})
 
 			continue
 		end
 
 		const reason = restructure_safely(state, files[1], change)
-		if reason then table.insert(refusals, { path = change.path, reason = reason }) end
+		if reason then table.insert(refusals, { path = change.path, reason = reason, kind = change.kind }) end
 	end
 
 	return refusals

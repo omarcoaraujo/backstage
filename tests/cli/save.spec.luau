@@ -131,6 +131,7 @@ return {
 				save.save_edits(root, state, json.serialize { changes = { { kind = "add", path = "shop.3" } } })
 
 			assert(refusals and #refusals == 1 and refusals[1].path == "shop.3")
+			assert(refusals[1].kind == "add")
 			assert(fs.readFileToString(`{root}/shop.luau`) == SHOP)
 		end)
 	end,
@@ -144,6 +145,7 @@ return {
 			)
 
 			assert(refusals and #refusals == 1 and refusals[1].reason == 'config "cats" is not in the project')
+			assert(refusals[1].kind == "add")
 		end)
 	end,
 

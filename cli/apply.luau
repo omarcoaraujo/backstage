@@ -5,7 +5,7 @@ const write = require "./write"
 --// Types
 export type edit = write.input & { path: string }
 type placed = { edit: edit, range: locate.range }
-export type refusal = { path: string, reason: string }
+export type refusal = { path: string, reason: string, kind: string? }
 
 --// Functions
 const function starts_later(left: placed, right: placed)
