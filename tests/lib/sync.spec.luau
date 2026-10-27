@@ -2,7 +2,9 @@
 const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
 --// Modules
+const backstage = require(ReplicatedStorage.backstage)
 const kinds = require(ReplicatedStorage.backstage.core.kinds)
+const mode = require(ReplicatedStorage.backstage.core.mode)
 const registry = require(ReplicatedStorage.backstage.core.registry)
 const sync = require(ReplicatedStorage.backstage.core.sync)
 
@@ -113,6 +115,43 @@ return {
 		assert(#log == 0)
 	end,
 
+	server_adds_a_catalog_entry_a_client_asks_for_and_tells_everyone = function()
+		const log, fire = server_remote()
+		mode.enable()
+		backstage.config("shop", { skins = { [1] = { price = 100 }, [5] = { price = 500 } } })
+
+		fire("add_item", "shop.skins", "9")
+		assert(registry.get "shop.skins.9.price" ~= nil)
+
+		const last = log[#log]
+		assert(last.kind == "all" and last.args[1] == "snapshot")
+		assert(table.find(last.args[2].catalogs["shop.skins"], "9") ~= nil)
+	end,
+
+	server_removes_a_catalog_entry_a_client_asks_for = function()
+		const log, fire = server_remote()
+		mode.enable()
+		backstage.config("shop", { skins = { [1] = { price = 100 }, [5] = { price = 500 } } })
+
+		fire("remove_item", "shop.skins", "5")
+		assert(registry.get "shop.skins.5.price" == nil)
+
+		const last = log[#log]
+		assert(last.kind == "all" and table.find(last.args[2].catalogs["shop.skins"], "5") == nil)
+	end,
+
+	server_sends_the_snapshot_back_when_it_refuses_a_catalog_change = function()
+		const log, fire = server_remote()
+		mode.enable()
+		backstage.config("shop", { skins = { [1] = { price = 100 }, [5] = { price = 500 } } })
+
+		const before = #log
+		fire("add_item", "shop.skins", "5")
+
+		assert(#log == before + 1)
+		assert(log[#log].kind == "client" and log[#log].args[1] == "snapshot")
+	end,
+
 	server_answers_ready_with_its_snapshot = function()
 		const log, fire = server_remote()
 		declare_speed(2)
@@ -187,6 +226,45 @@ return {
 		assert(sync.connect(remote))
 		assert(#log == 2 and log[1][1] == "ready")
 		assert(log[2][1] == "declare" and log[2][2].entries[1].path == "pets.speed")
+	end,
+
+	client_asks_the_server_for_a_catalog_entry_the_window_adds = function()
+		const remote, log = client_remote()
+		mode.enable()
+
+		backstage.config("shop", { skins = { [1] = { price = 100 }, [5] = { price = 500 } } })
+		assert(sync.connect(remote))
+
+		assert(registry.add_item("shop.skins", "9"))
+		registry.remove_item("shop.skins", "1")
+
+		const asked = {}
+
+		for _, sent in log do
+			if sent[1] == "add_item" or sent[1] == "remove_item" then table.insert(asked, sent) end
+		end
+
+		assert(#asked == 2)
+		assert(asked[1][1] == "add_item" and asked[1][2] == "shop.skins" and asked[1][3] == "9")
+		assert(asked[2][1] == "remove_item" and asked[2][2] == "shop.skins" and asked[2][3] == "1")
+	end,
+
+	client_follows_the_catalog_entries_the_server_lists = function()
+		const remote, _, receive = client_remote()
+		mode.enable()
+
+		backstage.config("shop", { skins = { [1] = { price = 100 }, [5] = { price = 500 } } })
+		assert(sync.connect(remote))
+
+		receive("snapshot", {
+			entries = {},
+			buttons = {},
+			catalogs = { ["shop.skins"] = { "1", "9" } },
+		})
+
+		assert(registry.get "shop.skins.9.price" ~= nil)
+		assert(registry.get "shop.skins.5.price" == nil)
+		assert(registry.get "shop.skins.1.price" == 100)
 	end,
 
 	client_declares_nothing_when_everything_came_from_the_server = function()

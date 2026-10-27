@@ -43,6 +43,7 @@ export type snapshot_entry = {
 export type snapshot = {
 	entries: { snapshot_entry },
 	buttons: { { path: string, name: string, group: string, hint: string? } },
+	catalogs: { [string]: { string } }?,
 }
 
 export type remote = {
@@ -60,6 +61,7 @@ export type catalog = {
 	add: (key: string) -> (string?, string?),
 	remove: (key: string) -> string?,
 	reinsert: (key: string) -> string?,
+	keys: () -> { string },
 
 	changed: () -> boolean,
 	revert: () -> { change },
@@ -332,7 +334,7 @@ const function connect_remote(handler: remote?)
 end
 
 const function snapshot(only_local: boolean?)
-	const result = { entries = {}, buttons = {} }
+	const result = { entries = {}, buttons = {} } :: snapshot
 
 	for _, path in sorted_paths(entries) do
 		const found = entries[path]
@@ -357,10 +359,43 @@ const function snapshot(only_local: boolean?)
 		table.insert(result.buttons, { path = found.path, name = found.name, group = found.group, hint = found.hint })
 	end
 
+	if only_local then return result end
+	const listed = {} :: { [string]: { string } }
+
+	for path, catalog in catalogs do
+		if catalog then listed[path] = catalog.keys() end
+	end
+
+	result.catalogs = listed
 	return result
 end
 
+const function reconcile(wanted: { [string]: { string } })
+	for _, path in sorted_paths(wanted) do
+		const catalog = catalogs[path]
+		if not catalog then continue end
+
+		const target = {} :: { [string]: boolean }
+		const present = {} :: { [string]: boolean }
+
+		for _, key in wanted[path] do
+			target[key] = true
+		end
+
+		for _, key in catalog.keys() do
+			present[key] = true
+			if not target[key] then catalog.remove(key) end
+		end
+
+		for key in target do
+			if not present[key] then catalog.reinsert(key) end
+		end
+	end
+end
+
 const function import(source: snapshot)
+	if source.catalogs then reconcile(source.catalogs) end
+
 	for _, incoming in source.entries do
 		const existing = entries[incoming.path]
 

@@ -40,6 +40,10 @@ const function fake_catalog(parts: {
 			return nil
 		end,
 
+		keys = function()
+			return {}
+		end,
+
 		changed = function()
 			return false
 		end,

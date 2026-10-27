@@ -204,6 +204,16 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		return added
 	end
 
+	const function keys(): { string }
+		const result = {}
+
+		for key in members do
+			table.insert(result, tostring(key))
+		end
+
+		return result
+	end
+
 	const function changed()
 		for key in members do
 			if not original[key] then return true end
@@ -275,7 +285,7 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		proxy,
 		path,
 		if template ~= nil
-			then { add = grow, remove = shrink, reinsert = reinsert, changed = changed, revert = revert }
+			then { add = grow, remove = shrink, reinsert = reinsert, keys = keys, changed = changed, revert = revert }
 			else nil
 	)
 
