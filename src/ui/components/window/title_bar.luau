@@ -10,9 +10,9 @@ const px = require "../../utils/px"
 const theme = require "../../constants/theme"
 
 --// Components
-const reset_button = require "../reset_button"
 const export_button = require "./export_button"
 const logo = require "./logo"
+const reset_button = require "../reset_button"
 const theme_button = require "./theme_button"
 
 --// Constants
@@ -153,8 +153,9 @@ return function(props: props)
 			BackgroundTransparency = close_transparency,
 
 			Text = "",
-			Activated = overlay.guard(props.on_close),
+			Modal = true,
 
+			Activated = overlay.guard(props.on_close),
 			MouseEnter = on_close_enter,
 			MouseLeave = on_close_leave,
 
