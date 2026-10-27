@@ -48,7 +48,7 @@ return function(props: props)
 
 	const function visible()
 		if props.shown == nil then return true end
-		return props.shown() or hovered() or lit()
+		return props.shown() or hovered()
 	end
 
 	const function background_transparency()
