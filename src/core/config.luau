@@ -192,6 +192,18 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		return `{path}.{name}`
 	end
 
+	const function reinsert(key: string): string?
+		const numbered = type(template) == "number"
+		const name = if numbered then tonumber(key) :: any else key
+		if name == nil or members[name] ~= nil then return nil end
+
+		const added = insert(name)
+		if not added then return nil end
+
+		push_leaves(added, source[name])
+		return added
+	end
+
 	const function changed()
 		for key in members do
 			if not original[key] then return true end
@@ -214,12 +226,10 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		end
 
 		for _, key in sorted_keys(original :: any) do
-			if members[key] ~= nil then continue end
-			const added, from = insert(key)
+			const added = reinsert(tostring(key))
 			if not added then continue end
 
-			table.insert(changes, { kind = "add", path = added, from = from })
-			push_leaves(added, source[key])
+			table.insert(changes, { kind = "add", path = added, from = `{path}.{template}` })
 		end
 
 		return changes
@@ -264,7 +274,9 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 	registry.add_group(
 		proxy,
 		path,
-		if template ~= nil then { add = grow, remove = shrink, changed = changed, revert = revert } else nil
+		if template ~= nil
+			then { add = grow, remove = shrink, reinsert = reinsert, changed = changed, revert = revert }
+			else nil
 	)
 
 	return proxy :: any

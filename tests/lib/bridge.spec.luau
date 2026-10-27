@@ -30,10 +30,15 @@ type fake = {
 const function fake_catalog(parts: {
 	add: (key: string) -> (string?, string?),
 	remove: (key: string) -> string?,
+	reinsert: ((key: string) -> string?)?,
 }): registry.catalog
 	return {
 		add = parts.add,
 		remove = parts.remove,
+
+		reinsert = parts.reinsert or function()
+			return nil
+		end,
 
 		changed = function()
 			return false
@@ -176,6 +181,137 @@ return {
 		assert(#changes == 1)
 
 		assert(changes[1].kind == "add" and changes[1].path == "shop.3" and changes[1].from == "shop.1")
+		bridge.reset()
+	end,
+
+	takes_back_a_new_entry_when_the_script_refuses_it_without_sending_it_again = function()
+		const clients = start()
+		const removed = {} :: { string }
+
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					return `shop.{key}`, "shop.1"
+				end,
+
+				remove = function(key: string)
+					table.insert(removed, key)
+					return `shop.{key}`
+				end,
+			}
+		)
+
+		clients[1].open()
+		registry.add_item("shop", "3")
+		task.wait(SETTLE)
+
+		clients[1].receive(HttpService:JSONEncode {
+			refused = { { path = "shop.3", reason = "no room", kind = "add" } },
+		})
+		task.wait(SETTLE)
+
+		assert(#removed == 1 and removed[1] == "3")
+		assert(#clients[1].sent == 1)
+		bridge.reset()
+	end,
+
+	takes_back_a_new_entry_even_with_an_edit_waiting_elsewhere = function()
+		const clients = start()
+		const removed = {} :: { string }
+
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					return `shop.{key}`, "shop.1"
+				end,
+
+				remove = function(key: string)
+					table.insert(removed, key)
+					return `shop.{key}`
+				end,
+			}
+		)
+
+		clients[1].open()
+		registry.add_item("shop", "3")
+		task.wait(SETTLE)
+
+		registry.set("pets.speed", 2)
+		clients[1].receive(HttpService:JSONEncode {
+			refused = { { path = "shop.3", reason = "no room", kind = "add" } },
+		})
+
+		assert(#removed == 1 and removed[1] == "3")
+		bridge.reset()
+	end,
+
+	brings_back_a_removed_entry_when_the_script_refuses_the_removal = function()
+		const clients = start()
+		const restored = {} :: { string }
+
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					return `shop.{key}`, "shop.1"
+				end,
+
+				remove = function(key: string)
+					return `shop.{key}`
+				end,
+
+				reinsert = function(key: string)
+					table.insert(restored, key)
+					return `shop.{key}`
+				end,
+			}
+		)
+
+		clients[1].open()
+		registry.remove_item("shop", "2")
+		task.wait(SETTLE)
+
+		clients[1].receive(HttpService:JSONEncode {
+			refused = { { path = "shop.2", reason = "not found", kind = "remove" } },
+		})
+		task.wait(SETTLE)
+
+		assert(#restored == 1 and restored[1] == "2")
+		assert(#clients[1].sent == 1)
+		bridge.reset()
+	end,
+
+	leaves_the_entry_alone_when_the_refusal_is_about_a_value = function()
+		const clients = start()
+		const removed = {} :: { string }
+
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					return `shop.{key}`, "shop.1"
+				end,
+
+				remove = function(key: string)
+					table.insert(removed, key)
+					return `shop.{key}`
+				end,
+			}
+		)
+
+		clients[1].open()
+		clients[1].receive(HttpService:JSONEncode {
+			refused = { { path = "shop.3", reason = "not a literal" } },
+		})
+
+		task.wait(SETTLE)
+		assert(#removed == 0)
 		bridge.reset()
 	end,
 

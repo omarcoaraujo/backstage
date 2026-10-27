@@ -59,6 +59,7 @@ export type change = {
 export type catalog = {
 	add: (key: string) -> (string?, string?),
 	remove: (key: string) -> string?,
+	reinsert: (key: string) -> string?,
 
 	changed: () -> boolean,
 	revert: () -> { change },
@@ -261,6 +262,17 @@ const function remove_item(path: string, key: string)
 	changed_structure { kind = "remove", path = removed }
 	announce()
 
+	return true
+end
+
+const function restore_item(path: string, key: string)
+	const catalog = catalogs[path]
+	if not catalog then return false end
+
+	const restored = catalog.reinsert(key)
+	if not restored then return false end
+
+	announce()
 	return true
 end
 
@@ -470,6 +482,7 @@ return table.freeze {
 
 	add_item = add_item,
 	remove_item = remove_item,
+	restore_item = restore_item,
 
 	remove = remove,
 	rebase = rebase,

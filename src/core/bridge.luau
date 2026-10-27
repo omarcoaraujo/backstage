@@ -260,6 +260,33 @@ const function apply_pushed(edits: { unknown }, added: { unknown }, removed: { u
 	registry.announce()
 end
 
+const function roll_back(refusal: { path: unknown, kind: unknown })
+	const path = refusal.path
+
+	if type(path) ~= "string" then return end
+	if refusal.kind ~= "add" and refusal.kind ~= "remove" then return end
+
+	const parent, key = string.match(path, "^(.*)%.([^%.]+)$")
+	if not parent or not key then return end
+
+	for edited in pending do
+		if string.sub(edited, 1, #path + 1) ~= `{path}.` then continue end
+		pending[edited] = nil
+	end
+
+	pushing = true
+
+	pcall(function()
+		if refusal.kind == "add" then
+			registry.remove_item(parent, key)
+		else
+			registry.restore_item(parent, key)
+		end
+	end)
+
+	pushing = false
+end
+
 const function report(message: string)
 	const ok, reply = pcall(HttpService.JSONDecode, HttpService, message)
 	if not ok or type(reply) ~= "table" then return end
@@ -275,6 +302,7 @@ const function report(message: string)
 	if type(reply.refused) ~= "table" then return end
 	for _, refusal in reply.refused do
 		warn(`[backstage] could not save {refusal.path} to the script: {refusal.reason}`)
+		roll_back(refusal)
 	end
 end
 
