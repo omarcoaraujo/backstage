@@ -11,7 +11,6 @@ const theme = require "../constants/theme"
 
 --// Constants
 const GLYPH_SIZE = 18
-const LABEL_PADDING = 6
 
 --// Types
 type props = {
@@ -72,8 +71,7 @@ return function(props: props)
 		AnchorPoint = Vector2.new(1, 0.5),
 
 		Position = props.position,
-		Size = px.udim2(0, theme.title_button, 0, theme.title_button),
-		AutomaticSize = Enum.AutomaticSize.X,
+		Size = px.udim2(0, theme.reset_width, 0, theme.reset_width),
 
 		BackgroundColor3 = appearance.hover,
 		BackgroundTransparency = background_transparency,
@@ -95,11 +93,6 @@ return function(props: props)
 
 		vide.create "UICorner" {
 			CornerRadius = px.udim(0, theme.radius),
-		},
-
-		vide.create "UIPadding" {
-			PaddingLeft = px.udim(0, LABEL_PADDING),
-			PaddingRight = px.udim(0, LABEL_PADDING),
 		},
 	}
 end
