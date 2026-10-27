@@ -265,7 +265,7 @@ const function roll_back(refusal: { path: unknown, kind: unknown })
 	const path = refusal.path
 
 	if type(path) ~= "string" then return end
-	if refusal.kind ~= "add" and refusal.kind ~= "remove" then return end
+	if refusal.kind ~= "add" and refusal.kind ~= "remove" and refusal.kind ~= "restore" then return end
 
 	const parent, key = string.match(path, "^(.*)%.([^%.]+)$")
 	if not parent or not key then return end
@@ -278,7 +278,7 @@ const function roll_back(refusal: { path: unknown, kind: unknown })
 	pushing = true
 
 	pcall(function()
-		if refusal.kind == "add" then
+		if refusal.kind == "add" or refusal.kind == "restore" then
 			registry.remove_item(parent, key)
 		else
 			registry.restore_item(parent, key)
@@ -299,6 +299,7 @@ end
 const function refusal_title(refusal: { kind: unknown })
 	if refusal.kind == "add" then return "Entry not added to the script" end
 	if refusal.kind == "remove" then return "Entry not removed from the script" end
+	if refusal.kind == "restore" then return "Entry not restored in the script" end
 	return "Not saved to the script"
 end
 

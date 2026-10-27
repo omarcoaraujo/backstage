@@ -15,7 +15,13 @@ type edit = apply.edit
 type refusal = apply.refusal
 
 export type change = { kind: string, path: string, from: string? }
-export type state = { index: scan.index, literals: { [string]: values.snapshot }, saving: number }
+export type state = {
+	index: scan.index,
+	literals: { [string]: values.snapshot },
+
+	removed: { [string]: entries.removed },
+	saving: number,
+}
 
 --// Functions
 const function index_names(index: scan.index)
@@ -122,19 +128,26 @@ end
 const function restructure_file(state: state, file: string, change: change): string?
 	const source = fs.readFileToString(file)
 	local updated, reason = nil :: string?, nil :: string?
+	local removed = nil :: entries.removed?
 
 	if change.kind == "add" and change.from then
 		updated, reason = entries.add(source, change.path, change.from)
 	elseif change.kind == "remove" then
-		updated, reason = entries.remove(source, change.path)
+		updated, reason, removed = entries.remove(source, change.path)
+	elseif change.kind == "restore" then
+		const taken = state.removed[change.path]
+		if not taken then return `"{change.path}" was not removed from the window, so there is nothing to restore` end
+		updated, reason = entries.restore(source, change.path, taken)
 	else
-		return "expected an add with a sibling to copy, or a remove"
+		return "expected an add with a sibling to copy, a remove, or a restore"
 	end
 
 	if not updated then return reason end
 	fs.writeStringToFile(file, updated)
 
+	state.removed[change.path] = removed
 	state.literals[file] = values.read(updated)
+
 	return nil
 end
 

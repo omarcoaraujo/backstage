@@ -41,6 +41,8 @@ const function fake_catalog(parts: {
 			return nil
 		end,
 
+		populate = function() end,
+
 		keys = function()
 			return {}
 		end,

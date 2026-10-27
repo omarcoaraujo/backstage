@@ -38,6 +38,24 @@ backstage.config("shop", {
 })
 ]]
 
+const GAP = [[
+backstage.config("shop", {
+	[1] = { scale = 1 },
+	[10] = { scale = 3 }, -- keep
+})
+]]
+
+const GAP_INLINE = [[
+backstage.config("shop", { [1] = 1, [9] = 9 })
+]]
+
+const UNSORTED = [[
+backstage.config("shop", {
+	dear = { price = 9 },
+	cheap = { price = 1 },
+})
+]]
+
 const EMPTY = [[
 backstage.config("shop", {})
 ]]
@@ -75,6 +93,77 @@ backstage.config("shop", {
 	[1] = { rarity = "common", price = 100 },
 	[2] = { rarity = "rare", price = 500 }, -- keep
 	[3] = { rarity = "rare", price = 500 },
+})
+]])
+	end,
+
+	remove_hands_back_what_it_cut_and_what_followed_it = function()
+		const _, _, removed = entries.remove(NAMED, "shop.cheap")
+		assert(removed ~= nil)
+
+		assert(removed.text == "cheap = { price = 1 }")
+		assert(removed.following == "dear")
+	end,
+
+	restore_puts_an_entry_back_where_it_was = function()
+		const first, _, removed_first = entries.remove(NAMED, "shop.cheap")
+		const restored_first = entries.restore(first :: string, "shop.cheap", removed_first :: entries.removed)
+		assert(restored_first == NAMED)
+
+		const last, _, removed_last = entries.remove(NAMED, "shop.dear")
+		const restored_last = entries.restore(last :: string, "shop.dear", removed_last :: entries.removed)
+		assert(restored_last == NAMED)
+	end,
+
+	restore_puts_an_entry_back_in_a_table_left_empty = function()
+		const emptied, _, removed = entries.remove(SINGLE, "shop.1")
+		assert(emptied == EMPTY_MULTILINE)
+
+		const restored = entries.restore(emptied :: string, "shop.1", removed :: entries.removed)
+		assert(restored == SINGLE)
+	end,
+
+	restore_puts_an_entry_back_in_a_table_left_empty_on_one_line = function()
+		const emptied, _, removed = entries.remove(SINGLE_INLINE, "pets.trail.a")
+		const restored = entries.restore(emptied :: string, "pets.trail.a", removed :: entries.removed)
+		assert(restored == SINGLE_INLINE)
+	end,
+
+	restore_refuses_an_entry_that_is_already_there = function()
+		const _, _, removed = entries.remove(NAMED, "shop.cheap")
+		const result, reason = entries.restore(NAMED, "shop.cheap", removed :: entries.removed)
+
+		assert(result == nil)
+		assert(mentions(reason, "already exists"))
+	end,
+
+	add_keeps_numeric_keys_in_order = function()
+		const result, reason = entries.add(GAP, "shop.8", "shop.10")
+
+		assert(reason == nil)
+		assert(result == [[
+backstage.config("shop", {
+	[1] = { scale = 1 },
+	[8] = { scale = 3 },
+	[10] = { scale = 3 }, -- keep
+})
+]])
+	end,
+
+	add_keeps_numeric_keys_in_order_on_one_line = function()
+		const result = entries.add(GAP_INLINE, "shop.5", "shop.9")
+		assert(result == [[
+backstage.config("shop", { [1] = 1, [5] = 9, [9] = 9 })
+]])
+	end,
+
+	add_keeps_the_order_of_a_table_that_is_not_sorted = function()
+		const result = entries.add(UNSORTED, "shop.mid", "shop.dear")
+		assert(result == [[
+backstage.config("shop", {
+	dear = { price = 9 },
+	cheap = { price = 1 },
+	mid = { price = 9 },
 })
 ]])
 	end,
@@ -152,10 +241,10 @@ backstage.config("shop", {
 		assert(mentions(reason, "is not next to"))
 	end,
 
-	add_refuses_a_template_that_is_not_in_the_script = function()
+	add_copies_the_first_entry_when_the_template_is_no_longer_in_the_script = function()
 		const result, reason = entries.add(CATALOG, "shop.3", "shop.9")
-		assert(result == nil)
-		assert(mentions(reason, "not found"))
+		assert(reason == nil)
+		assert(string.find(result :: string, '[3] = { rarity = "common", price = 100 },', 1, true))
 	end,
 
 	add_refuses_a_config_that_is_not_in_the_script = function()

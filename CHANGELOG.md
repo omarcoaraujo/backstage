@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- When the reset brings back a removed entry, the script gets it back exactly as it was, in the same place, even if it was the only one left or the one used as a model to add new ones.
+- An entry added or brought back from the window is now written to the script in its place, in order, instead of at the end of the list.
 - When the script cannot save a change, a notice now appears at the bottom right of the screen, for every player, and goes away by itself or when clicked.
 - The library can now also be installed with Wally, not only pesde.
 - In a first person game the mouse is now free while the window is open, so you can move it and click.

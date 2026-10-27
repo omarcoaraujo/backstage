@@ -26,7 +26,7 @@ end
 const function with_project(check: (root: string, state: save.state) -> ())
 	const root = make_project()
 	const ok, err = pcall(function()
-		check(root, { index = scan.scan(root), literals = {}, saving = 0 })
+		check(root, { index = scan.scan(root), literals = {}, removed = {}, saving = 0 })
 	end)
 
 	fs.removeDirectory(root, { recursive = true })

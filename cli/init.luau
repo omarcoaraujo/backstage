@@ -142,7 +142,7 @@ const function apply_export(options: options)
 		output.warning(problem)
 	end
 
-	const state = { index = scan.scan(options.root), literals = {}, saving = 0 } :: save.state
+	const state = { index = scan.scan(options.root), literals = {}, removed = {}, saving = 0 } :: save.state
 	const refusals = save.save(options.root, state, edits)
 
 	for _, refusal in refusals do

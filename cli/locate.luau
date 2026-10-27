@@ -335,6 +335,7 @@ end
 return {
 	locate = locate,
 	entry = entry,
+	entry_key = entry_key,
 
 	literals = literals,
 	to_range = to_range,

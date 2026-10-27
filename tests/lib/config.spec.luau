@@ -265,20 +265,60 @@ return {
 		assert(not registry.dirty "shop.skins")
 	end,
 
-	studio_accepts_back_a_removed_entry_whose_name_is_not_an_identifier = function()
+	studio_restoring_a_catalog_announces_the_entry_before_its_values = function()
+		fresh()
+		backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [5] = { price = 500 }, [9] = { price = 900 } },
+		})
+
+		registry.remove_item("shop.skins", "5")
+		const heard = {} :: { string }
+
+		registry.on_structure(function(change)
+			table.insert(heard, `entry {change.path}`)
+		end)
+
+		registry.on_change(function(path)
+			table.insert(heard, `value {path}`)
+		end)
+
+		registry.restore_group "shop.skins"
+		assert(heard[1] == "entry shop.skins.5")
+		assert(heard[2] == "value shop.skins.5.price")
+	end,
+
+	studio_reinstating_a_removed_entry_gives_it_its_own_values = function()
+		fresh()
+		const shop = backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [5] = { price = 500 }, [9] = { price = 900 } },
+		})
+
+		const heard = {} :: { string }
+		registry.on_structure(function(change)
+			table.insert(heard, `{change.kind} {change.path}`)
+		end)
+
+		registry.remove_item("shop.skins", "5")
+		assert(registry.reinstate_item("shop.skins", "5"))
+
+		assert(shop.skins[5].price == 500)
+		assert(registry.get "shop.skins.5.price" == 500)
+
+		assert(heard[1] == "remove shop.skins.5")
+		assert(heard[2] == "restore shop.skins.5")
+	end,
+
+	studio_reinstates_a_removed_entry_whose_name_is_not_an_identifier = function()
 		fresh()
 		const shop = backstage.config("shop", {
 			moods = { calm = { speed = 1 }, ["my key"] = { speed = 9 } },
 		})
 
 		assert(registry.remove_item("shop.moods", "my key"))
-		assert(shop.moods["my key"] == nil)
+		assert(registry.reinstate_item("shop.moods", "my key"))
 
-		assert(registry.add_item("shop.moods", "my key"))
-		assert(shop.moods["my key"] ~= nil)
-
-		const _, invented = registry.add_item("shop.moods", "other key")
-		assert(invented == "not a valid name")
+		assert(shop.moods["my key"].speed == 9)
+		assert(not registry.reinstate_item("shop.moods", "my key"))
 	end,
 
 	studio_restoring_a_catalog_drops_the_entries_added_since = function()

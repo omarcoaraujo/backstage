@@ -60,7 +60,9 @@ export type change = {
 export type catalog = {
 	add: (key: string) -> (string?, string?),
 	remove: (key: string) -> string?,
+
 	reinsert: (key: string) -> string?,
+	populate: (key: string) -> (),
 	keys: () -> { string },
 
 	changed: () -> boolean,
@@ -278,6 +280,19 @@ const function restore_item(path: string, key: string)
 	return true
 end
 
+const function reinstate_item(path: string, key: string)
+	const catalog = catalogs[path]
+	if not catalog then return false end
+
+	const restored = catalog.reinsert(key)
+	if not restored then return false end
+
+	changed_structure { kind = "restore", path = restored }
+	announce()
+
+	return true
+end
+
 const function inside_or_equal(path: string, prefix: string?)
 	return path == prefix or inside(path, prefix)
 end
@@ -304,6 +319,9 @@ const function revert_structure(prefix: string?)
 		for _, change in catalog.revert() do
 			changed_structure(change)
 			reverted = true
+
+			if change.kind ~= "restore" then continue end
+			catalog.populate(string.match(change.path, "[^%.]+$") :: string)
 		end
 	end
 
@@ -518,6 +536,7 @@ return table.freeze {
 	add_item = add_item,
 	remove_item = remove_item,
 	restore_item = restore_item,
+	reinstate_item = reinstate_item,
 
 	remove = remove,
 	rebase = rebase,

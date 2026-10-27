@@ -19,7 +19,7 @@ end
 
 const function serve(root: string, port: number?)
 	const listening = port or DEFAULT_PORT
-	const state = { index = scan.scan(root), literals = {}, saving = 0 } :: save.state
+	const state = { index = scan.scan(root), literals = {}, removed = {}, saving = 0 } :: save.state
 	const sockets = {}
 
 	const function push(edits: { apply.edit }, added: { apply.edit }, removed: { string })

@@ -170,13 +170,20 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		return `{path}.{name}`, `{path}.{template}`
 	end
 
+	const function populate(key: string)
+		const numbered = type(template) == "number"
+		const name = if numbered then tonumber(key) :: any else key
+
+		if name == nil or members[name] == nil then return end
+		push_leaves(`{path}.{name}`, source[name])
+	end
+
 	const function grow(key: string): (string?, string?)
 		const numbered = type(template) == "number"
 		const name = if numbered then tonumber(key) :: any else key
-		const known = original[name] == true
 
-		if not known and numbered and not string.match(key, "^%d+$") then return nil, "needs a number" end
-		if not known and not numbered and not string.match(key, "^[%a_][%w_]*$") then return nil, "not a valid name" end
+		if numbered and not string.match(key, "^%d+$") then return nil, "needs a number" end
+		if not numbered and not string.match(key, "^[%a_][%w_]*$") then return nil, "not a valid name" end
 		if members[name] ~= nil then return nil, "already exists" end
 
 		return insert(name)
@@ -193,15 +200,19 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		return `{path}.{name}`
 	end
 
-	const function reinsert(key: string): string?
+	const function bring_back(key: string): string?
 		const numbered = type(template) == "number"
 		const name = if numbered then tonumber(key) :: any else key
-		if name == nil or members[name] ~= nil then return nil end
 
-		const added = insert(name)
+		if name == nil or members[name] ~= nil then return nil end
+		return (insert(name))
+	end
+
+	const function reinsert(key: string): string?
+		const added = bring_back(key)
 		if not added then return nil end
 
-		push_leaves(added, source[name])
+		populate(key)
 		return added
 	end
 
@@ -237,10 +248,9 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		end
 
 		for _, key in sorted_keys(original :: any) do
-			const added = reinsert(tostring(key))
+			const added = bring_back(tostring(key))
 			if not added then continue end
-
-			table.insert(changes, { kind = "add", path = added, from = `{path}.{template}` })
+			table.insert(changes, { kind = "restore", path = added })
 		end
 
 		return changes
@@ -286,7 +296,17 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		proxy,
 		path,
 		if template ~= nil
-			then { add = grow, remove = shrink, reinsert = reinsert, keys = keys, changed = changed, revert = revert }
+			then {
+				add = grow,
+				remove = shrink,
+
+				reinsert = reinsert,
+				populate = populate,
+
+				keys = keys,
+				changed = changed,
+				revert = revert,
+			}
 			else nil
 	)
 

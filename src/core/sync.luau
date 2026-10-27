@@ -75,10 +75,12 @@ const function serve(given: server_remote?)
 
 		if type(path) ~= "string" then return end
 
-		if kind == "add_item" or kind == "remove_item" then
+		if kind == "add_item" or kind == "remove_item" or kind == "restore_item" then
 			if type(value) ~= "string" then return end
+
 			const done = if kind == "add_item"
 				then registry.add_item(path, value)
+				elseif kind == "restore_item" then registry.reinstate_item(path, value)
 				else registry.remove_item(path, value)
 
 			if not done then send_snapshot(player) end
@@ -172,7 +174,13 @@ const function connect(given: client_remote?)
 	const function forward(change: registry.change)
 		const parent, key = string.match(change.path, "^(.*)%.([^%.]+)$")
 		if not parent or not key then return end
-		remote:FireServer(if change.kind == "add" then "add_item" else "remove_item", parent, key)
+
+		const event = if change.kind == "add"
+			then "add_item"
+			elseif change.kind == "restore" then "restore_item"
+			else "remove_item"
+
+		remote:FireServer(event, parent, key)
 	end
 
 	remote.OnClientEvent:Connect(on_event)

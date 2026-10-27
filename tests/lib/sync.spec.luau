@@ -140,6 +140,19 @@ return {
 		assert(last.kind == "all" and table.find(last.args[2].catalogs["shop.skins"], "5") == nil)
 	end,
 
+	server_restores_a_catalog_entry_with_its_own_values_when_a_client_asks_for_it = function()
+		const _, fire = server_remote()
+
+		mode.enable()
+		backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [5] = { price = 500 }, [9] = { price = 900 } },
+		})
+
+		fire("remove_item", "shop.skins", "5")
+		fire("restore_item", "shop.skins", "5")
+		assert(registry.get "shop.skins.5.price" == 500)
+	end,
+
 	server_sends_the_snapshot_back_when_it_refuses_a_catalog_change = function()
 		const log, fire = server_remote()
 		mode.enable()
