@@ -293,7 +293,13 @@ const function refusal_detail(refusal: { path: unknown, reason: unknown })
 	const reason = tostring(refusal.reason)
 
 	if string.find(reason, path, 1, true) then return reason end
-	return `{path}: {reason}`
+	return `"{path}": {reason}`
+end
+
+const function refusal_title(refusal: { kind: unknown })
+	if refusal.kind == "add" then return "Entry not added to the script" end
+	if refusal.kind == "remove" then return "Entry not removed from the script" end
+	return "Not saved to the script"
 end
 
 const function report(message: string)
@@ -311,7 +317,7 @@ const function report(message: string)
 	if type(reply.refused) ~= "table" then return end
 	for _, refusal in reply.refused do
 		warn(`[backstage] could not save {refusal.path} to the script: {refusal.reason}`)
-		notice.show("Not saved to the script", "error", refusal_detail(refusal))
+		notice.show(refusal_title(refusal), "error", refusal_detail(refusal))
 		roll_back(refusal)
 	end
 end

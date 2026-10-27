@@ -220,9 +220,10 @@ return {
 		clients[1].receive(HttpService:JSONEncode {
 			refused = { { path = "shop.3", reason = "no room", kind = "add" } },
 		})
-		task.wait(SETTLE)
 
+		task.wait(SETTLE)
 		assert(#removed == 1 and removed[1] == "3")
+
 		assert(#clients[1].sent == 1)
 		assert(heard[1] and string.find(heard[1], "shop.3", 1, true))
 
