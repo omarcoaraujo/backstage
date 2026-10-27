@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The library can now also be installed with Wally, not only pesde.
 - In a first person game the mouse is now free while the window is open, so you can move it and click.
 - In a list of entries, like a price list or all the skins, the window now has a + to add an entry and a red × to remove one. Both show only when the mouse is over it, and the changes are written to the script too.
 - Buttons, fields and headers now change softly when you hover or focus them, and when you switch between the light and dark theme, instead of jumping.

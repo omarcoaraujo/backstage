@@ -44,3 +44,11 @@ run = "lute run cli serve example"
 
 [tasks.dev]
 run = [{ tasks = ["rojo", "backstage"] }]
+
+[tasks."wally:build"]
+run = "bash scripts/wally_build.sh"
+
+[tasks."wally:package"]
+shell = "bash -c"
+depends = ["wally:build"]
+run = "wally package --project-path build/wally --output build/backstage-wally.zip"
