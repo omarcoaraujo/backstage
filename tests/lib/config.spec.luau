@@ -164,8 +164,8 @@ return {
 		fresh()
 
 		backstage.config("shop", {
-			skins = { [1] = { price = 100 }, [2] = { price = 500 } },
-			prices = { [1] = 10, [2] = 20 },
+			skins = { [1] = { price = 100 }, [5] = { price = 500 } },
+			prices = { [1] = 10, [5] = 20 },
 			pet = { size = 1, mode = "follow" },
 			solo = { [1] = { price = 100 } },
 		})
@@ -181,7 +181,7 @@ return {
 		fresh()
 
 		const shop = backstage.config("shop", {
-			skins = { [1] = { rarity = "common", price = 100 }, [2] = { rarity = "rare", price = 500 } },
+			skins = { [1] = { rarity = "common", price = 100 }, [5] = { rarity = "rare", price = 500 } },
 		}, {
 			limits = backstage.each { price = { min = 0, max = 50 } },
 		})
@@ -205,26 +205,61 @@ return {
 	studio_adds_a_scalar_catalog_entry = function()
 		fresh()
 
-		const shop = backstage.config("shop", { prices = { [1] = 10, [2] = 20 } })
-		assert(registry.add_item("shop.prices", "3"))
+		const shop = backstage.config("shop", { prices = { [1] = 10, [5] = 20 } })
+		assert(registry.add_item("shop.prices", "9"))
 
-		assert(shop.prices[3] ~= nil)
-		assert(registry.get "shop.prices.3" ~= nil)
+		assert(shop.prices[9] ~= nil)
+		assert(registry.get "shop.prices.9" ~= nil)
 	end,
 
 	studio_removes_a_catalog_entry = function()
 		fresh()
 
 		const shop = backstage.config("shop", {
-			skins = { [1] = { price = 100 }, [2] = { price = 500 } },
+			skins = { [1] = { price = 100 }, [5] = { price = 500 } },
 		})
 
-		assert(registry.remove_item("shop.skins", "2"))
-		assert(shop.skins[2] == nil)
+		assert(registry.remove_item("shop.skins", "5"))
+		assert(shop.skins[5] == nil)
 
-		assert(registry.get "shop.skins.2.price" == nil)
+		assert(registry.get "shop.skins.5.price" == nil)
 		assert(registry.get "shop.skins.1.price" == 100)
-		assert(not registry.remove_item("shop.skins", "2"))
+		assert(not registry.remove_item("shop.skins", "5"))
+	end,
+
+	studio_restoring_a_catalog_brings_back_removed_entries_with_their_own_values = function()
+		fresh()
+		const shop = backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [5] = { price = 500 } },
+		})
+
+		assert(not registry.dirty "shop.skins")
+		registry.remove_item("shop.skins", "5")
+
+		assert(registry.dirty "shop.skins")
+		assert(registry.dirty())
+
+		registry.restore_group "shop.skins"
+		assert(shop.skins[5].price == 500)
+
+		assert(registry.get "shop.skins.5.price" == 500)
+		assert(not registry.dirty "shop.skins")
+	end,
+
+	studio_restoring_a_catalog_drops_the_entries_added_since = function()
+		fresh()
+		const shop = backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [5] = { price = 500 } },
+		})
+
+		registry.add_item("shop.skins", "9")
+		assert(registry.dirty "shop.skins")
+
+		registry.restore_group()
+		assert(shop.skins[9] == nil)
+
+		assert(registry.get "shop.skins.9.price" == nil)
+		assert(not registry.dirty())
 	end,
 
 	studio_only_catalogs_accept_entries = function()
@@ -237,15 +272,15 @@ return {
 
 	studio_announces_a_new_catalog_entry = function()
 		fresh()
-		backstage.config("shop", { prices = { [1] = 10, [2] = 20 } })
+		backstage.config("shop", { prices = { [1] = 10, [5] = 20 } })
 
 		local announced = 0
 		registry.on_register(function()
 			announced += 1
 		end)
 
-		registry.add_item("shop.prices", "3")
-		registry.remove_item("shop.prices", "3")
+		registry.add_item("shop.prices", "9")
+		registry.remove_item("shop.prices", "9")
 		assert(announced == 2)
 	end,
 

@@ -50,12 +50,19 @@ export type remote = {
 	press: (path: string) -> (),
 }
 
+export type change = {
+	kind: string,
+	path: string,
+	from: string?,
+}
+
 export type catalog = {
 	add: (key: string) -> (string?, string?),
 	remove: (key: string) -> string?,
-}
 
-export type change = { kind: string, path: string, from: string? }
+	changed: () -> boolean,
+	revert: () -> { change },
+}
 type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
 
 --// Variables
@@ -257,15 +264,42 @@ const function remove_item(path: string, key: string)
 	return true
 end
 
+const function inside_or_equal(path: string, prefix: string?)
+	return path == prefix or inside(path, prefix)
+end
+
 const function dirty(prefix: string?)
 	for path, found in entries do
 		if inside(path, prefix) and found.value ~= found.default then return true end
 	end
 
+	for path, catalog in catalogs do
+		if catalog and inside_or_equal(path, prefix) and catalog.changed() then return true end
+	end
+
 	return false
 end
 
+const function revert_structure(prefix: string?)
+	local reverted = false
+
+	for _, path in sorted_paths(catalogs) do
+		const catalog = catalogs[path]
+		if not catalog or not inside_or_equal(path, prefix) then continue end
+
+		for _, change in catalog.revert() do
+			changed_structure(change)
+			reverted = true
+		end
+	end
+
+	if not reverted then return end
+	announce()
+end
+
 const function restore_group(prefix: string?)
+	revert_structure(prefix)
+
 	for _, path in sorted_paths(entries) do
 		if inside(path, prefix) then restore(path) end
 	end
@@ -291,6 +325,7 @@ const function snapshot(only_local: boolean?)
 	for _, path in sorted_paths(entries) do
 		const found = entries[path]
 		if only_local and found.remote then continue end
+
 		table.insert(result.entries, {
 			path = found.path,
 			name = found.name,

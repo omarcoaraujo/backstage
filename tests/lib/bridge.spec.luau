@@ -27,6 +27,24 @@ type fake = {
 }
 
 --// Functions
+const function fake_catalog(parts: {
+	add: (key: string) -> (string?, string?),
+	remove: (key: string) -> string?,
+}): registry.catalog
+	return {
+		add = parts.add,
+		remove = parts.remove,
+
+		changed = function()
+			return false
+		end,
+
+		revert = function()
+			return {}
+		end,
+	}
+end
+
 const function signal()
 	const callbacks = {} :: { (...any) -> () }
 
@@ -136,15 +154,19 @@ return {
 
 	sends_a_new_catalog_entry_with_the_entry_it_was_copied_from = function()
 		const clients = start()
-		registry.add_group({}, "shop", {
-			add = function(key: string)
-				return `shop.{key}`, "shop.1"
-			end,
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					return `shop.{key}`, "shop.1"
+				end,
 
-			remove = function(key: string)
-				return `shop.{key}`
-			end,
-		})
+				remove = function(key: string)
+					return `shop.{key}`
+				end,
+			}
+		)
 
 		clients[1].open()
 		registry.add_item("shop", "3")
@@ -161,18 +183,22 @@ return {
 		const clients = start()
 		const created = {} :: { string }
 
-		registry.add_group({}, "shop", {
-			add = function(key: string)
-				table.insert(created, key)
-				registry.add(`shop.{key}.price`, "price", `shop.{key}`, kinds.infer(1) :: kinds.descriptor, 1)
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					table.insert(created, key)
+					registry.add(`shop.{key}.price`, "price", `shop.{key}`, kinds.infer(1) :: kinds.descriptor, 1)
 
-				return `shop.{key}`, "shop.1"
-			end,
+					return `shop.{key}`, "shop.1"
+				end,
 
-			remove = function(key: string)
-				return `shop.{key}`
-			end,
-		})
+				remove = function(key: string)
+					return `shop.{key}`
+				end,
+			}
+		)
 
 		clients[1].open()
 		clients[1].receive(HttpService:JSONEncode {
@@ -194,18 +220,22 @@ return {
 		const removed = {} :: { string }
 
 		registry.add("shop.2.price", "price", "shop.2", kinds.infer(1) :: kinds.descriptor, 1)
-		registry.add_group({}, "shop", {
-			add = function(key: string)
-				return `shop.{key}`, "shop.1"
-			end,
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					return `shop.{key}`, "shop.1"
+				end,
 
-			remove = function(key: string)
-				table.insert(removed, key)
-				registry.remove(`shop.{key}`)
+				remove = function(key: string)
+					table.insert(removed, key)
+					registry.remove(`shop.{key}`)
 
-				return `shop.{key}`
-			end,
-		})
+					return `shop.{key}`
+				end,
+			}
+		)
 
 		clients[1].open()
 		clients[1].receive(HttpService:JSONEncode { pushed = {}, added = {}, removed = { "shop.2.price" } })
@@ -224,16 +254,20 @@ return {
 
 		registry.add("shop.2.price", "price", "shop.2", kinds.infer(1) :: kinds.descriptor, 1)
 		registry.add("shop.2.rarity", "rarity", "shop.2", kinds.infer "a" :: kinds.descriptor, "a")
-		registry.add_group({}, "shop", {
-			add = function(key: string)
-				return `shop.{key}`, "shop.1"
-			end,
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					return `shop.{key}`, "shop.1"
+				end,
 
-			remove = function(key: string)
-				table.insert(removed, key)
-				return `shop.{key}`
-			end,
-		})
+				remove = function(key: string)
+					table.insert(removed, key)
+					return `shop.{key}`
+				end,
+			}
+		)
 
 		clients[1].open()
 		clients[1].receive(HttpService:JSONEncode { pushed = {}, added = {}, removed = { "shop.2.price" } })
@@ -246,15 +280,19 @@ return {
 	drops_the_pending_edits_of_an_entry_that_was_removed = function()
 		const clients = start()
 		registry.add("shop.3.price", "price", "shop.3", kinds.infer(1) :: kinds.descriptor, 1)
-		registry.add_group({}, "shop", {
-			add = function(key: string)
-				return `shop.{key}`, "shop.1"
-			end,
+		registry.add_group(
+			{},
+			"shop",
+			fake_catalog {
+				add = function(key: string)
+					return `shop.{key}`, "shop.1"
+				end,
 
-			remove = function(key: string)
-				return `shop.{key}`
-			end,
-		})
+				remove = function(key: string)
+					return `shop.{key}`
+				end,
+			}
+		)
 
 		clients[1].open()
 		registry.set("shop.3.price", 9)

@@ -110,9 +110,26 @@ const function clone_defaults(value: unknown): unknown
 	return copy
 end
 
+const function push_leaves(prefix: string, value: unknown)
+	if type(value) ~= "table" then
+		registry.push(prefix, value)
+		return
+	end
+
+	if button.is_button(value) then return end
+	for key, child in value :: node do
+		push_leaves(`{prefix}.{key}`, child)
+	end
+end
+
 const function build_group(source: node, limits: tree?, hints: tree?, path: string)
 	const members = {} :: { [string]: member }
+	const original = {} :: { [unknown]: boolean }
 	const template = template_of(source)
+
+	for key in source do
+		original[key] = true
+	end
 
 	const function add_member(key: string, value: unknown)
 		const member_path = `{path}.{key}`
@@ -144,7 +161,7 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 			return
 		end
 
-		registry.add(member_path, key, path, descriptor, value :: kinds.value, text)
+		registry.add(member_path, tostring(key), path, descriptor, value :: kinds.value, text)
 		members[key] = { kind = "entry", path = member_path }
 	end
 
@@ -166,6 +183,39 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		registry.remove(`{path}.{name}`)
 
 		return `{path}.{name}`
+	end
+
+	const function changed()
+		for key in members do
+			if not original[key] then return true end
+		end
+
+		for key in original do
+			if members[key :: any] == nil then return true end
+		end
+
+		return false
+	end
+
+	const function revert(): { registry.change }
+		const changes = {} :: { registry.change }
+
+		for _, key in sorted_keys(members) do
+			if original[key] then continue end
+			const removed = shrink(tostring(key))
+			if removed then table.insert(changes, { kind = "remove", path = removed }) end
+		end
+
+		for _, key in sorted_keys(original :: any) do
+			if members[key] ~= nil then continue end
+			const added, from = grow(tostring(key))
+			if not added then continue end
+
+			table.insert(changes, { kind = "add", path = added, from = from })
+			push_leaves(added, source[key])
+		end
+
+		return changes
 	end
 
 	const function index(_, key: string)
@@ -204,7 +254,11 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 	end
 
 	const proxy = setmetatable({}, { __index = index, __newindex = read_only, __iter = iterate, __len = length })
-	registry.add_group(proxy, path, if template ~= nil then { add = grow, remove = shrink } else nil)
+	registry.add_group(
+		proxy,
+		path,
+		if template ~= nil then { add = grow, remove = shrink, changed = changed, revert = revert } else nil
+	)
 
 	return proxy :: any
 end
