@@ -7,7 +7,7 @@ const branch = require "./branch"
 --// Types
 export type actions = {
 	suggest: () -> string,
-	on_add: ((key: string) -> boolean)?,
+	on_add: ((key: string) -> (boolean, string?))?,
 	on_append: (() -> ())?,
 }
 

@@ -45,6 +45,10 @@ return table.freeze {
 		return current().danger
 	end,
 
+	danger_text = function()
+		return current().danger_text
+	end,
+
 	danger_muted = function()
 		return current().danger_muted
 	end,

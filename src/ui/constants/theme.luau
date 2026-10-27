@@ -9,6 +9,7 @@ return table.freeze {
 
 			accent = Color3.fromRGB(96, 165, 250),
 			danger = Color3.fromRGB(248, 113, 113),
+			danger_text = Color3.fromRGB(248, 113, 113),
 
 			danger_muted = Color3.fromRGB(160, 84, 88),
 			stroke = Color3.fromRGB(255, 255, 255),
@@ -25,6 +26,7 @@ return table.freeze {
 
 			accent = Color3.fromRGB(37, 99, 235),
 			danger = Color3.fromRGB(220, 38, 38),
+			danger_text = Color3.fromRGB(190, 60, 60),
 
 			danger_muted = Color3.fromRGB(200, 120, 120),
 			stroke = Color3.fromRGB(0, 0, 0),
