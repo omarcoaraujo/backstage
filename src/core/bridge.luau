@@ -3,6 +3,7 @@ const HttpService = game:GetService "HttpService"
 
 --// Modules
 const kinds = require "./kinds"
+const notice = require "./notice"
 const registry = require "./registry"
 const script_entries = require "./script_entries"
 
@@ -287,6 +288,14 @@ const function roll_back(refusal: { path: unknown, kind: unknown })
 	pushing = false
 end
 
+const function refusal_detail(refusal: { path: unknown, reason: unknown })
+	const path = tostring(refusal.path)
+	const reason = tostring(refusal.reason)
+
+	if string.find(reason, path, 1, true) then return reason end
+	return `{path}: {reason}`
+end
+
 const function report(message: string)
 	const ok, reply = pcall(HttpService.JSONDecode, HttpService, message)
 	if not ok or type(reply) ~= "table" then return end
@@ -302,6 +311,7 @@ const function report(message: string)
 	if type(reply.refused) ~= "table" then return end
 	for _, refusal in reply.refused do
 		warn(`[backstage] could not save {refusal.path} to the script: {refusal.reason}`)
+		notice.show("Not saved to the script", "error", refusal_detail(refusal))
 		roll_back(refusal)
 	end
 end

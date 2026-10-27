@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- When the script cannot save a change, a notice now appears at the bottom right of the screen, for every player, and goes away by itself or when clicked.
 - The library can now also be installed with Wally, not only pesde.
 - In a first person game the mouse is now free while the window is open, so you can move it and click.
 - In a list of entries, like a price list or all the skins, the window now has a + to add an entry and a red × to remove one. Both show only when the mouse is over it, and the changes are written to the script too.

@@ -22,6 +22,7 @@ const cursors = require "./components/cursors"
 const entry_control = require "./components/controls/entry_control"
 const group = require "./components/group"
 const list = require "./components/list"
+const notifications = require "./components/notifications"
 const row = require "./components/row"
 const window = require "./components/window"
 
@@ -232,21 +233,30 @@ return function(props: props)
 	}
 
 	if props.cursors then vide.cleanup(share_pointer(anchors, viewport, props.visible)) end
-	return window {
-		title = props.title,
-		footer = props.footer,
 
-		visible = props.visible,
-		on_close = props.on_close,
+	return vide.create "Frame" {
+		Name = "backstage",
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
 
-		position = props.position,
-		size = props.size,
+		window {
+			title = props.title,
+			footer = props.footer,
 
-		on_geometry = props.on_geometry,
-		content = viewport,
+			visible = props.visible,
+			on_close = props.on_close,
 
-		dirty = any_dirty,
-		on_reset = restore_all,
-		export_text = export_text,
+			position = props.position,
+			size = props.size,
+
+			on_geometry = props.on_geometry,
+			content = viewport,
+
+			dirty = any_dirty,
+			on_reset = restore_all,
+			export_text = export_text,
+		},
+
+		notifications(),
 	}
 end

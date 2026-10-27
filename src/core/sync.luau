@@ -5,6 +5,7 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 --// Modules
 const holders = require "./holders"
 const mode = require "./mode"
+const notice = require "./notice"
 const presence = require "./presence"
 const registry = require "./registry"
 
@@ -112,8 +113,13 @@ const function serve(given: server_remote?)
 		remote:FireAllClients("cursor", player.UserId, player.DisplayName, nil)
 	end
 
+	const function share_notice(text: string, kind: notice.kind, detail: string?)
+		remote:FireAllClients("notice", text, kind, detail)
+	end
+
 	remote.OnServerEvent:Connect(on_event)
 	Players.PlayerRemoving:Connect(on_leaving)
+	notice.connect_remote(share_notice)
 
 	registry.on_change(on_changed)
 	registry.on_register(on_registered)
@@ -134,6 +140,11 @@ const function connect(given: client_remote?)
 			if own and path == own.UserId then return end
 
 			presence.set(path :: number, value :: string, presence.valid(extra))
+			return
+		end
+
+		if kind == "notice" and type(path) == "string" then
+			notice.receive(path, value, extra)
 			return
 		end
 

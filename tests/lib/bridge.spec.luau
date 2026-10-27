@@ -5,6 +5,7 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 --// Modules
 const bridge = require(ReplicatedStorage.backstage.core.bridge)
 const kinds = require(ReplicatedStorage.backstage.core.kinds)
+const notice = require(ReplicatedStorage.backstage.core.notice)
 const registry = require(ReplicatedStorage.backstage.core.registry)
 
 --// Constants
@@ -191,6 +192,11 @@ return {
 	takes_back_a_new_entry_when_the_script_refuses_it_without_sending_it_again = function()
 		const clients = start()
 		const removed = {} :: { string }
+		const heard = {} :: { string }
+
+		notice.on_notice(function(_, _, detail)
+			table.insert(heard, detail or "")
+		end)
 
 		registry.add_group(
 			{},
@@ -218,7 +224,10 @@ return {
 
 		assert(#removed == 1 and removed[1] == "3")
 		assert(#clients[1].sent == 1)
+		assert(heard[1] and string.find(heard[1], "shop.3", 1, true))
+
 		bridge.reset()
+		notice.reset()
 	end,
 
 	takes_back_a_new_entry_even_with_an_edit_waiting_elsewhere = function()

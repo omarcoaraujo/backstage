@@ -53,6 +53,10 @@ return table.freeze {
 		return current().danger_muted
 	end,
 
+	success_text = function()
+		return current().success_text
+	end,
+
 	stroke = function()
 		return current().stroke
 	end,

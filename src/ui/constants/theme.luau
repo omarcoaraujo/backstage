@@ -12,6 +12,7 @@ return table.freeze {
 			danger_text = Color3.fromRGB(248, 113, 113),
 
 			danger_muted = Color3.fromRGB(160, 84, 88),
+			success_text = Color3.fromRGB(74, 222, 128),
 			stroke = Color3.fromRGB(255, 255, 255),
 
 			text = Color3.fromRGB(232, 232, 236),
@@ -29,6 +30,7 @@ return table.freeze {
 			danger_text = Color3.fromRGB(190, 60, 60),
 
 			danger_muted = Color3.fromRGB(200, 120, 120),
+			success_text = Color3.fromRGB(22, 128, 61),
 			stroke = Color3.fromRGB(0, 0, 0),
 
 			text = Color3.fromRGB(24, 24, 27),
@@ -55,6 +57,12 @@ return table.freeze {
 
 	footer_height = 18,
 	footer_text_size = 11,
+
+	toast_width = 300,
+	toast_logo = 32,
+
+	toast_title_size = 13,
+	toast_detail_size = 11,
 
 	field_height = 20,
 	input_width = 56,
