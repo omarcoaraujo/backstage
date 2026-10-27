@@ -172,10 +172,11 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 
 	const function grow(key: string): (string?, string?)
 		const numbered = type(template) == "number"
-		if numbered and not string.match(key, "^%d+$") then return nil, "needs a number" end
-		if not numbered and not string.match(key, "^[%a_][%w_]*$") then return nil, "not a valid name" end
-
 		const name = if numbered then tonumber(key) :: any else key
+		const known = original[name] == true
+
+		if not known and numbered and not string.match(key, "^%d+$") then return nil, "needs a number" end
+		if not known and not numbered and not string.match(key, "^[%a_][%w_]*$") then return nil, "not a valid name" end
 		if members[name] ~= nil then return nil, "already exists" end
 
 		return insert(name)

@@ -265,6 +265,22 @@ return {
 		assert(not registry.dirty "shop.skins")
 	end,
 
+	studio_accepts_back_a_removed_entry_whose_name_is_not_an_identifier = function()
+		fresh()
+		const shop = backstage.config("shop", {
+			moods = { calm = { speed = 1 }, ["my key"] = { speed = 9 } },
+		})
+
+		assert(registry.remove_item("shop.moods", "my key"))
+		assert(shop.moods["my key"] == nil)
+
+		assert(registry.add_item("shop.moods", "my key"))
+		assert(shop.moods["my key"] ~= nil)
+
+		const _, invented = registry.add_item("shop.moods", "other key")
+		assert(invented == "not a valid name")
+	end,
+
 	studio_restoring_a_catalog_drops_the_entries_added_since = function()
 		fresh()
 		const shop = backstage.config("shop", {
