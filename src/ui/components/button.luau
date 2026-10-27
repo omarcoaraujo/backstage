@@ -6,6 +6,7 @@ const appearance = require "../stores/appearance"
 
 --// Utils
 const activity = require "../utils/activity"
+const motion = require "../utils/motion"
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../constants/theme"
@@ -96,7 +97,7 @@ return function(props: props)
 		AutomaticSize = Enum.AutomaticSize.X,
 
 		AutoButtonColor = false,
-		BackgroundColor3 = background,
+		BackgroundColor3 = motion.ease(background),
 		BorderSizePixel = 0,
 
 		FontFace = theme.font,
@@ -133,8 +134,8 @@ return function(props: props)
 		},
 
 		vide.create "UIStroke" {
-			Color = stroke_color,
-			Transparency = stroke_transparency,
+			Color = motion.ease(stroke_color),
+			Transparency = motion.ease(stroke_transparency),
 
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 			LineJoinMode = Enum.LineJoinMode.Round,

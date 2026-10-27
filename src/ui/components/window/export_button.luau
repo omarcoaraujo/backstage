@@ -5,6 +5,7 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
+const motion = require "../../utils/motion"
 const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
 const theme = require "../../constants/theme"
@@ -54,7 +55,7 @@ return function(props: props)
 		Active = true,
 
 		BackgroundColor3 = appearance.hover,
-		BackgroundTransparency = background_transparency,
+		BackgroundTransparency = motion.ease(background_transparency),
 		BorderSizePixel = 0,
 
 		Text = "",
@@ -78,7 +79,7 @@ return function(props: props)
 			Image = ICON,
 
 			ImageColor3 = appearance.text,
-			ImageTransparency = icon_transparency,
+			ImageTransparency = motion.ease(icon_transparency),
 		},
 	}
 end

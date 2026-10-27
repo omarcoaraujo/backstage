@@ -5,6 +5,7 @@ const vide = require "../../../roblox_packages/vide"
 const appearance = require "../stores/appearance"
 
 --// Utils
+const motion = require "../utils/motion"
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../constants/theme"
@@ -69,7 +70,7 @@ return function(props: props)
 
 			BackgroundTransparency = 1,
 			Image = ICON,
-			ImageColor3 = color,
+			ImageColor3 = motion.ease(color),
 
 			vide.create "UIAspectRatioConstraint" {
 				AspectRatio = 1,

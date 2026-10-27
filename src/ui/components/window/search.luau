@@ -6,6 +6,7 @@ const appearance = require "../../stores/appearance"
 
 --// Utils
 const filter = require "../../utils/filter"
+const motion = require "../../utils/motion"
 const px = require "../../utils/px"
 const theme = require "../../constants/theme"
 
@@ -75,8 +76,8 @@ return function()
 			},
 
 			vide.create "UIStroke" {
-				Color = stroke_color,
-				Transparency = stroke_transparency,
+				Color = motion.ease(stroke_color),
+				Transparency = motion.ease(stroke_transparency),
 
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 				LineJoinMode = Enum.LineJoinMode.Round,

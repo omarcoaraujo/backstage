@@ -4,6 +4,7 @@
 
 - In a first person game the mouse is now free while the window is open, so you can move it and click.
 - In a list of entries, like a price list or all the skins, the window now has a + to add an entry and a red × to remove one. Both show only when the mouse is over it, and the changes are written to the script too.
+- Buttons, fields and headers now change softly when you hover or focus them, and when you switch between the light and dark theme, instead of jumping.
 - When the name of a new entry is refused, because it already exists or is not a valid name, the window now says why, in red inside the field.
 - Resetting a list brings back the entries that were removed and drops the ones that were added.
 - One limit or hint can now cover every entry of a list, like all the skins, instead of being written again for each one.

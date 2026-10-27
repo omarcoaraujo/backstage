@@ -5,6 +5,7 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
+const motion = require "../../utils/motion"
 const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
 const theme = require "../../constants/theme"
@@ -76,7 +77,7 @@ return function(props: props)
 			Position = UDim2.fromScale(0.5, 0.5),
 			Size = px.udim2(0, CROSS_LENGTH, 0, CROSS_THICKNESS),
 
-			BackgroundColor3 = cross_color,
+			BackgroundColor3 = motion.ease(cross_color),
 			BorderSizePixel = 0,
 			Rotation = rotation,
 
@@ -150,7 +151,7 @@ return function(props: props)
 			BackgroundColor3 = appearance.hover,
 
 			BorderSizePixel = 0,
-			BackgroundTransparency = close_transparency,
+			BackgroundTransparency = motion.ease(close_transparency),
 
 			Text = "",
 			Modal = true,

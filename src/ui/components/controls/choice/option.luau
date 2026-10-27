@@ -5,6 +5,7 @@ const vide = require "../../../../../roblox_packages/vide"
 const appearance = require "../../../stores/appearance"
 
 --// Utils
+const motion = require "../../../utils/motion"
 const px = require "../../../utils/px"
 const theme = require "../../../constants/theme"
 
@@ -44,12 +45,12 @@ return function(props: props)
 		AutoButtonColor = false,
 		BackgroundColor3 = appearance.hover,
 
-		BackgroundTransparency = background_transparency,
+		BackgroundTransparency = motion.ease(background_transparency),
 		BorderSizePixel = 0,
 
 		FontFace = theme.font,
 		Text = props.text,
-		TextColor3 = text_color,
+		TextColor3 = motion.ease(text_color),
 
 		TextSize = px(theme.text_size),
 		TextXAlignment = Enum.TextXAlignment.Left,

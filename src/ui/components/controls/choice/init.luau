@@ -8,6 +8,7 @@ const locks = require "../../stores/locks"
 --// Utils
 const activity = require "../../utils/activity"
 const arrow = require "../../constants/arrow"
+const motion = require "../../utils/motion"
 const overlay = require "../../utils/overlay"
 const place = require "../../utils/place"
 const px = require "../../utils/px"
@@ -138,7 +139,7 @@ return function(props: props)
 
 		FontFace = theme.font,
 		Text = props.value,
-		TextColor3 = text_color,
+		TextColor3 = motion.ease(text_color),
 
 		TextSize = px(theme.text_size),
 		TextTruncate = Enum.TextTruncate.AtEnd,
@@ -154,8 +155,8 @@ return function(props: props)
 		},
 
 		vide.create "UIStroke" {
-			Color = stroke_color,
-			Transparency = stroke_transparency,
+			Color = motion.ease(stroke_color),
+			Transparency = motion.ease(stroke_transparency),
 
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 			LineJoinMode = Enum.LineJoinMode.Round,

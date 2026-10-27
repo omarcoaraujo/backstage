@@ -7,6 +7,7 @@ const appearance = require "../stores/appearance"
 --// Utils
 const arrow = require "../constants/arrow"
 const filter = require "../utils/filter"
+const motion = require "../utils/motion"
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../constants/theme"
@@ -174,7 +175,7 @@ return function(props: props)
 		AutoButtonColor = false,
 
 		BackgroundColor3 = appearance.hover,
-		BackgroundTransparency = header_transparency,
+		BackgroundTransparency = motion.ease(header_transparency),
 		BorderSizePixel = 0,
 
 		FontFace = theme.font,

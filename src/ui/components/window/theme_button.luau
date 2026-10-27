@@ -5,6 +5,7 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
+const motion = require "../../utils/motion"
 const overlay = require "../../utils/overlay"
 const px = require "../../utils/px"
 const theme = require "../../constants/theme"
@@ -55,7 +56,7 @@ return function(props: props)
 		Active = true,
 
 		BackgroundColor3 = appearance.hover,
-		BackgroundTransparency = background_transparency,
+		BackgroundTransparency = motion.ease(background_transparency),
 		BorderSizePixel = 0,
 		Text = "",
 
@@ -74,7 +75,7 @@ return function(props: props)
 			Position = UDim2.fromScale(0.5, 0.5),
 			Size = px.udim2(0, ICON_SIZE, 0, ICON_SIZE),
 
-			BackgroundColor3 = icon_color,
+			BackgroundColor3 = motion.ease(icon_color),
 			BorderSizePixel = 0,
 			Rotation = rotation,
 
@@ -93,7 +94,7 @@ return function(props: props)
 			},
 
 			vide.create "UIStroke" {
-				Color = icon_color,
+				Color = motion.ease(icon_color),
 
 				ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 				LineJoinMode = Enum.LineJoinMode.Round,
