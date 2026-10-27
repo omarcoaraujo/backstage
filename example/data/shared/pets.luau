@@ -4,26 +4,6 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 --// Modules
 const backstage = require(ReplicatedStorage.backstage)
 
---// Constants
-const STANCE_LIMITS = {
-	distance = { min = 0, max = 30, step = 0.1 },
-	height = { min = 0, max = 15, step = 0.1 },
-
-	speed = { min = 0.5, max = 40 },
-	sway = { min = 0, max = 2, step = 0.05 },
-}
-
-const STANCE_HINTS = {
-	distance = "How far from the player the pet stays",
-	speed = "Higher snaps to the target, lower drifts",
-	sway = "How much the pet bobs up and down, shared by every stance",
-}
-
-const SKIN_LIMITS = {
-	rarity = { "common", "rare", "legendary" },
-	scale = { min = 0.5, max = 3, step = 0.1 },
-}
-
 --// Types
 type rarity = "common" | "rare" | "legendary"
 
@@ -57,8 +37,18 @@ return backstage.config("pets", {
 		size = { min = 0.5, max = 8, step = 0.1 },
 		mode = { "follow", "orbit" },
 
-		stances = { follow = STANCE_LIMITS, orbit = STANCE_LIMITS },
-		skins = { [1] = SKIN_LIMITS, [8] = SKIN_LIMITS, [10] = SKIN_LIMITS },
+		stances = backstage.each {
+			distance = { min = 0, max = 30, step = 0.1 },
+			height = { min = 0, max = 15, step = 0.1 },
+
+			speed = { min = 0.5, max = 40 },
+			sway = { min = 0, max = 2, step = 0.05 },
+		},
+
+		skins = backstage.each {
+			rarity = { "common", "rare", "legendary" },
+			scale = { min = 0.5, max = 3, step = 0.1 },
+		},
 
 		trail = {
 			length = { min = 0.1, max = 6, step = 0.1 },
@@ -69,7 +59,12 @@ return backstage.config("pets", {
 		mode = "Follow trails the player, orbit circles around",
 		respawn = "Puts the pet back next to the player",
 
-		stances = { follow = STANCE_HINTS, orbit = STANCE_HINTS },
+		stances = backstage.each {
+			distance = "How far from the player the pet stays",
+			speed = "Higher snaps to the target, lower drifts",
+			sway = "How much the pet bobs up and down, shared by every stance",
+		},
+
 		trail = { length = "Seconds the trail takes to fade" },
 	},
 })
