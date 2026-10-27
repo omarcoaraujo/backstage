@@ -202,6 +202,25 @@ return {
 		assert(#seen == 3)
 	end,
 
+	studio_says_why_a_catalog_entry_was_refused = function()
+		fresh()
+
+		backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [5] = { price = 500 } },
+			moods = { calm = { speed = 1 }, wild = { speed = 9 } },
+		})
+
+		const _, repeated = registry.add_item("shop.skins", "5")
+		const _, not_a_number = registry.add_item("shop.skins", "nope")
+		const _, not_a_name = registry.add_item("shop.moods", "1bad")
+		const _, taken = registry.add_item("shop.moods", "calm")
+
+		assert(repeated == "already exists")
+		assert(not_a_number == "needs a number")
+		assert(not_a_name == "not a valid name")
+		assert(taken == "already exists")
+	end,
+
 	studio_adds_a_scalar_catalog_entry = function()
 		fresh()
 

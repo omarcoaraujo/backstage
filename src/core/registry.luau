@@ -238,17 +238,17 @@ const function changed_structure(change: change)
 	end
 end
 
-const function add_item(path: string, key: string)
+const function add_item(path: string, key: string): (boolean, string?)
 	const catalog = catalogs[path]
-	if not catalog then return false end
+	if not catalog then return false, "not a list of entries" end
 
 	const added, from = catalog.add(key)
-	if not added then return false end
+	if not added then return false, from end
 
 	changed_structure { kind = "add", path = added, from = from }
 	announce()
 
-	return true
+	return true, nil
 end
 
 const function remove_item(path: string, key: string)

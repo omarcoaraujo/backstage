@@ -165,13 +165,20 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		members[key] = { kind = "entry", path = member_path }
 	end
 
-	const function grow(key: string): (string?, string?)
-		const numbered = type(template) == "number"
-		const name = if numbered then tonumber(key) :: any else key
-		if name == nil or members[name] ~= nil then return nil, nil end
-
+	const function insert(name: any): (string?, string?)
 		add_member(name, clone_defaults(source[template :: string]))
 		return `{path}.{name}`, `{path}.{template}`
+	end
+
+	const function grow(key: string): (string?, string?)
+		const numbered = type(template) == "number"
+		if numbered and not string.match(key, "^%d+$") then return nil, "needs a number" end
+		if not numbered and not string.match(key, "^[%a_][%w_]*$") then return nil, "not a valid name" end
+
+		const name = if numbered then tonumber(key) :: any else key
+		if members[name] ~= nil then return nil, "already exists" end
+
+		return insert(name)
 	end
 
 	const function shrink(key: string): string?
@@ -208,7 +215,7 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 
 		for _, key in sorted_keys(original :: any) do
 			if members[key] ~= nil then continue end
-			const added, from = grow(tostring(key))
+			const added, from = insert(key)
 			if not added then continue end
 
 			table.insert(changes, { kind = "add", path = added, from = from })
