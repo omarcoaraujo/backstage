@@ -8,6 +8,9 @@ return table.freeze {
 			divider = Color3.fromRGB(44, 44, 50),
 
 			accent = Color3.fromRGB(96, 165, 250),
+			danger = Color3.fromRGB(248, 113, 113),
+
+			danger_muted = Color3.fromRGB(160, 84, 88),
 			stroke = Color3.fromRGB(255, 255, 255),
 
 			text = Color3.fromRGB(232, 232, 236),
@@ -21,6 +24,9 @@ return table.freeze {
 			divider = Color3.fromRGB(216, 216, 223),
 
 			accent = Color3.fromRGB(37, 99, 235),
+			danger = Color3.fromRGB(220, 38, 38),
+
+			danger_muted = Color3.fromRGB(200, 120, 120),
 			stroke = Color3.fromRGB(0, 0, 0),
 
 			text = Color3.fromRGB(24, 24, 27),
@@ -50,7 +56,9 @@ return table.freeze {
 
 	field_height = 20,
 	input_width = 56,
+
 	reset_width = 18,
+	action_width = 24,
 
 	radius = 4,
 	padding = 10,

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- In a list of entries, like a price list or all the skins, the window now has a + to add an entry and a red × to remove one. Both show only when the mouse is over it, and the changes are written to the script too.
+- Resetting a list brings back the entries that were removed and drops the ones that were added.
 - One limit or hint can now cover every entry of a list, like all the skins, instead of being written again for each one.
 - A value the window cannot edit, like an animation or a model, no longer breaks the config: it is simply not shown, and the game reads it as usual.
 

@@ -5,13 +5,16 @@ const vide = require "../../../roblox_packages/vide"
 const appearance = require "../stores/appearance"
 
 --// Utils
+const arrow = require "../constants/arrow"
 const filter = require "../utils/filter"
 const overlay = require "../utils/overlay"
 const px = require "../utils/px"
-const arrow = require "../constants/arrow"
 const theme = require "../constants/theme"
 
 --// Components
+const header_action = require "./header_action"
+const new_entry = require "./new_entry"
+const remove_button = require "./remove_button"
 const reset_button = require "./reset_button"
 
 --// Constants
@@ -28,6 +31,12 @@ type props = {
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
+
+	suggest: (() -> string)?,
+	on_add: ((key: string) -> boolean)?,
+
+	on_append: (() -> ())?,
+	on_remove: (() -> ())?,
 }
 
 --// Functions
@@ -56,11 +65,15 @@ return function(props: props)
 	const children = (props.content or {}) :: { Instance }
 	local last = nil :: Instance?
 
+	const addable = props.on_add ~= nil or props.on_append ~= nil
+	const actions = (if addable then 1 else 0) + (if props.on_remove then 1 else 0)
+
 	const open = vide.source(props.open == true)
 	const closed_in_search = vide.source(false)
 
 	const hovered = vide.source(false)
 	const last_height = vide.source(0)
+	const adding = vide.source(false)
 
 	for _, child in children do
 		if child.Name == "buttons" then continue end
@@ -115,6 +128,32 @@ return function(props: props)
 
 	const function on_reset()
 		if props.on_reset then props.on_reset() end
+	end
+
+	const function on_add_pressed()
+		open(true)
+		if props.on_toggle then props.on_toggle(true) end
+
+		if props.on_append then
+			props.on_append()
+			return
+		end
+
+		adding(not adding())
+	end
+
+	const function suggestion()
+		if props.suggest then return props.suggest() end
+		return ""
+	end
+
+	const function close_adding()
+		adding(false)
+	end
+
+	const function add_entry(key: string)
+		if not props.on_add then return false end
+		return props.on_add(key)
 	end
 
 	const function arrow_frame()
@@ -173,10 +212,33 @@ return function(props: props)
 		},
 
 		reset_button {
-			right = theme.padding / 2,
+			right = theme.padding / 2 + theme.action_width * actions,
 			visible = reset_visible,
 			on_reset = on_reset,
 		},
+
+		if addable
+			then header_action {
+				name = "add",
+				position = px.udim2(1, -theme.padding / 2, 0.5, 0),
+
+				text = function()
+					return "+"
+				end,
+
+				on_activated = on_add_pressed,
+				highlighted = adding,
+				shown = hovered,
+			}
+			else nil,
+
+		if props.on_remove
+			then remove_button {
+				position = px.udim2(1, -(theme.padding / 2 + (if addable then theme.action_width else 0)), 0.5, 0),
+				shown = hovered,
+				on_remove = props.on_remove,
+			}
+			else nil,
 	}
 
 	const frame = vide.create "Frame" {
@@ -225,6 +287,16 @@ return function(props: props)
 				vide.create "UIPadding" {
 					PaddingLeft = px.udim(0, theme.indent),
 				},
+
+				if props.on_add
+					then new_entry {
+						visible = adding,
+						suggestion = suggestion,
+
+						on_add = add_entry,
+						on_close = close_adding,
+					}
+					else nil,
 
 				props.content,
 			},

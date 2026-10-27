@@ -12,6 +12,7 @@ const theme = require "../constants/theme"
 
 --// Components
 const hint = require "./hint"
+const remove_button = require "./remove_button"
 const reset_button = require "./reset_button"
 
 --// Constants
@@ -26,6 +27,8 @@ type props = {
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
+
+	on_remove: (() -> ())?,
 	locked: (() -> boolean)?,
 }
 
@@ -33,6 +36,8 @@ type props = {
 return function(props: props)
 	const node = filter.leaf { props.label }
 	local root = nil :: Frame?
+
+	const hovered = vide.source(false)
 	const tip = hint {
 		text = props.hint,
 		anchor = function()
@@ -48,6 +53,20 @@ return function(props: props)
 		if props.on_reset then props.on_reset() end
 	end
 
+	const function on_enter()
+		hovered(true)
+		tip.on_enter()
+	end
+
+	const function on_leave()
+		hovered(false)
+		tip.on_leave()
+	end
+
+	const function removable()
+		return hovered() and not reset_visible()
+	end
+
 	const function dimmed()
 		return locks.check(props.locked)
 	end
@@ -59,8 +78,8 @@ return function(props: props)
 		Visible = node.shown,
 		Size = px.udim2(1, 0, 0, theme.row_height),
 
-		MouseEnter = tip.on_enter,
-		MouseLeave = tip.on_leave,
+		MouseEnter = on_enter,
+		MouseLeave = on_leave,
 		InputBegan = tip.on_input,
 
 		vide.create "TextLabel" {
@@ -94,6 +113,14 @@ return function(props: props)
 			visible = reset_visible,
 			on_reset = on_reset,
 		},
+
+		if props.on_remove
+			then remove_button {
+				position = px.udim2(1, -theme.padding / 2, 0.5, 0),
+				shown = removable,
+				on_remove = props.on_remove,
+			}
+			else nil,
 
 		vide.create "Frame" {
 			Name = "locked",

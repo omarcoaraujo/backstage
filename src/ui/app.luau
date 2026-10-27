@@ -2,7 +2,6 @@
 const vide = require "../../roblox_packages/vide"
 
 --// Modules
-const exporter = require "../core/export"
 const kinds = require "../core/kinds"
 const registry = require "../core/registry"
 
@@ -10,22 +9,20 @@ const registry = require "../core/registry"
 const locks = require "./stores/locks"
 
 --// Utils
+const branch = require "./utils/branch"
+const catalog = require "./utils/catalog"
+const export_text = require "./utils/export_text"
 const pointer_target = require "./utils/pointer_target"
 const px = require "./utils/px"
 const share_pointer = require "./utils/share_pointer"
 
 --// Components
 const buttons = require "./components/buttons"
-const choice = require "./components/controls/choice"
-const color = require "./components/controls/color"
 const cursors = require "./components/cursors"
+const entry_control = require "./components/controls/entry_control"
 const group = require "./components/group"
 const list = require "./components/list"
-const number = require "./components/controls/number"
 const row = require "./components/row"
-const text = require "./components/controls/text"
-const toggle = require "./components/controls/toggle"
-const vector3 = require "./components/controls/vector3"
 const window = require "./components/window"
 
 --// Types
@@ -41,54 +38,6 @@ type props = {
 	size: Vector2?,
 	on_geometry: ((position: Vector2, size: Vector2) -> ())?,
 }
-
-type branch = {
-	entries: { registry.entry },
-	buttons: { registry.button_entry },
-	groups: { [string]: branch },
-}
-
---// Functions
-const function new_branch(): branch
-	return { entries = {}, buttons = {}, groups = {} }
-end
-
-const function descend(root: branch, group_path: string): branch
-	local current = root
-
-	for segment in string.gmatch(group_path, "[^%.]+") do
-		const child = current.groups[segment] or new_branch()
-		current.groups[segment] = child
-		current = child
-	end
-
-	return current
-end
-
-const function collect(): branch
-	const root = new_branch()
-
-	for _, entry in registry.list() do
-		table.insert(descend(root, entry.group).entries, entry)
-	end
-
-	for _, entry in registry.list_buttons() do
-		table.insert(descend(root, entry.group).buttons, entry)
-	end
-
-	return root
-end
-
-const function sorted_names(groups: { [string]: branch })
-	const names = {}
-
-	for name in groups do
-		table.insert(names, name)
-	end
-
-	table.sort(names)
-	return names
-end
 
 --// Component
 return function(props: props)
@@ -123,127 +72,41 @@ return function(props: props)
 		registry.restore_group()
 	end
 
-	const function export_text()
-		const changed = {}
-
-		for _, entry in registry.list() do
-			table.insert(changed, {
-				path = entry.path,
-				value = entry.value,
-
-				default = entry.default,
-				decimals = kinds.decimals(entry.descriptor),
-			})
-		end
-
-		return exporter.text(changed)
-	end
-
-	const function restorable(entry: registry.entry, value: () -> unknown, content: unknown)
-		const frame = row {
-			label = entry.name,
-			locked = locks.of_path(entry.path),
-			content = content,
-			hint = entry.hint,
-
-			dirty = function()
-				return value() ~= entry.default
-			end,
-
-			on_reset = function()
-				registry.restore(entry.path)
-			end,
-		}
-
-		frame:SetAttribute(pointer_target.owner_attribute, entry.path)
-		anchors.rows[entry.path] = { frame = frame, group = entry.group }
-		return frame
-	end
-
 	const function entry_row(entry: registry.entry)
 		const path = entry.path
-		const kind = entry.descriptor.kind
-
-		const text_value = vide.source(entry.value :: string)
-		const locked = locks.of_path(path)
 
 		const function on_change(value: unknown)
 			registry.set(path, value)
 		end
 
-		if kind == "number" then
-			const value = vide.source(entry.value :: number)
+		const control = entry_control {
+			entry = entry,
+			bind = bind,
 
-			bind(path, function(next_value)
-				value(next_value :: number)
-			end)
+			on_change = on_change,
+			locked = locks.of_path(path),
+		}
 
-			return restorable(
-				entry,
-				value,
-				number {
-					value = value,
-					on_change = on_change,
-					locked = locked,
+		const frame = row {
+			label = entry.name,
+			locked = locks.of_path(path),
+			content = control.content,
+			hint = entry.hint,
 
-					min = entry.descriptor.min,
-					max = entry.descriptor.max,
+			dirty = function()
+				return control.value() ~= entry.default
+			end,
 
-					step = entry.descriptor.step,
-					decimals = kinds.decimals(entry.descriptor),
-				}
-			)
-		end
+			on_reset = function()
+				registry.restore(path)
+			end,
 
-		if kind == "boolean" then
-			const value = vide.source(entry.value :: boolean)
+			on_remove = catalog.remover(entry.group, tostring(entry.name)),
+		}
 
-			bind(path, function(next_value)
-				value(next_value :: boolean)
-			end)
-
-			return restorable(entry, value, toggle { value = value, on_change = on_change, locked = locked })
-		end
-
-		if kind == "color" then
-			const value = vide.source(entry.value :: Color3)
-
-			bind(path, function(next_value)
-				value(next_value :: Color3)
-			end)
-
-			return restorable(entry, value, color { value = value, on_change = on_change, locked = locked })
-		end
-
-		if kind == "vector3" then
-			const value = vide.source(entry.value :: Vector3)
-
-			bind(path, function(next_value)
-				value(next_value :: Vector3)
-			end)
-
-			return restorable(entry, value, vector3 { value = value, on_change = on_change, locked = locked })
-		end
-
-		bind(path, function(next_value)
-			text_value(next_value :: string)
-		end)
-
-		if kind == "choice" then
-			return restorable(
-				entry,
-				text_value,
-				choice {
-					value = text_value,
-					on_change = on_change,
-
-					choices = entry.descriptor.choices or {},
-					locked = locked,
-				}
-			)
-		end
-
-		return restorable(entry, text_value, text { value = text_value, on_change = on_change, locked = locked })
+		frame:SetAttribute(pointer_target.owner_attribute, path)
+		anchors.rows[path] = { frame = frame, group = entry.group }
+		return frame
 	end
 
 	const function build_buttons(entries: { registry.button_entry })
@@ -265,8 +128,10 @@ return function(props: props)
 		return buttons { items = items }
 	end
 
-	const function build_branch(source: branch, name: string, path: string)
+	const function build_branch(source: branch.branch, name: string, path: string)
 		const content = {}
+		const parent = string.match(path, "^(.*)%.[^%.]+$")
+		const actions = catalog.actions(path, source)
 
 		const function dirty()
 			revision()
@@ -287,7 +152,7 @@ return function(props: props)
 
 		if #source.buttons > 0 then table.insert(content, build_buttons(source.buttons)) end
 
-		for _, child_name in sorted_names(source.groups) do
+		for _, child_name in branch.sorted_names(source.groups) do
 			table.insert(content, build_branch(source.groups[child_name], child_name, `{path}.{child_name}`))
 		end
 
@@ -298,7 +163,13 @@ return function(props: props)
 
 			on_toggle = on_toggle,
 			dirty = dirty,
+
 			on_reset = on_reset,
+			suggest = actions.suggest,
+
+			on_add = actions.on_add,
+			on_append = actions.on_append,
+			on_remove = if parent then catalog.remover(parent, name) else nil,
 		}
 
 		frame:SetAttribute(pointer_target.owner_attribute, path)
@@ -307,10 +178,10 @@ return function(props: props)
 	end
 
 	const function tree()
-		const root = collect()
+		const root = branch.collect()
 		const content = {} :: { Instance }
 
-		for _, name in sorted_names(root.groups) do
+		for _, name in branch.sorted_names(root.groups) do
 			table.insert(content, build_branch(root.groups[name], name, name))
 		end
 
@@ -347,8 +218,8 @@ return function(props: props)
 
 	vide.cleanup(registry.on_change(on_value_changed))
 	vide.cleanup(registry.on_register(rebuild))
-	vide.cleanup(clear)
 
+	vide.cleanup(clear)
 	rebuild()
 
 	const viewport = vide.create "Frame" {

@@ -41,6 +41,14 @@ return table.freeze {
 		return current().accent
 	end,
 
+	danger = function()
+		return current().danger
+	end,
+
+	danger_muted = function()
+		return current().danger_muted
+	end,
+
 	stroke = function()
 		return current().stroke
 	end,

@@ -39,6 +39,16 @@ return backstage.config("demo", {
 			open = false,
 		},
 	},
+
+	shop = {
+		skins = {
+			[1] = { rarity = "common", price = 100 },
+			[2] = { rarity = "rare", price = 500 },
+			[10] = { rarity = "legendary", price = 4000 },
+		},
+
+		prices = { [1] = 10, [2] = 20, [3] = 30 },
+	},
 }, {
 	limits = {
 		pets = {
@@ -53,6 +63,15 @@ return backstage.config("demo", {
 					curve = { smoothing = { min = 0, max = 1, step = 0.05 } },
 				},
 			},
+		},
+
+		shop = {
+			skins = backstage.each {
+				rarity = { "common", "rare", "legendary" },
+				price = { min = 0, max = 10000, step = 50 },
+			},
+
+			prices = backstage.each { min = 0, max = 1000, step = 5 },
 		},
 	},
 
