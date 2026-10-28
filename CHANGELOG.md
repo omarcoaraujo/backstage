@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.16.0
+
 - The search now also looks inside the text of a value, so typing the name of an item, like a petal named in a text box, finds the group that holds it and opens it.
 - The window now builds the rows of a group only when you open it, and when a search needs them, so opening it with thousands of values is far lighter and quicker.
 - Pressing the check mark that keeps the current state as the new starting point is now much lighter on a window with many values: it no longer rebuilds the window or resends every value to the other players.
