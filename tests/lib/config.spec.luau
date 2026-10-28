@@ -330,7 +330,7 @@ return {
 
 		registry.set("shop.skins.1.price", 150)
 		registry.remove_item("shop.skins", "5")
-		
+
 		registry.add_item("shop.skins", "7")
 		registry.set("shop.skins.7.price", 700)
 

@@ -273,7 +273,7 @@ return function(props: props)
 
 			dirty = props.dirty,
 			on_reset = props.on_reset,
-			
+
 			on_confirm = props.on_confirm,
 			on_export = if props.export_text then toggle_export else nil,
 		},

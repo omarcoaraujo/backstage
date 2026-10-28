@@ -239,7 +239,7 @@ return function(props: props)
 
 				position = px.udim2(1, -theme.padding / 2, 0.5, 0),
 				on_activated = on_add_pressed,
-				
+
 				highlighted = adding,
 				shown = hovered,
 			}

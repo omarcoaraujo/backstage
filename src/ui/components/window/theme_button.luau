@@ -90,7 +90,7 @@ return function(props: props)
 					NumberSequenceKeypoint.new(0.5, 0),
 					NumberSequenceKeypoint.new(1, 0),
 				},
-				
+
 				Rotation = 0,
 			},
 

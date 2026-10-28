@@ -266,7 +266,7 @@ return function(props: props)
 
 			dirty = any_dirty,
 			on_reset = restore_all,
-			
+
 			on_confirm = confirm_all,
 			export_text = export_text,
 		},
