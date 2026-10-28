@@ -33,6 +33,10 @@ return table.freeze {
 		return current().hover
 	end,
 
+	raised = function()
+		return current().raised
+	end,
+
 	divider = function()
 		return current().divider
 	end,

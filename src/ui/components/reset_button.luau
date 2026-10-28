@@ -58,7 +58,7 @@ return function(props: props)
 		Position = px.udim2(1, -props.right, 0.5, 0),
 		Size = px.udim2(0, props.size or theme.reset_width, 0, props.size or theme.reset_width),
 
-		BackgroundColor3 = appearance.hover,
+		BackgroundColor3 = appearance.raised,
 		BackgroundTransparency = motion.ease(background_transparency),
 		BorderSizePixel = 0,
 

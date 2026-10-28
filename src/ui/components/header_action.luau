@@ -69,7 +69,7 @@ return function(props: props)
 		if props.danger and active then return appearance.danger() end
 		if props.danger then return appearance.danger_muted() end
 		if active then return appearance.text() end
-		
+
 		return appearance.icon()
 	end
 
@@ -80,7 +80,7 @@ return function(props: props)
 		Position = props.position,
 		Size = px.udim2(0, theme.reset_width, 0, theme.reset_width),
 
-		BackgroundColor3 = appearance.hover,
+		BackgroundColor3 = appearance.raised,
 		BackgroundTransparency = motion.ease(background_transparency),
 		BorderSizePixel = 0,
 

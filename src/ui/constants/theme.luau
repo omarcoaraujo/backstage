@@ -5,6 +5,8 @@ return table.freeze {
 			background = Color3.fromRGB(17, 17, 19),
 			field = Color3.fromRGB(26, 26, 30),
 			hover = Color3.fromRGB(36, 36, 41),
+			
+			raised = Color3.fromRGB(58, 58, 66),
 			divider = Color3.fromRGB(44, 44, 50),
 
 			accent = Color3.fromRGB(96, 165, 250),
@@ -23,6 +25,8 @@ return table.freeze {
 			background = Color3.fromRGB(250, 250, 251),
 			field = Color3.fromRGB(240, 240, 243),
 			hover = Color3.fromRGB(229, 229, 234),
+			
+			raised = Color3.fromRGB(208, 208, 216),
 			divider = Color3.fromRGB(216, 216, 223),
 
 			accent = Color3.fromRGB(37, 99, 235),
@@ -77,7 +81,7 @@ return table.freeze {
 
 	radius = 4,
 	padding = 10,
-	
+
 	indent = 12,
 	gap = 6,
 }
