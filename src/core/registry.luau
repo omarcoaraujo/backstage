@@ -505,10 +505,10 @@ const function import(source: snapshot)
 		if not existing then
 			add(incoming.path, incoming.name, incoming.group, incoming.descriptor, incoming.default, incoming.hint)
 			entries[incoming.path].value = incoming.value
-			
+
 			entries[incoming.path].leading = incoming.leading
 			entries[incoming.path].remote = true
-			
+
 			continue
 		end
 
