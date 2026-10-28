@@ -3,11 +3,12 @@ const button = require "@self/core/button"
 const changes = require "@self/core/changes"
 const config = require "@self/core/config"
 const each = require "@self/core/each"
+const embed = require "@self/core/embed"
 const kinds = require "@self/core/kinds"
 const mode = require "@self/core/mode"
-const embed = require "@self/core/embed"
 const on_change = require "@self/core/on_change"
 const start = require "@self/core/start"
+const union = require "@self/core/union"
 
 --// Types
 export type value = kinds.value
@@ -36,6 +37,8 @@ end
 --// End
 return table.freeze {
 	config = create_config,
+	union = union.create,
+
 	button = create_button,
 	each = each.create,
 

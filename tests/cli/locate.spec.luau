@@ -242,4 +242,24 @@ backstage.config("shop", { sword = item(10) })
 		assert(#names == 0)
 		assert(#dynamic == 1 and dynamic[1] == 2)
 	end,
+
+	locates_a_value_in_the_first_variant_of_a_union = function()
+		const source =
+			'backstage.config("pets", { pick = backstage.union("kind", { kind = "coin", amount = 3 }, { kind = "skin", skin_id = "" }) })'
+
+		const found = locate.locate(source, "pets.pick.amount")
+		assert(found and found.tag == "number")
+
+		const missing, reason = locate.locate(source, "pets.pick.skin_id")
+		assert(not missing and reason ~= nil)
+	end,
+
+	lists_the_literals_of_the_first_variant_of_a_union = function()
+		const source =
+			'backstage.config("pets", { pick = backstage.union("kind", { kind = "coin", amount = 3 }, { kind = "skin", skin_id = "" }) })'
+
+		const found = locate.literals(source)
+		assert(found["pets.pick.kind"] and found["pets.pick.amount"])
+		assert(found["pets.pick.skin_id"] == nil)
+	end,
 }

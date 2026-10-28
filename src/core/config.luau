@@ -5,6 +5,7 @@ const kinds = require "./kinds"
 const mode = require "./mode"
 const registry = require "./registry"
 const tracker = require "./tracker"
+const union = require "./union"
 
 --// Types
 type tree = { [string]: unknown }
@@ -19,6 +20,10 @@ type member =
 
 --// Variables
 const declared = {} :: { [string]: tree }
+const readers = {} :: { [unknown]: (key: string, source: string?, line: number?, caller: unknown) -> unknown }
+
+const stops = {} :: { [string]: () -> () }
+local build_union: (source: union.marker, limits: tree?, hints: tree?, path: string) -> node
 
 --// Functions
 const function read_only()
@@ -144,7 +149,7 @@ const function current_values(prefix: string): unknown
 	return tree
 end
 
-const function build_group(source: node, limits: tree?, hints: tree?, path: string)
+const function build_group(source: node, limits: tree?, hints: tree?, path: string): node
 	const members = {} :: { [string]: member }
 	const original = {} :: { [unknown]: boolean }
 
@@ -167,6 +172,15 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 			registry.add_button(member_path, key, path, pressable, text)
 
 			members[key] = { kind = "button", button = pressable }
+			return
+		end
+
+		if union.is_union(value) then
+			members[key] = {
+				kind = "group",
+				proxy = build_union(value :: any, limit :: tree?, hint :: tree?, member_path),
+			}
+
 			return
 		end
 
@@ -327,6 +341,10 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 	end
 
 	const proxy = setmetatable({}, { __index = index, __newindex = read_only, __iter = iterate, __len = length })
+	readers[proxy] = function(key: string, source: string?, line: number?, caller: unknown)
+		return resolve(members, key, source, line, caller)
+	end
+
 	registry.add_group(
 		proxy,
 		path,
@@ -346,6 +364,109 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 			}
 			else nil
 	)
+
+	return proxy :: any
+end
+
+build_union = function(source: union.marker, limits: tree?, hints: tree?, path: string)
+	const field = source.discriminant
+	const field_path = `{path}.{field}`
+
+	const names = union.names(source)
+	const remembered = {} :: { [string]: { [string]: { value: kinds.value, default: kinds.value } } }
+
+	local active = names[1]
+	local committed = active
+	local inner = nil :: unknown
+
+	const function limits_with_choices(): tree
+		const merged = if limits then table.clone(limits) else {}
+		merged[field] = names
+		return merged
+	end
+
+	const function remember(name: string)
+		const saved = {}
+
+		for _, entry in registry.list() do
+			if entry.path == field_path or not registry.inside(entry.path, path) then continue end
+			saved[entry.path] = { value = entry.value, default = entry.default }
+		end
+
+		remembered[name] = saved
+	end
+
+	const function build(name: string)
+		active = name
+		inner = build_group(clone_defaults(union.find(source, name)) :: node, limits_with_choices(), hints, path)
+
+		const saved = remembered[name]
+		if not saved then return end
+
+		for saved_path, state in saved do
+			registry.seed(saved_path, state.default, state.value)
+		end
+	end
+
+	const function register()
+		registry.add_union(path, {
+			changed = function()
+				return active ~= committed
+			end,
+
+			commit = function()
+				committed = active
+			end,
+
+			revert = function()
+				if active ~= committed then registry.set(field_path, committed) end
+			end,
+		})
+	end
+
+	const function switch(name: string)
+		if name == active or not table.find(names, name) then return end
+		remember(active)
+
+		registry.remove(path)
+		build(name)
+
+		register()
+		registry.announce()
+	end
+
+	const function on_discriminant(changed: string, value: unknown)
+		if changed ~= field_path or type(value) ~= "string" then return end
+		switch(value)
+	end
+
+	const function iterate()
+		const snapshot = {}
+
+		for key, value in inner :: any do
+			snapshot[key] = value
+		end
+
+		return next, snapshot
+	end
+
+	const function index(_, key: string)
+		const caller, file, line = debug.info(2, "fsl")
+		return readers[inner](key, file, line, caller)
+	end
+
+	const function length()
+		return #(inner :: any)
+	end
+
+	build(active)
+	register()
+
+	if stops[path] then stops[path]() end
+	stops[path] = registry.on_change(on_discriminant)
+
+	const proxy = setmetatable({}, { __index = index, __newindex = read_only, __iter = iterate, __len = length })
+	registry.add_group(proxy, path, nil)
 
 	return proxy :: any
 end

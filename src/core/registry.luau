@@ -43,7 +43,9 @@ export type snapshot_entry = {
 export type snapshot = {
 	entries: { snapshot_entry },
 	buttons: { { path: string, name: string, group: string, hint: string? } },
+
 	catalogs: { [string]: { string } }?,
+	unions: { string }?,
 }
 
 export type remote = {
@@ -70,6 +72,7 @@ export type catalog = {
 	commit: () -> (),
 	revert: () -> { change },
 }
+export type union = { changed: () -> boolean, commit: () -> (), revert: () -> () }
 type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
 
 --// Variables
@@ -82,6 +85,7 @@ const structure_listeners = {} :: { (change: change) -> () }
 const groups = {} :: { [unknown]: string }
 
 const catalogs = {} :: { [string]: catalog? }
+const unions = {} :: { [string]: union }
 local remote = nil :: remote?
 
 --// Functions
@@ -122,6 +126,18 @@ const function rebase(path: string, default: kinds.value)
 	const found = entries[path]
 	if not found then return end
 	found.default = default
+end
+
+const function seed(path: string, default: kinds.value, value: kinds.value)
+	const found = entries[path]
+	if not found then return end
+
+	found.default = default
+	found.value = value
+end
+
+const function add_union(path: string, controller: union)
+	unions[path] = controller
 end
 
 const function add_button(path: string, name: string, group: string, source: button.button, hint: string?)
@@ -237,6 +253,10 @@ const function remove(prefix: string)
 	for path in catalogs do
 		if path == prefix or inside(path, prefix) then catalogs[path] = nil end
 	end
+
+	for path in unions do
+		if path == prefix or inside(path, prefix) then unions[path] = nil end
+	end
 end
 
 const function changed_structure(change: change)
@@ -308,6 +328,10 @@ const function dirty(prefix: string?)
 		if catalog and inside_or_equal(path, prefix) and catalog.changed() then return true end
 	end
 
+	for path, controller in unions do
+		if inside_or_equal(path, prefix) and controller.changed() then return true end
+	end
+
 	return false
 end
 
@@ -331,8 +355,16 @@ const function revert_structure(prefix: string?)
 	announce()
 end
 
+const function revert_unions(prefix: string?)
+	for _, path in sorted_paths(unions) do
+		const controller = unions[path]
+		if controller and inside_or_equal(path, prefix) then controller.revert() end
+	end
+end
+
 const function restore_group(prefix: string?)
 	revert_structure(prefix)
+	revert_unions(prefix)
 
 	for _, path in sorted_paths(entries) do
 		if inside(path, prefix) then restore(path) end
@@ -346,6 +378,10 @@ const function apply_commit(prefix: string?)
 
 	for path, catalog in catalogs do
 		if catalog and inside_or_equal(path, prefix) then catalog.commit() end
+	end
+
+	for path, controller in unions do
+		if inside_or_equal(path, prefix) then controller.commit() end
 	end
 
 	announce()
@@ -404,7 +440,24 @@ const function snapshot(only_local: boolean?)
 	end
 
 	result.catalogs = listed
+	result.unions = sorted_paths(unions)
+
 	return result
+end
+
+const function prune_unions(source: snapshot)
+	if not source.unions then return end
+	const incoming = {} :: { [string]: boolean }
+
+	for _, entry in source.entries do
+		incoming[entry.path] = true
+	end
+
+	for _, path in source.unions do
+		for existing in entries do
+			if inside(existing, path) and not incoming[existing] then entries[existing] = nil end
+		end
+	end
 end
 
 const function reconcile(wanted: { [string]: { string } })
@@ -432,6 +485,7 @@ end
 
 const function import(source: snapshot)
 	if source.catalogs then reconcile(source.catalogs) end
+	prune_unions(source)
 
 	for _, incoming in source.entries do
 		const existing = entries[incoming.path]
@@ -539,6 +593,7 @@ const function reset()
 
 	table.clear(groups)
 	table.clear(catalogs)
+	table.clear(unions)
 
 	tracker.reset()
 	remote = nil
@@ -554,8 +609,12 @@ return table.freeze {
 
 	add_item = add_item,
 	remove_item = remove_item,
+	
 	restore_item = restore_item,
 	reinstate_item = reinstate_item,
+
+	add_union = add_union,
+	seed = seed,
 
 	remove = remove,
 	rebase = rebase,

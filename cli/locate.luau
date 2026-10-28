@@ -155,6 +155,36 @@ const function unwrap_cast(node)
 	return unwrap_cast(node.operand)
 end
 
+const function is_union_call(node)
+	return node.tag == "call" and node.func.tag == "indexname" and node.func.index.text == "union"
+end
+
+const function variant_tables(call)
+	const variants = {}
+
+	for index = 2, #call.arguments do
+		const variant = unwrap_cast(call.arguments[index].node)
+		if variant.tag == "table" then table.insert(variants, variant) end
+	end
+
+	return variants
+end
+
+const function discriminant_of(call): string?
+	const first = call.arguments[1]
+	if not first then return nil end
+	return string_text(first.node)
+end
+
+const function variant_name(variant, discriminant: string): string?
+	for _, entry in variant.entries do
+		if entry_key(entry) ~= discriminant then continue end
+		return string_text(unwrap_cast(entry.value))
+	end
+
+	return nil
+end
+
 const function is_negative_number(node)
 	return node.tag == "unary" and node.operand.tag == "number"
 end
@@ -226,6 +256,12 @@ const function collect_literals(root, table_node, prefix: string, found: { [stri
 			continue
 		end
 
+		if is_union_call(entry_value) then
+			const active = variant_tables(entry_value)[1]
+			if active then collect_literals(root, active, path, found, entered) end
+			continue
+		end
+
 		if entry_value.tag == "call" and not is_constructor(entry_value) then
 			const inside = enter_call(root, entry_value)
 			if inside then collect_literals(root, inside.returned, path, found, inside) end
@@ -278,7 +314,11 @@ const function descend(root, start, segments: { string }, count: number)
 	for index = 1, count do
 		const segment = segments[index]
 
-		if current.tag == "call" then
+		if is_union_call(current) then
+			const active = variant_tables(current)[1]
+			if not active then return nil, nil, `"{segment}" is inside a union without variants` end
+			current = active
+		elseif current.tag == "call" then
 			entered = enter_call(root, current)
 			if not entered then return nil, nil, `"{segment}" is inside a call that does not return a table literal` end
 			current = entered.returned
@@ -314,6 +354,29 @@ const function entry(source: string, path: string)
 	return { owner = owner, entry = find_entry(owner, last), entered = entered }
 end
 
+const function union_of(source: string, path: string)
+	const opened = open(source, path)
+	if not opened then return nil end
+
+	const segments = opened.segments
+	const call = descend(opened.root, opened.defaults, segments, #segments - 1)
+
+	if not call or not is_union_call(call) then return nil end
+	if discriminant_of(call) ~= segments[#segments] then return nil end
+
+	const discriminant = segments[#segments]
+	const variants = {}
+
+	for _, variant in variant_tables(call) do
+		table.insert(variants, {
+			name = variant_name(variant, discriminant),
+			range = to_range(variant.location),
+		})
+	end
+
+	return variants
+end
+
 const function locate(source: string, path: string): (found?, string?)
 	const opened, reason = open(source, path)
 	if not opened then return nil, reason end
@@ -338,6 +401,7 @@ return {
 	entry_key = entry_key,
 
 	literals = literals,
+	union_of = union_of,
 	to_range = to_range,
 
 	config_names = config_names,

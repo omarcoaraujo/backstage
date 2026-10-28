@@ -10,6 +10,12 @@ backstage.config("pets", {
 })
 ]]
 
+const UNION = [[
+backstage.config("pets", {
+	pick = backstage.union("kind", { kind = "coin", amount = 3 }, { kind = "skin", skin_id = "" }),
+})
+]]
+
 --// Specs
 return {
 	rewrites_one_value_and_keeps_the_rest = function()
@@ -71,5 +77,51 @@ return {
 	leaves_the_source_alone_when_everything_is_refused = function()
 		const result, refused = apply.apply(SOURCE, { { path = "nope.x", kind = "number", value = 1 } })
 		assert(result == SOURCE and #refused == 1)
+	end,
+
+	writes_a_value_into_the_first_variant_of_a_union = function()
+		const result, refused = apply.apply(UNION, { { path = "pets.pick.amount", kind = "number", value = 9 } })
+		assert(#refused == 0)
+		assert(string.find(result, "amount = 9", 1, true))
+	end,
+
+	selecting_a_variant_moves_it_to_the_front = function()
+		const result, refused = apply.apply(UNION, { { path = "pets.pick.kind", kind = "string", value = "skin" } })
+		assert(#refused == 0)
+		assert(
+			string.find(
+				result,
+				'backstage.union("kind", { kind = "skin", skin_id = "" }, { kind = "coin", amount = 3 })',
+				1,
+				true
+			)
+		)
+	end,
+
+	selecting_the_active_variant_changes_nothing = function()
+		const result, refused = apply.apply(UNION, { { path = "pets.pick.kind", kind = "string", value = "coin" } })
+		assert(#refused == 0 and result == UNION)
+	end,
+
+	selecting_an_unknown_variant_is_refused = function()
+		const result, refused = apply.apply(UNION, { { path = "pets.pick.kind", kind = "string", value = "gem" } })
+		assert(result == UNION and #refused == 1 and refused[1].path == "pets.pick.kind")
+	end,
+
+	edits_to_the_old_variant_land_before_the_selection = function()
+		const result, refused = apply.apply(UNION, {
+			{ path = "pets.pick.kind", kind = "string", value = "skin" },
+			{ path = "pets.pick.amount", kind = "number", value = 7 },
+		})
+
+		assert(#refused == 0)
+		assert(
+			string.find(
+				result,
+				'backstage.union("kind", { kind = "skin", skin_id = "" }, { kind = "coin", amount = 7 })',
+				1,
+				true
+			)
+		)
 	end,
 }
