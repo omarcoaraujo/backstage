@@ -109,6 +109,8 @@ const function apply_effect(effect: typeof(config.effect))
 	if effect.kind == "glow" then
 		light.Enabled = true
 		light.Range = effect.radius
+		
+		light.Brightness = effect.intensity
 		pet.Transparency = 0
 
 		return
