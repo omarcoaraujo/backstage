@@ -12,8 +12,7 @@ const theme = require "../../constants/theme"
 
 --// Constants
 const ICON_SIZE = 16
-const ICON = "rbxassetid://112746140543671"
-const IDLE_TRANSPARENCY = 0.35
+const ICON = "rbxassetid://96960130733821"
 
 --// Types
 type props = {
@@ -39,9 +38,9 @@ return function(props: props)
 		return 1
 	end
 
-	const function icon_transparency()
-		if hovered() and not overlay.active() then return 0 end
-		return IDLE_TRANSPARENCY
+	const function icon_color()
+		if hovered() and not overlay.active() then return appearance.text() end
+		return appearance.icon()
 	end
 
 	return vide.create "TextButton" {
@@ -78,8 +77,7 @@ return function(props: props)
 			BackgroundTransparency = 1,
 			Image = ICON,
 
-			ImageColor3 = appearance.text,
-			ImageTransparency = motion.ease(icon_transparency),
+			ImageColor3 = motion.ease(icon_color),
 		},
 	}
 end

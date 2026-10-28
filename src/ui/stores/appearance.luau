@@ -65,6 +65,11 @@ return table.freeze {
 		return current().text
 	end,
 
+	icon = function()
+		const palette = current()
+		return palette.text_muted:Lerp(palette.text, theme.icon_mix)
+	end,
+
 	text_muted = function()
 		return current().text_muted
 	end,

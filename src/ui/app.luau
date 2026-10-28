@@ -73,6 +73,11 @@ return function(props: props)
 		registry.restore_group()
 	end
 
+	const function confirm_all()
+		registry.commit()
+		revision(revision() + 1)
+	end
+
 	const function entry_row(entry: registry.entry)
 		const path = entry.path
 
@@ -95,6 +100,7 @@ return function(props: props)
 			hint = entry.hint,
 
 			dirty = function()
+				revision()
 				return control.value() ~= entry.default
 			end,
 
@@ -143,6 +149,11 @@ return function(props: props)
 			registry.restore_group(path)
 		end
 
+		const function on_confirm()
+			registry.commit(path)
+			revision(revision() + 1)
+		end
+
 		const function on_toggle(open: boolean)
 			opened[path] = open
 		end
@@ -166,6 +177,7 @@ return function(props: props)
 			dirty = dirty,
 
 			on_reset = on_reset,
+			on_confirm = on_confirm,
 			suggest = actions.suggest,
 
 			on_add = actions.on_add,
@@ -254,6 +266,8 @@ return function(props: props)
 
 			dirty = any_dirty,
 			on_reset = restore_all,
+			
+			on_confirm = confirm_all,
 			export_text = export_text,
 		},
 

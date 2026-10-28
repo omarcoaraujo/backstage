@@ -13,13 +13,16 @@ const px = require "../utils/px"
 const theme = require "../constants/theme"
 
 --// Components
+const confirm_button = require "./confirm_button"
 const header_action = require "./header_action"
 const new_entry = require "./new_entry"
 const remove_button = require "./remove_button"
 const reset_button = require "./reset_button"
 
 --// Constants
+const ADD_ICON = "rbxassetid://78158808810563"
 const BRANCH_TRANSPARENCY = 0.5
+
 const BRANCH_OFFSET = theme.padding + arrow.size / 2
 const TICK_GAP = 2
 
@@ -32,6 +35,7 @@ type props = {
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
+	on_confirm: (() -> ())?,
 
 	suggest: (() -> string)?,
 	on_add: ((key: string) -> (boolean, string?))?,
@@ -131,6 +135,10 @@ return function(props: props)
 		if props.on_reset then props.on_reset() end
 	end
 
+	const function on_confirm()
+		if props.on_confirm then props.on_confirm() end
+	end
+
 	const function on_add_pressed()
 		open(true)
 		if props.on_toggle then props.on_toggle(true) end
@@ -218,16 +226,20 @@ return function(props: props)
 			on_reset = on_reset,
 		},
 
+		confirm_button {
+			right = theme.padding / 2 + theme.action_width * (actions + 1),
+			visible = reset_visible,
+			on_confirm = on_confirm,
+		},
+
 		if addable
 			then header_action {
 				name = "add",
+				image = ADD_ICON,
+
 				position = px.udim2(1, -theme.padding / 2, 0.5, 0),
-
-				text = function()
-					return "+"
-				end,
-
 				on_activated = on_add_pressed,
+				
 				highlighted = adding,
 				shown = hovered,
 			}

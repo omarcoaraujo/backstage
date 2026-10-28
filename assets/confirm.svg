@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 15 15" width="128" height="128">
+  <title>Confirm</title>
+  <mask id="check">
+    <rect width="15" height="15" fill="#FFFFFF"/>
+    <path d="M5 7.8l1.7 1.6 3.3-3.6" fill="none" stroke="#000000" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </mask>
+  <circle cx="7.5" cy="7.5" r="5.5" fill="#FFFFFF" mask="url(#check)"/>
+</svg>

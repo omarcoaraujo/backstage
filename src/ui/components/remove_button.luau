@@ -1,6 +1,9 @@
 --// Components
 const header_action = require "./header_action"
 
+--// Constants
+const ICON = "rbxassetid://118608486657001"
+
 --// Types
 type props = {
 	position: () -> UDim2,
@@ -10,18 +13,13 @@ type props = {
 
 --// Component
 return function(props: props)
-	const function text()
-		return "×"
-	end
-
 	return header_action {
 		name = "remove",
+		image = ICON,
 		danger = true,
 
 		position = props.position,
 		shown = props.shown,
-
-		text = text,
 		on_activated = props.on_remove,
 	}
 end

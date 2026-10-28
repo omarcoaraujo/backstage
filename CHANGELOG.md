@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Next to the reset of a group, and of the whole window, there is now a check mark that keeps the current state as the new starting point. From then on the reset goes back to it.
 - When the reset brings back a removed entry, the script gets it back exactly as it was, in the same place, even if it was the only one left or the one used as a model to add new ones.
 - An entry added or brought back from the window is now written to the script in its place, in order, instead of at the end of the list.
 - When the script cannot save a change, a notice now appears at the bottom right of the screen, for every player, and goes away by itself or when clicked.

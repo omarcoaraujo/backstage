@@ -11,19 +11,22 @@ const px = require "../utils/px"
 const theme = require "../constants/theme"
 
 --// Constants
-const ICON_SIZE = 14
-const ICON = "rbxassetid://103271473486724"
+const ICON_MARGIN = 4
+const ICON = "rbxassetid://127550923848951"
 
 --// Types
 type props = {
 	right: number,
 	visible: () -> boolean,
+
 	on_reset: () -> (),
+	size: number?,
 }
 
 --// Component
 return function(props: props)
 	const hovered = vide.source(false)
+	const icon_size = (props.size or theme.reset_width) - ICON_MARGIN
 
 	const function on_enter()
 		hovered(true)
@@ -40,17 +43,25 @@ return function(props: props)
 
 	const function color()
 		if hovered() and not overlay.active() then return appearance.text() end
-		return appearance.text_muted()
+		return appearance.icon()
+	end
+
+	const function background_transparency()
+		if hovered() and not overlay.active() then return 0 end
+		return 1
 	end
 
 	return vide.create "TextButton" {
 		Name = "reset",
-		AnchorPoint = Vector2.new(1, 0),
+		AnchorPoint = Vector2.new(1, 0.5),
 
-		Position = px.udim2(1, -props.right, 0, 0),
-		Size = px.udim2(0, theme.reset_width, 1, 0),
+		Position = px.udim2(1, -props.right, 0.5, 0),
+		Size = px.udim2(0, props.size or theme.reset_width, 0, props.size or theme.reset_width),
 
-		BackgroundTransparency = 1,
+		BackgroundColor3 = appearance.hover,
+		BackgroundTransparency = motion.ease(background_transparency),
+		BorderSizePixel = 0,
+
 		AutoButtonColor = false,
 		Active = true,
 
@@ -61,21 +72,20 @@ return function(props: props)
 		MouseEnter = on_enter,
 		MouseLeave = on_leave,
 
+		vide.create "UICorner" {
+			CornerRadius = px.udim(0, theme.radius),
+		},
+
 		vide.create "ImageLabel" {
 			Name = "icon",
 			AnchorPoint = Vector2.new(0.5, 0.5),
 
 			Position = UDim2.fromScale(0.5, 0.5),
-			Size = px.udim2(0, ICON_SIZE, 1, 0),
+			Size = px.udim2(0, icon_size, 0, icon_size),
 
 			BackgroundTransparency = 1,
 			Image = ICON,
 			ImageColor3 = motion.ease(color),
-
-			vide.create "UIAspectRatioConstraint" {
-				AspectRatio = 1,
-				DominantAxis = Enum.DominantAxis.Width,
-			},
 		},
 	}
 end

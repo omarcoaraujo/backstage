@@ -11,6 +11,7 @@ const px = require "../../utils/px"
 const theme = require "../../constants/theme"
 
 --// Components
+const confirm_button = require "../confirm_button"
 const export_button = require "./export_button"
 const logo = require "./logo"
 const reset_button = require "../reset_button"
@@ -31,6 +32,8 @@ type props = {
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
+
+	on_confirm: (() -> ())?,
 	on_export: (() -> ())?,
 }
 
@@ -54,6 +57,10 @@ return function(props: props)
 		if props.on_reset then props.on_reset() end
 	end
 
+	const function on_confirm()
+		if props.on_confirm then props.on_confirm() end
+	end
+
 	const function on_export()
 		if props.on_export then props.on_export() end
 	end
@@ -66,7 +73,7 @@ return function(props: props)
 
 	const function cross_color()
 		if close_hovered() and not overlay.active() then return appearance.text() end
-		return appearance.text_muted()
+		return appearance.icon()
 	end
 
 	const function cross_stroke(rotation: number)
@@ -127,8 +134,18 @@ return function(props: props)
 
 		reset_button {
 			right = theme.title_inset * 2.5 + theme.title_button * 3,
+			size = theme.title_button,
+
 			visible = reset_visible,
 			on_reset = on_reset,
+		},
+
+		confirm_button {
+			right = theme.title_inset * 3 + theme.title_button * 4,
+			size = theme.title_button,
+
+			visible = reset_visible,
+			on_confirm = on_confirm,
 		},
 
 		export_button {

@@ -11,12 +11,12 @@ const px = require "../utils/px"
 const theme = require "../constants/theme"
 
 --// Constants
-const GLYPH_SIZE = 18
+const ICON_SIZE = 15
 
 --// Types
 type props = {
 	name: string,
-	text: () -> string,
+	image: string,
 	position: () -> UDim2,
 
 	on_activated: () -> (),
@@ -58,13 +58,19 @@ return function(props: props)
 		return 1
 	end
 
+	const function icon_position()
+		const inset = math.floor((px(theme.reset_width)() - px(ICON_SIZE)()) / 2)
+		return UDim2.fromOffset(inset, inset)
+	end
+
 	const function color()
 		const active = (hovered() or lit()) and not overlay.active()
 
 		if props.danger and active then return appearance.danger() end
 		if props.danger then return appearance.danger_muted() end
 		if active then return appearance.text() end
-		return appearance.text_muted()
+		
+		return appearance.icon()
 	end
 
 	return vide.create "TextButton" {
@@ -82,11 +88,7 @@ return function(props: props)
 		Active = true,
 		Visible = visible,
 
-		FontFace = theme.font,
-		Text = props.text,
-
-		TextColor3 = motion.ease(color),
-		TextSize = px(GLYPH_SIZE),
+		Text = "",
 
 		Activated = overlay.guard(on_activated),
 		MouseEnter = on_enter,
@@ -94,6 +96,16 @@ return function(props: props)
 
 		vide.create "UICorner" {
 			CornerRadius = px.udim(0, theme.radius),
+		},
+
+		vide.create "ImageLabel" {
+			Name = "icon",
+			Position = icon_position,
+			Size = px.udim2(0, ICON_SIZE, 0, ICON_SIZE),
+
+			BackgroundTransparency = 1,
+			Image = props.image,
+			ImageColor3 = motion.ease(color),
 		},
 	}
 end

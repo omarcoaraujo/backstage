@@ -72,10 +72,12 @@ return table.freeze {
 	input_width = 56,
 
 	reset_width = 18,
-	action_width = 24,
+	action_width = 20,
+	icon_mix = 0.45,
 
 	radius = 4,
 	padding = 10,
+	
 	indent = 12,
 	gap = 6,
 }

@@ -11,7 +11,7 @@ const px = require "../../utils/px"
 const theme = require "../../constants/theme"
 
 --// Constants
-const ICON_SIZE = 12
+const ICON_SIZE = 13
 
 --// Types
 type props = {
@@ -38,7 +38,7 @@ return function(props: props)
 
 	const function icon_color()
 		if hovered() and not overlay.active() then return appearance.text() end
-		return appearance.text_muted()
+		return appearance.icon()
 	end
 
 	const function rotation()
@@ -90,7 +90,8 @@ return function(props: props)
 					NumberSequenceKeypoint.new(0.5, 0),
 					NumberSequenceKeypoint.new(1, 0),
 				},
-				Rotation = 90,
+				
+				Rotation = 0,
 			},
 
 			vide.create "UIStroke" {
