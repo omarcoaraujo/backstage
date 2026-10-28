@@ -14,15 +14,31 @@ const nodes = setmetatable({} :: { [Instance]: node }, { __mode = "k" })
 
 const texts = {} :: { [string]: string }
 const text_version = vide.source(0)
+local versions = 0
 
 --// Functions
 const function searching(): boolean
 	return query() ~= ""
 end
 
+const function bump_texts()
+	versions += 1
+	text_version(versions)
+end
+
 const function set_text(path: string, value: string)
 	texts[path] = string.lower(value)
-	if searching() then text_version(text_version() + 1) end
+	if searching() then bump_texts() end
+end
+
+const function replace_texts(values: { [string]: string })
+	table.clear(texts)
+
+	for path, value in values do
+		texts[path] = string.lower(value)
+	end
+
+	if searching() then bump_texts() end
 end
 
 const function clear_texts()
@@ -111,6 +127,7 @@ end
 return table.freeze {
 	query = query,
 	set_text = set_text,
+	replace_texts = replace_texts,
 
 	clear_texts = clear_texts,
 	searching = searching,

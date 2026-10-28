@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Searching in a window with thousands of text values no longer freezes Studio or shows a script timeout, and the window no longer reads every text value until you type a search.
+
 ## 0.16.0
 
 - The search now also looks inside the text of a value, so typing the name of an item, like a petal named in a text box, finds the group that holds it and opens it.

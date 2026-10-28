@@ -57,20 +57,30 @@ return function(props: props)
 
 	local destroy_tree = nil :: (() -> ())?
 	local items = {} :: { Instance }
+	local indexed = false
 
 	const function bind(path: string, apply: (value: kinds.value) -> ())
 		appliers[path] = apply
 	end
 
 	const function index_texts()
-		filter.clear_texts()
+		const values = {} :: { [string]: string }
 		table.clear(texts)
 
 		for _, entry in registry.list() do
 			if entry.descriptor.kind ~= "string" then continue end
 			texts[entry.path] = true
-			filter.set_text(entry.path, entry.value :: string)
+			values[entry.path] = entry.value :: string
 		end
+
+		filter.replace_texts(values)
+		indexed = true
+	end
+
+	const function drop_texts()
+		filter.clear_texts()
+		table.clear(texts)
+		indexed = false
 	end
 
 	const function on_value_changed(path: string, value: kinds.value)
@@ -238,7 +248,9 @@ return function(props: props)
 
 	const function rebuild()
 		revision(revision() + 1)
-		index_texts()
+		drop_texts()
+		
+		if filter.searching() then index_texts() end
 		clear()
 
 		table.clear(appliers)
@@ -263,6 +275,11 @@ return function(props: props)
 	vide.cleanup(registry.on_register(coalesce(rebuild)))
 	vide.cleanup(clear)
 	rebuild()
+
+	vide.effect(function()
+		if not filter.searching() or indexed then return end
+		index_texts()
+	end)
 
 	const viewport = vide.create "Frame" {
 		Name = "viewport",

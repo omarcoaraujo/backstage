@@ -1,6 +1,9 @@
 --// Services
 const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
+--// Packages
+const vide = require(ReplicatedStorage.roblox_packages.vide)
+
 --// Utils
 const filter = require(ReplicatedStorage.backstage.ui.utils.filter)
 
@@ -61,6 +64,51 @@ return {
 
 		filter.set_text("petals.1.name", "Sun Petal")
 		assert(group.shown())
+		reset()
+	end,
+
+	replacing_the_texts_updates_the_search_once = function()
+		reset()
+		search "sun"
+
+		const group = filter.branch("1", {}, { "petals.1.name", "petals.2.name" })
+		local runs = 0
+
+		const destroy = vide.root(function()
+			vide.effect(function()
+				group.shown()
+				runs += 1
+			end)
+		end)
+
+		const before = runs
+		filter.replace_texts { ["petals.1.name"] = "Dew", ["petals.2.name"] = "Sun" }
+
+		assert(runs == before + 1)
+		assert(group.shown())
+
+		destroy()
+		reset()
+	end,
+
+	replacing_the_texts_without_a_search_does_not_update = function()
+		reset()
+
+		const group = filter.branch("1", {}, { "petals.1.name" })
+		local runs = 0
+
+		const destroy = vide.root(function()
+			vide.effect(function()
+				group.shown()
+				runs += 1
+			end)
+		end)
+
+		const before = runs
+		filter.replace_texts { ["petals.1.name"] = "Dew" }
+		assert(runs == before)
+
+		destroy()
 		reset()
 	end,
 
