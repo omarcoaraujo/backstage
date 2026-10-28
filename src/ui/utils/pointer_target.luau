@@ -86,12 +86,22 @@ const function locate(anchors: anchors, viewport: GuiObject, point: Vector2): pr
 	}
 end
 
+const function nearest_group(anchors: anchors, path: string): GuiObject?
+	local current = path :: string?
+
+	while current do
+		const frame = anchors.groups[current]
+		if frame and visible(frame) then return frame end
+		current = string.match(current, "^(.*)%.[^%.]+$")
+	end
+
+	return nil
+end
+
 const function anchor_of(anchors: anchors, cursor: presence.cursor): GuiObject?
-	const frame = if cursor.row
-		then anchors.rows[cursor.row] and anchors.rows[cursor.row].frame
-		else anchors.groups[cursor.group]
-	if not frame or not visible(frame) then return nil end
-	return frame
+	const row = if cursor.row then anchors.rows[cursor.row] else nil
+	if row and visible(row.frame) then return row.frame end
+	return nearest_group(anchors, cursor.group)
 end
 
 const function place(anchors: anchors, cursor: presence.cursor): Vector2?
@@ -126,6 +136,7 @@ end
 
 const function resolve(anchors: anchors, hold: presence.hold): GuiObject?
 	const row = anchors.rows[hold.owner]
+	if not row and not anchors.groups[hold.owner] then return nearest_group(anchors, hold.owner) end
 	local current = (if row then row.frame else anchors.groups[hold.owner]) :: Instance?
 
 	for _, name in hold.part do

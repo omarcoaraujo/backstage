@@ -76,7 +76,6 @@ return function(props: props)
 
 	const function confirm_all()
 		registry.commit()
-		revision(revision() + 1)
 	end
 
 	const function entry_row(entry: registry.entry)
@@ -137,7 +136,6 @@ return function(props: props)
 	end
 
 	const function build_branch(source: branch.branch, name: string, path: string)
-		const content = {}
 		const parent = string.match(path, "^(.*)%.[^%.]+$")
 		const actions = catalog.actions(path, source)
 
@@ -152,27 +150,34 @@ return function(props: props)
 
 		const function on_confirm()
 			registry.commit(path)
-			revision(revision() + 1)
 		end
 
 		const function on_toggle(open: boolean)
 			opened[path] = open
 		end
 
-		for _, entry in source.entries do
-			table.insert(content, entry_row(entry))
-		end
+		const function build()
+			const content = {} :: { Instance }
 
-		if #source.buttons > 0 then table.insert(content, build_buttons(source.buttons)) end
+			for _, entry in source.entries do
+				table.insert(content, entry_row(entry))
+			end
 
-		for _, child_name in branch.sorted_names(source.groups) do
-			table.insert(content, build_branch(source.groups[child_name], child_name, `{path}.{child_name}`))
+			if #source.buttons > 0 then table.insert(content, build_buttons(source.buttons)) end
+
+			for _, child_name in branch.sorted_names(source.groups) do
+				table.insert(content, build_branch(source.groups[child_name], child_name, `{path}.{child_name}`))
+			end
+
+			return content
 		end
 
 		const frame = group {
 			name = name,
 			open = opened[path],
-			content = content,
+
+			build = build,
+			descendants = branch.descendant_names(source),
 
 			on_toggle = on_toggle,
 			dirty = dirty,
@@ -231,8 +236,11 @@ return function(props: props)
 	end
 
 	vide.cleanup(registry.on_change(on_value_changed))
-	vide.cleanup(registry.on_register(coalesce(rebuild)))
+	vide.cleanup(registry.on_commit(function()
+		revision(revision() + 1)
+	end))
 
+	vide.cleanup(registry.on_register(coalesce(rebuild)))
 	vide.cleanup(clear)
 	rebuild()
 

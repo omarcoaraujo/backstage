@@ -51,6 +51,22 @@ const function sorted_names(groups: { [string]: branch })
 	return names
 end
 
+const function descendant_names(source: branch): { string }
+	const names = {}
+
+	for _, entry in source.entries do
+		table.insert(names, entry.name)
+	end
+
+	for name, child in source.groups do
+		table.insert(names, name)
+		const nested = descendant_names(child)
+		table.move(nested, 1, #nested, #names + 1, names)
+	end
+
+	return names
+end
+
 const function child_names(source: branch)
 	const names = {}
 
@@ -99,7 +115,9 @@ end
 return table.freeze {
 	create = create,
 	collect = collect,
+
 	sorted_names = sorted_names,
+	descendant_names = descendant_names,
 
 	next_key = next_key,
 	is_list = is_list,

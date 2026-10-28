@@ -85,4 +85,21 @@ return {
 		assert(registry.list()[1].leading == true)
 		registry.reset()
 	end,
+
+	descendant_names_lists_the_entries_and_groups_at_every_depth = function()
+		const root = branch.create()
+		table.insert(root.entries, { name = "size" } :: any)
+
+		const trail = branch.create()
+		table.insert(trail.entries, { name = "length" } :: any)
+		root.groups.trail = trail
+
+		const deep = branch.create()
+		table.insert(deep.entries, { name = "fade" } :: any)
+		trail.groups.tip = deep
+
+		const names = branch.descendant_names(root)
+		table.sort(names)
+		assert(table.concat(names, ",") == "fade,length,size,tip,trail")
+	end,
 }

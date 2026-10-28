@@ -5,6 +5,7 @@ const vide = require "../../../roblox_packages/vide"
 export type node = {
 	forced: vide.Source<boolean>,
 	shown: () -> boolean,
+	adopt: ((content: { Instance }) -> ())?,
 }
 
 --// Variables
@@ -39,16 +40,9 @@ const function leaf(names: { string }): node
 	return { forced = forced, shown = shown }
 end
 
-const function branch(name: string, content: { Instance }?): node
+const function branch(name: string, descendants: { string }): node
 	const forced = vide.source(false)
 	const children = {} :: { node }
-
-	if content then
-		for _, child in ipairs(content) do
-			const child_node = nodes[child]
-			if child_node then table.insert(children, child_node) end
-		end
-	end
 
 	const function passes_down(): boolean
 		return forced() or matches(name)
@@ -56,6 +50,7 @@ const function branch(name: string, content: { Instance }?): node
 
 	const function shown(): boolean
 		if passes_down() then return true end
+		if matches_any(descendants) then return true end
 
 		for _, child in children do
 			if child.shown() then return true end
@@ -64,15 +59,19 @@ const function branch(name: string, content: { Instance }?): node
 		return false
 	end
 
-	vide.effect(function()
-		const passed = passes_down()
+	const function adopt(content: { Instance })
+		for _, child in content do
+			const child_node = nodes[child]
+			if not child_node then continue end
 
-		for _, child in children do
-			child.forced(passed)
+			table.insert(children, child_node)
+			vide.effect(function()
+				child_node.forced(passes_down())
+			end)
 		end
-	end)
+	end
 
-	return { forced = forced, shown = shown }
+	return { forced = forced, shown = shown, adopt = adopt }
 end
 
 const function track(target: Instance, node: node)

@@ -30,8 +30,12 @@ const TICK_GAP = 2
 type props = {
 	name: string,
 	open: boolean?,
+
 	on_toggle: ((open: boolean) -> ())?,
 	content: unknown?,
+
+	build: (() -> { Instance })?,
+	descendants: { string }?,
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
@@ -66,12 +70,12 @@ end
 
 --// Component
 return function(props: props)
-	const node = filter.branch(props.name, props.content :: { Instance }?)
-	const children = (props.content or {}) :: { Instance }
-	local last = nil :: Instance?
+	const node = filter.branch(props.name, props.descendants or {})
+	const built = vide.source(false)
 
 	const addable = props.on_add ~= nil or props.on_append ~= nil
 	const actions = (if addable then 1 else 0) + (if props.on_remove then 1 else 0)
+	local destroy_built = nil :: (() -> ())?
 
 	const open = vide.source(props.open == true)
 	const closed_in_search = vide.source(false)
@@ -79,21 +83,6 @@ return function(props: props)
 	const hovered = vide.source(false)
 	const last_height = vide.source(0)
 	const adding = vide.source(false)
-
-	for _, child in children do
-		if child.Name == "buttons" then continue end
-		tick(child)
-		last = child
-	end
-
-	if last and last:IsA "GuiObject" then
-		const function update()
-			last_height(last.AbsoluteSize.Y)
-		end
-
-		update()
-		vide.cleanup(last:GetPropertyChangedSignal("AbsoluteSize"):Connect(update))
-	end
 
 	const function branch_size()
 		return UDim2.new(0, 1, 1, -(last_height() - px(theme.row_height)() / 2))
@@ -113,11 +102,6 @@ return function(props: props)
 		open(not open())
 		if props.on_toggle then props.on_toggle(open()) end
 	end
-
-	vide.effect(function()
-		filter.query()
-		closed_in_search(false)
-	end)
 
 	const function on_enter()
 		hovered(true)
@@ -141,8 +125,8 @@ return function(props: props)
 
 	const function on_add_pressed()
 		open(true)
-		if props.on_toggle then props.on_toggle(true) end
 
+		if props.on_toggle then props.on_toggle(true) end
 		if props.on_append then
 			props.on_append()
 			return
@@ -174,6 +158,70 @@ return function(props: props)
 		if hovered() then return 0.4 end
 		return 1
 	end
+
+	const content_frame = vide.create "Frame" {
+		Name = "content",
+		Size = px.udim2(1, 0, 0, 0),
+
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundTransparency = 1,
+
+		vide.create "UIListLayout" {
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		},
+
+		vide.create "UIPadding" {
+			PaddingLeft = px.udim(0, theme.indent),
+		},
+
+		if props.on_add
+			then new_entry {
+				visible = adding,
+				suggestion = suggestion,
+
+				on_add = add_entry,
+				on_close = close_adding,
+			}
+			else nil,
+	}
+
+	const function attach(children: { Instance })
+		local last = nil :: Instance?
+
+		for _, child in children do
+			child.Parent = content_frame
+			if child.Name == "buttons" then continue end
+
+			tick(child)
+			last = child
+		end
+
+		if node.adopt then node.adopt(children) end
+		if not last or not last:IsA "GuiObject" then return end
+
+		const tail = last :: GuiObject
+		const function update()
+			last_height(tail.AbsoluteSize.Y)
+		end
+
+		update()
+		vide.cleanup(tail:GetPropertyChangedSignal("AbsoluteSize"):Connect(update))
+	end
+
+	vide.effect(function()
+		filter.query()
+		closed_in_search(false)
+	end)
+
+	vide.effect(function()
+		const build = props.build
+		if built() or not build or not expanded() or not node.shown() then return end
+
+		built(true)
+		destroy_built = vide.root(function()
+			attach(build())
+		end)
+	end)
 
 	const header = vide.create "TextButton" {
 		Name = "header",
@@ -286,35 +334,15 @@ return function(props: props)
 				BorderSizePixel = 0,
 			},
 
-			vide.create "Frame" {
-				Name = "content",
-				Size = px.udim2(1, 0, 0, 0),
-
-				AutomaticSize = Enum.AutomaticSize.Y,
-				BackgroundTransparency = 1,
-
-				vide.create "UIListLayout" {
-					SortOrder = Enum.SortOrder.LayoutOrder,
-				},
-
-				vide.create "UIPadding" {
-					PaddingLeft = px.udim(0, theme.indent),
-				},
-
-				if props.on_add
-					then new_entry {
-						visible = adding,
-						suggestion = suggestion,
-
-						on_add = add_entry,
-						on_close = close_adding,
-					}
-					else nil,
-
-				props.content,
-			},
+			content_frame,
 		},
 	}
+	
+	if props.content then attach(props.content :: { Instance }) end
+
+	vide.cleanup(function()
+		if destroy_built then destroy_built() end
+	end)
 
 	filter.track(frame, node)
 	return frame
