@@ -257,4 +257,26 @@ return {
 		registry.adopt(incoming(9))
 		assert(announced == 1)
 	end,
+
+	committing_tells_the_listeners_without_announcing_a_new_shape = function()
+		fresh()
+		declare_speed(1)
+
+		local announced = 0
+		local committed = nil :: string?
+
+		registry.on_register(function()
+			announced += 1
+		end)
+
+		registry.on_commit(function(prefix)
+			committed = prefix or "all"
+		end)
+
+		registry.set("pets.speed", 4)
+		registry.apply_commit()
+
+		assert(announced == 0 and committed == "all")
+		assert(registry.get_default "pets.speed" == 4)
+	end,
 }

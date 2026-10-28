@@ -281,9 +281,11 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		table.clear(original)
 		table.clear(committed)
 
+		const current = current_values(path) :: tree
+
 		for key in members do
 			original[key] = true
-			committed[key] = current_values(`{path}.{key}`)
+			committed[key] = current[tostring(key)]
 		end
 	end
 

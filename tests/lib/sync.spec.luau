@@ -168,9 +168,15 @@ return {
 
 		fire("commit", "shop.pet")
 		task.wait()
-
 		assert(not registry.dirty "shop.pet")
-		assert(log[#log].kind == "all" and log[#log].args[1] == "snapshot")
+
+		local told = false
+
+		for _, sent in log do
+			if sent.kind == "all" and sent.args[1] == "committed" then told = true end
+		end
+
+		assert(told)
 	end,
 
 	server_sends_the_snapshot_back_when_it_refuses_a_catalog_change = function()
@@ -390,5 +396,37 @@ return {
 
 		assert(snapshots == 1)
 		assert(#log[#log].args[2].entries == 20)
+	end,
+
+	server_tells_everyone_a_commit_without_sending_a_snapshot = function()
+		const log, fire = server_remote()
+		mode.enable()
+
+		backstage.config("shop", { pet = { size = 1 } })
+		task.wait()
+
+		table.clear(log)
+		registry.set("shop.pet.size", 5)
+		table.clear(log)
+
+		fire("commit", "shop.pet")
+		task.wait()
+
+		assert(#log == 1 and log[1].kind == "all")
+		assert(log[1].args[1] == "committed" and log[1].args[2] == "shop.pet")
+	end,
+
+	client_applies_a_commit_the_server_announces = function()
+		const remote, _, receive = client_remote()
+		mode.enable()
+
+		backstage.config("shop", { pet = { size = 1 } })
+		assert(sync.connect(remote))
+
+		registry.apply("shop.pet.size", 5)
+		assert(registry.dirty "shop.pet")
+
+		receive("committed", "shop.pet")
+		assert(not registry.dirty "shop.pet")
 	end,
 }

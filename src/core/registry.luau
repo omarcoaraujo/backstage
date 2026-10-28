@@ -85,6 +85,7 @@ const buttons = {} :: { [string]: button_entry }
 const listeners = {} :: { listener }
 
 const register_listeners = {} :: { () -> () }
+const commit_listeners = {} :: { (prefix: string?) -> () }
 const structure_listeners = {} :: { (change: change) -> () }
 const groups = {} :: { [unknown]: string }
 
@@ -200,11 +201,11 @@ const function sorted_paths(source: { [string]: unknown })
 	return paths
 end
 
-const function write(path: string, value: unknown, forward: boolean)
+const function write(path: string, value: unknown, forward: boolean, exact: boolean)
 	const found = entries[path]
 	if not found then return false end
 
-	const coerced = kinds.coerce(found.descriptor, value)
+	const coerced = kinds.coerce(found.descriptor, value, exact)
 	if coerced == nil then return false end
 
 	const previous = found.value
@@ -222,28 +223,28 @@ const function write(path: string, value: unknown, forward: boolean)
 end
 
 const function set(path: string, value: unknown)
-	return write(path, value, true)
+	return write(path, value, true, false)
 end
 
 const function apply(path: string, value: unknown)
-	return write(path, value, false)
+	return write(path, value, false, true)
 end
 
 const function push(path: string, value: unknown)
 	const found = entries[path]
 	if not found then return false end
 
-	const coerced = kinds.coerce(found.descriptor, value)
+	const coerced = kinds.coerce(found.descriptor, value, true)
 	if coerced == nil then return false end
 
 	found.default = coerced
-	return write(path, coerced, true)
+	return write(path, coerced, true, true)
 end
 
 const function restore(path: string)
 	const found = entries[path]
 	if not found then return false end
-	return write(path, found.default, true)
+	return write(path, found.default, true, true)
 end
 
 const function inside(path: string, prefix: string?)
@@ -394,7 +395,9 @@ const function apply_commit(prefix: string?)
 		if inside_or_equal(path, prefix) then controller.commit() end
 	end
 
-	announce()
+	for _, listener in table.clone(commit_listeners) do
+		listener(prefix)
+	end
 end
 
 const function commit(prefix: string?)
@@ -569,6 +572,15 @@ const function on_register(listener: () -> ())
 	end
 end
 
+const function on_commit(listener: (prefix: string?) -> ())
+	table.insert(commit_listeners, listener)
+
+	return function()
+		const index = table.find(commit_listeners, listener)
+		if index then table.remove(commit_listeners, index) end
+	end
+end
+
 const function on_structure(listener: (change: change) -> ())
 	table.insert(structure_listeners, listener)
 
@@ -604,6 +616,8 @@ const function reset()
 
 	table.clear(listeners)
 	table.clear(register_listeners)
+
+	table.clear(commit_listeners)
 	table.clear(structure_listeners)
 
 	table.clear(groups)
@@ -664,6 +678,8 @@ return table.freeze {
 	on_change = on_change,
 
 	on_register = on_register,
+	on_commit = on_commit,
+
 	on_structure = on_structure,
 	list = list,
 

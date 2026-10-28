@@ -90,6 +90,7 @@ const function serve(given: server_remote?)
 
 		if kind == "commit" then
 			registry.apply_commit(if path == "" then nil else path)
+			remote:FireAllClients("committed", path)
 			return
 		end
 
@@ -153,6 +154,11 @@ const function connect(given: client_remote?)
 
 		if kind == "notice" and type(path) == "string" then
 			notice.receive(path, value, extra)
+			return
+		end
+
+		if kind == "committed" and type(path) == "string" then
+			registry.apply_commit(if path == "" then nil else path)
 			return
 		end
 

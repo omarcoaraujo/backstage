@@ -718,4 +718,34 @@ return {
 
 		pets.respawn:fire()
 	end,
+
+	studio_importing_over_an_existing_entry_keeps_the_value_as_declared = function()
+		fresh()
+		backstage.config("pets", { fine = 0.117, coarse = 2.59491 }, {
+			limits = { fine = { step = 0.005 }, coarse = { step = 0.1 } },
+		})
+
+		registry.import(registry.snapshot())
+		assert(registry.get "pets.fine" == 0.117)
+
+		assert(registry.get "pets.coarse" == 2.59491)
+		assert(not registry.dirty "pets")
+	end,
+
+	studio_push_keeps_a_value_the_script_wrote_by_hand = function()
+		fresh()
+		backstage.config("pets", { fine = 0.5 }, { limits = { fine = { step = 0.005 } } })
+
+		assert(registry.push("pets.fine", 0.117))
+		assert(registry.get "pets.fine" == 0.117)
+		assert(registry.get_default "pets.fine" == 0.117)
+	end,
+
+	studio_editing_in_the_window_still_snaps_to_the_step = function()
+		fresh()
+		backstage.config("pets", { fine = 0.5 }, { limits = { fine = { step = 0.1 } } })
+
+		assert(registry.set("pets.fine", 2.59491))
+		assert(registry.get "pets.fine" == 2.6)
+	end,
 }
