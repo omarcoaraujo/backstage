@@ -66,7 +66,7 @@ return {
 
 	without_a_search_everything_shows = function()
 		reset()
-		
+
 		const row = filter.leaf({ "name" }, "petals.1.name")
 		const group = filter.branch("1", {}, {})
 		assert(row.shown() and group.shown())

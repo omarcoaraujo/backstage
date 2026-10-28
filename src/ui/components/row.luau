@@ -23,7 +23,7 @@ const LOCKED_TRANSPARENCY = 0.45
 type props = {
 	label: string,
 	content: unknown?,
-	
+
 	hint: string?,
 	search_path: string?,
 

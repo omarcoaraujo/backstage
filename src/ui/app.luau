@@ -196,7 +196,7 @@ return function(props: props)
 
 			descendants = branch.descendant_names(source),
 			text_paths = branch.text_paths(source),
-			
+
 			build = build,
 			on_toggle = on_toggle,
 			dirty = dirty,

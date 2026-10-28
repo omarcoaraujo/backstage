@@ -110,7 +110,7 @@ return {
 
 		const deep = branch.create()
 		table.insert(deep.entries, { name = "tag", path = "p.deep.tag", descriptor = { kind = "string" } } :: any)
-		
+
 		table.insert(deep.entries, { name = "mode", path = "p.deep.mode", descriptor = { kind = "choice" } } :: any)
 		root.groups.deep = deep
 

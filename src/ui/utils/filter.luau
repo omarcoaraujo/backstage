@@ -111,7 +111,7 @@ end
 return table.freeze {
 	query = query,
 	set_text = set_text,
-	
+
 	clear_texts = clear_texts,
 	searching = searching,
 
