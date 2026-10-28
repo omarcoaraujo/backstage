@@ -249,7 +249,7 @@ return function(props: props)
 	const function rebuild()
 		revision(revision() + 1)
 		drop_texts()
-		
+
 		if filter.searching() then index_texts() end
 		clear()
 
