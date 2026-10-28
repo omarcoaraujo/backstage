@@ -128,7 +128,7 @@ return function(props: props)
 	end
 
 	const function reset_visible()
-		return props.dirty ~= nil and props.dirty()
+		return hovered() and props.dirty ~= nil and props.dirty()
 	end
 
 	const function on_reset()

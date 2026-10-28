@@ -41,6 +41,10 @@ return function(props: props)
 		props.on_reset()
 	end
 
+	const function visible()
+		return props.visible() or hovered()
+	end
+
 	const function color()
 		if hovered() and not overlay.active() then return appearance.text() end
 		return appearance.icon()
@@ -66,7 +70,7 @@ return function(props: props)
 		Active = true,
 
 		Text = "",
-		Visible = props.visible,
+		Visible = visible,
 
 		Activated = overlay.guard(on_activated),
 		MouseEnter = on_enter,
