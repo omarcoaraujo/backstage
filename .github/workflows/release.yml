@@ -104,7 +104,7 @@ jobs:
         run: bash scripts/wally_build.sh
 
       - name: Log in to Wally
-        run: wally login --token "$WALLY_AUTH"
+        run: wally login --project-path build/wally --token "$WALLY_AUTH"
         env:
           WALLY_AUTH: ${{ secrets.WALLY_AUTH }}
 
