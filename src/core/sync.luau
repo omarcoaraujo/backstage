@@ -3,6 +3,7 @@ const Players = game:GetService "Players"
 const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
 --// Modules
+const coalesce = require "./coalesce"
 const holders = require "./holders"
 const mode = require "./mode"
 const notice = require "./notice"
@@ -129,7 +130,7 @@ const function serve(given: server_remote?)
 	notice.connect_remote(share_notice)
 
 	registry.on_change(on_changed)
-	registry.on_register(on_registered)
+	registry.on_register(coalesce(on_registered))
 end
 
 const function connect(given: client_remote?)
@@ -198,7 +199,7 @@ const function connect(given: client_remote?)
 	registry.connect_remote { edit = edit, press = press, commit = commit }
 	presence.connect_remote(share_cursor)
 
-	registry.on_register(declare)
+	registry.on_register(coalesce(declare))
 	remote:FireServer "ready"
 
 	declare()

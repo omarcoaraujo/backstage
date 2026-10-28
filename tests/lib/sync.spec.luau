@@ -101,6 +101,7 @@ return {
 	server_adopts_the_entries_a_client_declares = function()
 		const log, fire = server_remote()
 		fire("declare", snapshot_of(4))
+		task.wait()
 
 		assert(registry.get "pets.speed" == 4)
 		assert(#log == 1 and log[1].kind == "all" and log[1].args[1] == "snapshot")
@@ -121,6 +122,7 @@ return {
 		backstage.config("shop", { skins = { [1] = { price = 100 }, [5] = { price = 500 } } })
 
 		fire("add_item", "shop.skins", "9")
+		task.wait()
 		assert(registry.get "shop.skins.9.price" ~= nil)
 
 		const last = log[#log]
@@ -134,6 +136,7 @@ return {
 		backstage.config("shop", { skins = { [1] = { price = 100 }, [5] = { price = 500 } } })
 
 		fire("remove_item", "shop.skins", "5")
+		task.wait()
 		assert(registry.get "shop.skins.5.price" == nil)
 
 		const last = log[#log]
@@ -149,6 +152,8 @@ return {
 		})
 
 		fire("remove_item", "shop.skins", "5")
+		task.wait()
+
 		fire("restore_item", "shop.skins", "5")
 		assert(registry.get "shop.skins.5.price" == 500)
 	end,
@@ -162,6 +167,8 @@ return {
 		assert(registry.dirty "shop.pet")
 
 		fire("commit", "shop.pet")
+		task.wait()
+
 		assert(not registry.dirty "shop.pet")
 		assert(log[#log].kind == "all" and log[#log].args[1] == "snapshot")
 	end,
@@ -334,6 +341,7 @@ return {
 
 		declare_speed(5, "world.gravity")
 		registry.announce()
+		task.wait()
 
 		assert(#log == 2 and log[2][1] == "declare")
 		assert(#log[2][2].entries == 1 and log[2][2].entries[1].path == "world.gravity")
@@ -361,5 +369,26 @@ return {
 		receive("snapshot", snapshot_of(3))
 		assert(registry.set("pets.speed", 6))
 		assert(#log == 3 and log[3][1] == "edit" and log[3][3] == 6)
+	end,
+
+	server_sends_one_snapshot_for_many_announcements_in_the_same_frame = function()
+		const log = server_remote()
+		mode.enable()
+
+		for index = 1, 20 do
+			backstage.config(`world{index}`, { gravity = index })
+		end
+
+		task.wait()
+		local snapshots = 0
+
+		for _, sent in log do
+			if sent.kind == "all" and sent.args[1] == "snapshot" then
+				snapshots += 1
+			end
+		end
+
+		assert(snapshots == 1)
+		assert(#log[#log].args[2].entries == 20)
 	end,
 }

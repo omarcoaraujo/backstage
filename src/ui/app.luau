@@ -2,6 +2,7 @@
 const vide = require "../../roblox_packages/vide"
 
 --// Modules
+const coalesce = require "../core/coalesce"
 const kinds = require "../core/kinds"
 const registry = require "../core/registry"
 
@@ -230,7 +231,7 @@ return function(props: props)
 	end
 
 	vide.cleanup(registry.on_change(on_value_changed))
-	vide.cleanup(registry.on_register(rebuild))
+	vide.cleanup(registry.on_register(coalesce(rebuild)))
 
 	vide.cleanup(clear)
 	rebuild()
@@ -245,7 +246,6 @@ return function(props: props)
 	}
 
 	if props.cursors then vide.cleanup(share_pointer(anchors, viewport, props.visible)) end
-
 	return vide.create "Frame" {
 		Name = "backstage",
 		Size = UDim2.fromScale(1, 1),
