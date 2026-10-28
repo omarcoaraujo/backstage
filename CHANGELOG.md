@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- The window now builds the rows of a group only when you open it, and when a search needs them, so opening it with thousands of values is far lighter and quicker.
+- Pressing the check mark that keeps the current state as the new starting point is now much lighter on a window with many values: it no longer rebuilds the window or resends every value to the other players.
+- A value you declared with more decimals than its step allows, like 0.117 with a step of 0.005, now keeps exactly that value and no longer shows as changed when the game joins the shared view. The step only applies when you edit the control, and clicking into a number box and leaving it without typing no longer changes the value.
+
 ## 0.15.0
 
 - The window and the shared view now rebuild once per frame no matter how many values are declared in a row, so a game with hundreds of values no longer freezes while it declares them.
