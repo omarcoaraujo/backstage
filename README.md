@@ -162,6 +162,32 @@ return backstage.config("skins", {
 
 The second argument is optional and holds the entries that differ. A key you write there wins over the shared rule, and when both are tables they are merged, so skin `10` above keeps the `min` and `step` and only raises the `max`. A list of options is replaced whole instead of merged. `each` also works one level down, as in `limits = { skins = backstage.each { ... } }`.
 
+When a value can take different shapes, like an effect that is either a glow with a radius or a pulse with a speed, declare it with `backstage.union`. The first argument is the field that tells the shapes apart, and the rest are the shapes, from two to six:
+
+```lua
+return backstage.config("pets", {
+	effect = backstage.union(
+		"kind",
+		{ kind = "glow" :: "glow", radius = 8 },
+		{ kind = "pulse" :: "pulse", speed = 3 }
+	),
+})
+```
+
+The window shows `kind` as a choice of the shapes, and picking another one swaps the fields below it. Write each tag with a cast, like `"glow" :: "glow"`, so Luau can tell the shapes apart when you read it back:
+
+```lua
+const effect = pets.effect
+
+if effect.kind == "glow" then
+	print(effect.radius)
+else
+	print(effect.speed)
+end
+```
+
+The shape that comes first is the one the script keeps: picking another shape in the window moves it to the front of the call, and a value you edit stays in the shape's own table, so it is still there when you pick that shape again. Reset brings back the shape you started with. A union is not supported as an item of a list of entries, and `limits` and `hints` go under its name like any group, with the fields of every shape side by side.
+
 In the window, every changed value shows a reset arrow. A group shows one that resets everything inside it, and the title bar shows one that resets the whole window. A search bar filters the tree by name.
 
 ### 2. Reading values

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The window and the shared view now rebuild once per frame no matter how many values are declared in a row, so a game with hundreds of values no longer freezes while it declares them.
+- A value can now take different shapes, like an effect that is either a glow or a pulse. The window shows a choice for the shape, picking another one swaps its fields, and the script keeps the shape you picked.
 - The check mark and the reset of a group now show only while the mouse is over the group, and the buttons in a group header stand out better from its hover color.
 - Next to the reset of a group, and of the whole window, there is now a check mark that keeps the current state as the new starting point. From then on the reset goes back to it.
 - When the reset brings back a removed entry, the script gets it back exactly as it was, in the same place, even if it was the only one left or the one used as a model to add new ones.

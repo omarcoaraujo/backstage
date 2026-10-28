@@ -27,6 +27,8 @@ return backstage.config("pets", {
 
 	trail = { enabled = true, length = 1.5 },
 
+	effect = backstage.union("kind", { kind = "glow" :: "glow", radius = 8 }, { kind = "pulse" :: "pulse", speed = 3 }),
+
 	skins = {
 		[1] = { rarity = "common" :: rarity, scale = 1 },
 		[8] = { rarity = "rare" :: rarity, scale = 1.2 },
@@ -53,6 +55,11 @@ return backstage.config("pets", {
 		trail = {
 			length = { min = 0.1, max = 6, step = 0.1 },
 		},
+
+		effect = {
+			radius = { min = 0, max = 30, step = 0.5 },
+			speed = { min = 0, max = 10, step = 0.1 },
+		},
 	},
 
 	hints = {
@@ -66,5 +73,11 @@ return backstage.config("pets", {
 		},
 
 		trail = { length = "Seconds the trail takes to fade" },
+
+		effect = {
+			kind = "Glow lights up around the pet, pulse makes it fade in and out",
+			radius = "How far the glow reaches",
+			speed = "How fast the pet fades in and out",
+		},
 	},
 })
