@@ -102,4 +102,20 @@ return {
 		table.sort(names)
 		assert(table.concat(names, ",") == "fade,length,size,tip,trail")
 	end,
+
+	text_paths_lists_only_the_text_entries_at_every_depth = function()
+		const root = branch.create()
+		table.insert(root.entries, { name = "size", path = "p.size", descriptor = { kind = "number" } } :: any)
+		table.insert(root.entries, { name = "name", path = "p.name", descriptor = { kind = "string" } } :: any)
+
+		const deep = branch.create()
+		table.insert(deep.entries, { name = "tag", path = "p.deep.tag", descriptor = { kind = "string" } } :: any)
+		
+		table.insert(deep.entries, { name = "mode", path = "p.deep.mode", descriptor = { kind = "choice" } } :: any)
+		root.groups.deep = deep
+
+		const paths = branch.text_paths(root)
+		table.sort(paths)
+		assert(table.concat(paths, ",") == "p.deep.tag,p.name")
+	end,
 }

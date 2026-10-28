@@ -23,7 +23,9 @@ const LOCKED_TRANSPARENCY = 0.45
 type props = {
 	label: string,
 	content: unknown?,
+	
 	hint: string?,
+	search_path: string?,
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
@@ -34,7 +36,7 @@ type props = {
 
 --// Component
 return function(props: props)
-	const node = filter.leaf { props.label }
+	const node = filter.leaf({ props.label }, props.search_path)
 	local root = nil :: Frame?
 
 	const hovered = vide.source(false)

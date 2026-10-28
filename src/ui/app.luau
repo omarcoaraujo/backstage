@@ -13,6 +13,7 @@ const locks = require "./stores/locks"
 const branch = require "./utils/branch"
 const catalog = require "./utils/catalog"
 const export_text = require "./utils/export_text"
+const filter = require "./utils/filter"
 const pointer_target = require "./utils/pointer_target"
 const px = require "./utils/px"
 const share_pointer = require "./utils/share_pointer"
@@ -46,6 +47,8 @@ return function(props: props)
 	px.use_px()
 
 	const appliers = {} :: { [string]: (value: kinds.value) -> () }
+	const texts = {} :: { [string]: boolean }
+
 	const opened = {} :: { [string]: boolean }
 	const anchors = { rows = {}, groups = {} } :: pointer_target.anchors
 
@@ -59,8 +62,21 @@ return function(props: props)
 		appliers[path] = apply
 	end
 
+	const function index_texts()
+		filter.clear_texts()
+		table.clear(texts)
+
+		for _, entry in registry.list() do
+			if entry.descriptor.kind ~= "string" then continue end
+			texts[entry.path] = true
+			filter.set_text(entry.path, entry.value :: string)
+		end
+	end
+
 	const function on_value_changed(path: string, value: kinds.value)
 		revision(revision() + 1)
+		if texts[path] and type(value) == "string" then filter.set_text(path, value) end
+
 		const apply = appliers[path]
 		if apply then apply(value) end
 	end
@@ -95,6 +111,8 @@ return function(props: props)
 
 		const frame = row {
 			label = entry.name,
+			search_path = path,
+
 			locked = locks.of_path(path),
 			content = control.content,
 			hint = entry.hint,
@@ -176,9 +194,10 @@ return function(props: props)
 			name = name,
 			open = opened[path],
 
-			build = build,
 			descendants = branch.descendant_names(source),
-
+			text_paths = branch.text_paths(source),
+			
+			build = build,
 			on_toggle = on_toggle,
 			dirty = dirty,
 
@@ -219,6 +238,7 @@ return function(props: props)
 
 	const function rebuild()
 		revision(revision() + 1)
+		index_texts()
 		clear()
 
 		table.clear(appliers)

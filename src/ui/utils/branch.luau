@@ -67,6 +67,21 @@ const function descendant_names(source: branch): { string }
 	return names
 end
 
+const function text_paths(source: branch): { string }
+	const paths = {}
+
+	for _, entry in source.entries do
+		if entry.descriptor.kind == "string" then table.insert(paths, entry.path) end
+	end
+
+	for _, child in source.groups do
+		const nested = text_paths(child)
+		table.move(nested, 1, #nested, #paths + 1, paths)
+	end
+
+	return paths
+end
+
 const function child_names(source: branch)
 	const names = {}
 
@@ -118,6 +133,7 @@ return table.freeze {
 
 	sorted_names = sorted_names,
 	descendant_names = descendant_names,
+	text_paths = text_paths,
 
 	next_key = next_key,
 	is_list = is_list,

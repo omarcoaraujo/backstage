@@ -36,6 +36,7 @@ type props = {
 
 	build: (() -> { Instance })?,
 	descendants: { string }?,
+	text_paths: { string }?,
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
@@ -70,7 +71,7 @@ end
 
 --// Component
 return function(props: props)
-	const node = filter.branch(props.name, props.descendants or {})
+	const node = filter.branch(props.name, props.descendants or {}, props.text_paths or {})
 	const built = vide.source(false)
 
 	const addable = props.on_add ~= nil or props.on_append ~= nil
@@ -337,7 +338,7 @@ return function(props: props)
 			content_frame,
 		},
 	}
-	
+
 	if props.content then attach(props.content :: { Instance }) end
 
 	vide.cleanup(function()
