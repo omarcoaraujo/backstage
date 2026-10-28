@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.16.1
+
 - Searching in a window with thousands of text values no longer freezes Studio or shows a script timeout, and the window no longer reads every text value until you type a search.
 
 ## 0.16.0
