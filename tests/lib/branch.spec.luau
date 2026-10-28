@@ -59,7 +59,7 @@ return {
 	collect_puts_the_leading_entry_first_and_keeps_the_rest_alphabetical = function()
 		registry.reset()
 		registry.add("fx.intensity", "intensity", "fx", { kind = "number" } :: any, 1, nil)
-		
+
 		registry.add("fx.kind", "kind", "fx", { kind = "string" } :: any, "glow", nil)
 		registry.add("fx.radius", "radius", "fx", { kind = "number" } :: any, 1, nil)
 		registry.lead "fx.kind"

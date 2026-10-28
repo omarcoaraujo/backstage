@@ -82,7 +82,7 @@ return backstage.config("pets", {
 		effect = {
 			kind = "Glow lights up around the pet, pulse makes it fade in and out",
 			radius = "How far the glow reaches",
-			
+
 			intensity = "How bright the glow is",
 			speed = "How fast the pet fades in and out",
 		},
