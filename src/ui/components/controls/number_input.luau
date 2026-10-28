@@ -20,7 +20,9 @@ return function(props: props)
 	end
 
 	const function on_commit(typed: string)
+		if typed == text() then return end
 		const parsed = tonumber(typed)
+
 		if not parsed then return end
 		props.on_change(parsed)
 	end

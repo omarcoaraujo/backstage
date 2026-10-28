@@ -83,11 +83,12 @@ const function snap(value: number, descriptor: descriptor)
 	)
 end
 
-const function coerce(descriptor: descriptor, value: unknown): value?
+const function coerce(descriptor: descriptor, value: unknown, exact: boolean?): value?
 	const kind = descriptor.kind
 
 	if kind == "number" then
 		if type(value) ~= "number" or value ~= value or math.abs(value) == math.huge then return nil end
+		if exact then return value end
 		return snap(value, descriptor)
 	end
 
@@ -109,6 +110,8 @@ const function coerce(descriptor: descriptor, value: unknown): value?
 	if kind == "vector3" then
 		if typeof(value) ~= "Vector3" then return nil end
 		const vector = value :: Vector3
+
+		if exact then return vector end
 		return Vector3.new(precision.round(vector.X), precision.round(vector.Y), precision.round(vector.Z))
 	end
 
