@@ -321,6 +321,60 @@ return {
 		assert(not registry.reinstate_item("shop.moods", "my key"))
 	end,
 
+	studio_committing_a_group_makes_the_current_state_the_new_base = function()
+		fresh()
+		const shop = backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [5] = { price = 500 }, [9] = { price = 900 } },
+			mood = { speed = 1 },
+		})
+
+		registry.set("shop.skins.1.price", 150)
+		registry.remove_item("shop.skins", "5")
+		
+		registry.add_item("shop.skins", "7")
+		registry.set("shop.skins.7.price", 700)
+
+		assert(registry.dirty "shop.skins")
+		registry.commit "shop.skins"
+		assert(not registry.dirty "shop.skins")
+
+		registry.set("shop.skins.1.price", 1)
+		registry.restore_group "shop.skins"
+
+		assert(registry.get "shop.skins.1.price" == 150)
+		assert(shop.skins[5] == nil)
+		assert(registry.get "shop.skins.7.price" == 700)
+	end,
+
+	studio_committing_keeps_the_values_an_entry_had_when_it_comes_back = function()
+		fresh()
+		const shop = backstage.config("shop", {
+			skins = { [1] = { price = 100 }, [5] = { price = 500 } },
+		})
+
+		registry.add_item("shop.skins", "7")
+		registry.set("shop.skins.7.price", 700)
+		registry.commit()
+
+		registry.remove_item("shop.skins", "7")
+		registry.restore_group()
+
+		assert(shop.skins[7].price == 700)
+		assert(registry.get "shop.skins.7.price" == 700)
+	end,
+
+	studio_committing_only_touches_the_group_it_was_asked_for = function()
+		fresh()
+		backstage.config("shop", { pet = { size = 1 }, hud = { scale = 2 } })
+
+		registry.set("shop.pet.size", 5)
+		registry.set("shop.hud.scale", 6)
+		registry.commit "shop.pet"
+
+		assert(not registry.dirty "shop.pet")
+		assert(registry.dirty "shop.hud")
+	end,
+
 	studio_restoring_a_catalog_drops_the_entries_added_since = function()
 		fresh()
 		const shop = backstage.config("shop", {
@@ -374,6 +428,99 @@ return {
 
 		assert(registry.set("skins.10.price", 999))
 		assert(registry.get "skins.10.price" == 50)
+	end,
+
+	studio_each_applies_limits_to_a_new_entry = function()
+		fresh()
+
+		backstage.config("moods", {
+			calm = { speed = 1 },
+			wild = { speed = 2 },
+		}, {
+			limits = backstage.each { speed = { min = 0, max = 50 } },
+		})
+
+		assert(registry.add_item("moods", "mild"))
+		assert(registry.set("moods.mild.speed", 999))
+		assert(registry.get "moods.mild.speed" == 50)
+	end,
+
+	studio_each_applies_limits_to_a_new_entry_of_a_nested_catalog = function()
+		fresh()
+
+		backstage.config("pets", {
+			size = 1,
+			stances = {
+				follow = { speed = 1, sway = 0.4 },
+				orbit = { speed = 2, sway = 0.4 },
+			},
+		}, {
+			limits = {
+				size = { min = 0, max = 8 },
+				stances = backstage.each {
+					speed = { min = 0, max = 50 },
+					sway = { min = 0, max = 2, step = 0.05 },
+				},
+			},
+		})
+
+		assert(registry.add_item("pets.stances", "another"))
+		assert(registry.set("pets.stances.another.speed", 999))
+		assert(registry.get "pets.stances.another.speed" == 50)
+	end,
+
+	studio_gives_the_example_stances_their_limits_when_one_is_added = function()
+		fresh()
+
+		const function stance(distance: number, height: number, speed: number)
+			return { distance = distance, height = height, speed = speed, sway = 0.4 }
+		end
+
+		backstage.config("pets", {
+			size = 2,
+			tint = Color3.fromRGB(255, 200, 80),
+
+			mode = "follow",
+			respawn = backstage.button(),
+
+			stances = {
+				follow = stance(6, 3, 8),
+				orbit = stance(10, 4, 5),
+			},
+
+			trail = { enabled = true, length = 1.5 },
+		}, {
+			limits = {
+				size = { min = 0.5, max = 8, step = 0.1 },
+				mode = { "follow", "orbit" },
+
+				stances = backstage.each {
+					distance = { min = 0, max = 30, step = 0.1 },
+					height = { min = 0, max = 15, step = 0.1 },
+
+					speed = { min = 0.5, max = 40 },
+					sway = { min = 0, max = 2, step = 0.05 },
+				},
+
+				trail = { length = { min = 0.1, max = 6, step = 0.1 } },
+			},
+
+			hints = {
+				stances = backstage.each {
+					distance = "How far from the player the pet stays",
+				},
+			},
+		})
+
+		assert(registry.add_item("pets.stances", "another"))
+
+		for _, entry in registry.list() do
+			if entry.path ~= "pets.stances.another.distance" then continue end
+			assert(entry.descriptor.max == 30)
+			return
+		end
+
+		error "the new entry was not registered"
 	end,
 
 	studio_each_explicit_key_wins = function()

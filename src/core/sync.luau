@@ -87,6 +87,11 @@ const function serve(given: server_remote?)
 			return
 		end
 
+		if kind == "commit" then
+			registry.apply_commit(if path == "" then nil else path)
+			return
+		end
+
 		if kind == "press" then
 			registry.press(path)
 			return
@@ -161,6 +166,10 @@ const function connect(given: client_remote?)
 		remote:FireServer("press", path)
 	end
 
+	const function commit(prefix: string)
+		remote:FireServer("commit", prefix)
+	end
+
 	const function declare()
 		const local_only = registry.snapshot(true)
 		if #local_only.entries == 0 and #local_only.buttons == 0 then return end
@@ -186,7 +195,7 @@ const function connect(given: client_remote?)
 	remote.OnClientEvent:Connect(on_event)
 	registry.on_structure(forward)
 
-	registry.connect_remote { edit = edit, press = press }
+	registry.connect_remote { edit = edit, press = press, commit = commit }
 	presence.connect_remote(share_cursor)
 
 	registry.on_register(declare)

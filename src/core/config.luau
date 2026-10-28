@@ -122,9 +122,33 @@ const function push_leaves(prefix: string, value: unknown)
 	end
 end
 
+const function current_values(prefix: string): unknown
+	const exact = registry.get(prefix)
+	if exact ~= nil then return exact end
+	const tree = {} :: { [string]: any }
+
+	for _, entry in registry.list() do
+		if not registry.inside(entry.path, prefix) then continue end
+
+		const segments = string.split(string.sub(entry.path, #prefix + 2), ".")
+		local node = tree
+
+		for index = 1, #segments - 1 do
+			node[segments[index]] = node[segments[index]] or {}
+			node = node[segments[index]]
+		end
+
+		node[segments[#segments]] = entry.value
+	end
+
+	return tree
+end
+
 const function build_group(source: node, limits: tree?, hints: tree?, path: string)
 	const members = {} :: { [string]: member }
 	const original = {} :: { [unknown]: boolean }
+
+	const committed = {} :: { [unknown]: unknown }
 	const template = template_of(source)
 
 	for key in source do
@@ -173,9 +197,10 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 	const function populate(key: string)
 		const numbered = type(template) == "number"
 		const name = if numbered then tonumber(key) :: any else key
-
 		if name == nil or members[name] == nil then return end
-		push_leaves(`{path}.{name}`, source[name])
+
+		const known = if committed[name] ~= nil then committed[name] else source[name]
+		push_leaves(`{path}.{name}`, known)
 	end
 
 	const function grow(key: string): (string?, string?)
@@ -236,6 +261,16 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 		end
 
 		return false
+	end
+
+	const function commit()
+		table.clear(original)
+		table.clear(committed)
+
+		for key in members do
+			original[key] = true
+			committed[key] = current_values(`{path}.{key}`)
+		end
 	end
 
 	const function revert(): { registry.change }
@@ -305,6 +340,8 @@ const function build_group(source: node, limits: tree?, hints: tree?, path: stri
 
 				keys = keys,
 				changed = changed,
+
+				commit = commit,
 				revert = revert,
 			}
 			else nil

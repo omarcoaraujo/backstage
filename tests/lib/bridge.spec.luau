@@ -51,6 +51,8 @@ const function fake_catalog(parts: {
 			return false
 		end,
 
+		commit = function() end,
+
 		revert = function()
 			return {}
 		end,

@@ -49,6 +49,7 @@ export type snapshot = {
 export type remote = {
 	edit: (path: string, value: kinds.value) -> (),
 	press: (path: string) -> (),
+	commit: (prefix: string) -> (),
 }
 
 export type change = {
@@ -66,6 +67,7 @@ export type catalog = {
 	keys: () -> { string },
 
 	changed: () -> boolean,
+	commit: () -> (),
 	revert: () -> { change },
 }
 type listener = (path: string, value: kinds.value, previous: kinds.value) -> ()
@@ -337,6 +339,23 @@ const function restore_group(prefix: string?)
 	end
 end
 
+const function apply_commit(prefix: string?)
+	for path, found in entries do
+		if inside(path, prefix) then found.default = found.value end
+	end
+
+	for path, catalog in catalogs do
+		if catalog and inside_or_equal(path, prefix) then catalog.commit() end
+	end
+
+	announce()
+end
+
+const function commit(prefix: string?)
+	apply_commit(prefix)
+	if remote then remote.commit(prefix or "") end
+end
+
 const function press(path: string)
 	const found = buttons[path]
 	if not found then return false end
@@ -552,6 +571,9 @@ return table.freeze {
 
 	restore = restore,
 	restore_group = restore_group,
+
+	apply_commit = apply_commit,
+	commit = commit,
 
 	inside = inside,
 	dirty = dirty,

@@ -16,9 +16,12 @@ const function fresh()
 		edit = function(path, value)
 			table.insert(edits, { path = path, value = value })
 		end,
+		
 		press = function(path)
 			table.insert(presses, path)
 		end,
+
+		commit = function() end,
 	}
 
 	return edits, presses

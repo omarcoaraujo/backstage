@@ -153,6 +153,19 @@ return {
 		assert(registry.get "shop.skins.5.price" == 500)
 	end,
 
+	server_commits_a_group_when_a_client_asks_for_it = function()
+		const log, fire = server_remote()
+		mode.enable()
+		backstage.config("shop", { pet = { size = 1 } })
+
+		registry.set("shop.pet.size", 5)
+		assert(registry.dirty "shop.pet")
+
+		fire("commit", "shop.pet")
+		assert(not registry.dirty "shop.pet")
+		assert(log[#log].kind == "all" and log[#log].args[1] == "snapshot")
+	end,
+
 	server_sends_the_snapshot_back_when_it_refuses_a_catalog_change = function()
 		const log, fire = server_remote()
 		mode.enable()
@@ -278,6 +291,35 @@ return {
 		assert(registry.get "shop.skins.9.price" ~= nil)
 		assert(registry.get "shop.skins.5.price" == nil)
 		assert(registry.get "shop.skins.1.price" == 100)
+	end,
+
+	client_keeps_a_new_catalog_entry_with_its_limits_when_an_older_snapshot_arrives = function()
+		const remote, _, receive = client_remote()
+		mode.enable()
+
+		backstage.config("moods", {
+			calm = { speed = 1 },
+			wild = { speed = 2 },
+		}, {
+			limits = backstage.each { speed = { min = 0, max = 50 } },
+		})
+
+		assert(sync.connect(remote))
+		assert(registry.add_item("moods", "mild"))
+
+		const full = registry.snapshot()
+		const stale = { entries = {}, buttons = {}, catalogs = { ["moods"] = { "calm", "wild" } } } :: registry.snapshot
+
+		for _, entry in full.entries do
+			if not string.find(entry.path, "moods.mild.", 1, true) then table.insert(stale.entries, entry) end
+		end
+
+		receive("snapshot", stale)
+		receive("snapshot", full)
+
+		assert(registry.set("moods.mild.speed", 999))
+		assert(registry.get "moods.mild.speed" == 50)
+		assert(registry.remove_item("moods", "mild"))
 	end,
 
 	client_declares_nothing_when_everything_came_from_the_server = function()
