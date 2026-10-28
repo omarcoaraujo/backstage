@@ -55,4 +55,34 @@ return {
 		assert(#root.groups.shop.groups.skins.groups["1"].entries == 1)
 		registry.reset()
 	end,
+
+	collect_puts_the_leading_entry_first_and_keeps_the_rest_alphabetical = function()
+		registry.reset()
+		registry.add("fx.intensity", "intensity", "fx", { kind = "number" } :: any, 1, nil)
+		
+		registry.add("fx.kind", "kind", "fx", { kind = "string" } :: any, "glow", nil)
+		registry.add("fx.radius", "radius", "fx", { kind = "number" } :: any, 1, nil)
+		registry.lead "fx.kind"
+
+		const names = {}
+		for _, entry in branch.collect().groups.fx.entries do
+			table.insert(names, entry.name)
+		end
+
+		assert(table.concat(names, ",") == "kind,intensity,radius")
+		registry.reset()
+	end,
+
+	the_snapshot_keeps_the_leading_entry = function()
+		registry.reset()
+		registry.add("fx.kind", "kind", "fx", { kind = "string" } :: any, "glow", nil)
+		registry.lead "fx.kind"
+
+		const sent = registry.snapshot()
+		registry.reset()
+		registry.import(sent)
+
+		assert(registry.list()[1].leading == true)
+		registry.reset()
+	end,
 }

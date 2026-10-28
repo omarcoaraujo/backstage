@@ -14,6 +14,8 @@ export type entry = {
 
 	hint: string?,
 	value: kinds.value,
+
+	leading: boolean?,
 	remote: boolean,
 }
 
@@ -37,7 +39,9 @@ export type snapshot_entry = {
 
 	default: kinds.value,
 	hint: string?,
+
 	value: kinds.value,
+	leading: boolean?,
 }
 
 export type snapshot = {
@@ -134,6 +138,12 @@ const function seed(path: string, default: kinds.value, value: kinds.value)
 
 	found.default = default
 	found.value = value
+end
+
+const function lead(path: string)
+	const found = entries[path]
+	if not found then return end
+	found.leading = true
 end
 
 const function add_union(path: string, controller: union)
@@ -422,7 +432,9 @@ const function snapshot(only_local: boolean?)
 
 			default = found.default,
 			hint = found.hint,
+
 			value = found.value,
+			leading = found.leading,
 		})
 	end
 
@@ -493,13 +505,16 @@ const function import(source: snapshot)
 		if not existing then
 			add(incoming.path, incoming.name, incoming.group, incoming.descriptor, incoming.default, incoming.hint)
 			entries[incoming.path].value = incoming.value
-
+			
+			entries[incoming.path].leading = incoming.leading
 			entries[incoming.path].remote = true
+			
 			continue
 		end
 
 		existing.remote = true
 		existing.default = incoming.default
+		existing.leading = incoming.leading
 
 		existing.hint = incoming.hint
 		apply(incoming.path, incoming.value)
@@ -609,11 +624,12 @@ return table.freeze {
 
 	add_item = add_item,
 	remove_item = remove_item,
-	
+
 	restore_item = restore_item,
 	reinstate_item = reinstate_item,
 
 	add_union = add_union,
+	lead = lead,
 	seed = seed,
 
 	remove = remove,

@@ -29,7 +29,8 @@ const function collect(): branch
 	const root = create()
 
 	for _, entry in registry.list() do
-		table.insert(descend(root, entry.group).entries, entry)
+		const entries = descend(root, entry.group).entries
+		table.insert(entries, if entry.leading then 1 else #entries + 1, entry)
 	end
 
 	for _, entry in registry.list_buttons() do

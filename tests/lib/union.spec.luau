@@ -199,4 +199,21 @@ return {
 		assert(table.isfrozen(pets.pick))
 		assert(#registry.list() == 0)
 	end,
+
+	the_discriminant_leads_before_and_after_a_switch = function()
+		fresh()
+		declare()
+
+		const function leading(): string?
+			for _, entry in registry.list() do
+				if entry.leading then return entry.path end
+			end
+
+			return nil
+		end
+
+		assert(leading() == "pets.pick.kind")
+		registry.set("pets.pick.kind", "skin")
+		assert(leading() == "pets.pick.kind")
+	end,
 }

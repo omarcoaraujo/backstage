@@ -399,6 +399,7 @@ build_union = function(source: union.marker, limits: tree?, hints: tree?, path: 
 	const function build(name: string)
 		active = name
 		inner = build_group(clone_defaults(union.find(source, name)) :: node, limits_with_choices(), hints, path)
+		registry.lead(field_path)
 
 		const saved = remembered[name]
 		if not saved then return end
