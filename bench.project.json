@@ -1,0 +1,11 @@
+{
+  "name": "backstage_bench",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "backstage": { "$path": "src" },
+      "roblox_packages": { "$path": "roblox_packages" },
+      "bench": { "$path": "bench/lib" }
+    }
+  }
+}

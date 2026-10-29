@@ -5,19 +5,26 @@
 run = "rojo sourcemap dev.project.json --output sourcemap.json"
 
 [tasks.format]
-run = "stylua src example stories tests cli"
+run = "stylua src example stories tests cli bench"
 
 [tasks.analyze]
 shell = "bash -c"
 run = """
-stylua src example stories tests cli
+stylua src example stories tests cli bench
 rojo sourcemap dev.project.json --output sourcemap.json
+mkdir -p build
+rojo sourcemap bench.project.json --output build/bench-sourcemap.json
 [ -f roblox.d.luau ] || curl -L https://raw.githubusercontent.com/JohnnyMorganz/luau-lsp/refs/heads/main/scripts/globalTypes.d.luau -o roblox.d.luau
 luau-lsp analyze \
 	--sourcemap=sourcemap.json \
 	--definitions=roblox.d.luau \
 	--ignore="**/roblox_packages/**" \
 	src example stories tests/lib
+luau-lsp analyze \
+	--sourcemap=build/bench-sourcemap.json \
+	--definitions=roblox.d.luau \
+	--ignore="**/roblox_packages/**" \
+	bench/lib
 """
 
 [tasks.test]
@@ -26,6 +33,42 @@ run = """
 mkdir -p build
 rojo build test.project.json --output build/tests.rbxl
 run-in-roblox --place build/tests.rbxl --script tests/lib/run.server.luau
+"""
+
+[tasks.bench]
+shell = "bash -c"
+depends = ["install:cli"]
+run = """
+if tasklist | grep -qi run-in-roblox; then
+	echo "error: another run-in-roblox is running, from tests or a bench in another terminal or session. Wait for it to end and run again"
+	exit 1
+fi
+mkdir -p build bench/results
+rojo build bench.project.json --output build/bench.rbxl
+stamp=$(date +%Y-%m-%d_%H%M%S)
+status=0
+run-in-roblox --place build/bench.rbxl --script bench/lib/run.server.luau > build/bench.log 2>&1 || status=$?
+if ! grep -q '^BENCH' build/bench.log; then
+	echo "error: the run produced no results, the last lines of the log follow"
+	tail -n 20 build/bench.log
+	exit 1
+fi
+grep -E '^(SECTION|BENCH|FAILED)' build/bench.log > "bench/results/$stamp.txt"
+cp "bench/results/$stamp.txt" bench/results/latest.txt
+lute run bench/tools/show.luau bench/results/latest.txt || status=$?
+[ "$status" -eq 0 ] || tail -n 20 build/bench.log
+exit $status
+"""
+
+[tasks."bench:compare"]
+depends = ["install:cli"]
+run = "lute run bench/tools/compare.luau bench/baseline.txt bench/results/latest.txt"
+
+[tasks."bench:save"]
+shell = "bash -c"
+run = """
+grep -q '^BENCH' bench/results/latest.txt || { echo "error: bench/results/latest.txt has no results, run mise run bench first"; exit 1; }
+cp bench/results/latest.txt bench/baseline.txt
 """
 
 [tasks."test:cli"]

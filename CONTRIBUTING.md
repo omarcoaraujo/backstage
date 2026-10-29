@@ -22,6 +22,7 @@ The CLI has its own `cli/pesde.toml`, with [tint](https://github.com/omarcoarauj
 | `src/ui/` | The window and its controls, built with Vide |
 | `stories/` | UI Labs stories of the window |
 | `tests/lib/` | Library specs, run inside Studio |
+| `bench/` | Benchmarks of the library, run inside Studio, and the Lute tools that show and compare them |
 | `example/` | A small game that uses Backstage |
 
 ## Checks
@@ -33,6 +34,16 @@ mise run test
 ```
 
 `analyze` needs the Roblox definitions, which it downloads once into `roblox.d.luau`. `test` builds a place and runs the specs with `run-in-roblox`, so Studio has to be installed.
+
+## Benchmarks
+
+```sh
+mise run bench
+mise run bench:compare
+mise run bench:save
+```
+
+`bench` builds a place, runs every case with 100, 1000 and 5000 entries, prints the medians and saves them to `bench/results/`, which git ignores. `bench:compare` sets the last run against `bench/baseline.txt` and fails when a case got more than 25% and half a millisecond slower. `bench:save` promotes the last run to the baseline, in a commit of its own. The numbers come from a headless Studio and only compare with each other, they say nothing about layout or rendering.
 
 ## Style
 

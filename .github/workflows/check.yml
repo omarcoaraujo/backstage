@@ -18,7 +18,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check formatting
-        run: stylua --check src example stories tests cli
+        run: stylua --check src example stories tests cli bench
 
   cli:
     name: CLI specs
@@ -81,3 +81,9 @@ jobs:
 
       - name: Type check
         run: luau-lsp analyze --definitions=roblox.d.luau --sourcemap=sourcemap.json --ignore "**/roblox_packages/**" src example stories tests/lib
+
+      - name: Generate the benchmark sourcemap
+        run: rojo sourcemap bench.project.json --output bench-sourcemap.json
+
+      - name: Type check the benchmarks
+        run: luau-lsp analyze --definitions=roblox.d.luau --sourcemap=bench-sourcemap.json --ignore "**/roblox_packages/**" bench/lib
