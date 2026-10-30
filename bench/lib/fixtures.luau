@@ -2,6 +2,7 @@
 const ReplicatedStorage = game:GetService "ReplicatedStorage"
 
 --// Modules
+const button = require(ReplicatedStorage.backstage.core.button)
 const kinds = require(ReplicatedStorage.backstage.core.kinds)
 const mode = require(ReplicatedStorage.backstage.core.mode)
 const registry = require(ReplicatedStorage.backstage.core.registry)
@@ -71,6 +72,12 @@ const function variant(kind: string, size: number)
 	return fields
 end
 
+const function declare_buttons(count: number)
+	for index = 1, math.ceil(count / GROUP_SIZE) do
+		registry.add_button(`g{index}.go`, "go", `g{index}`, button.create())
+	end
+end
+
 const function add_extra()
 	registry.add("extra.e1", "e1", "extra", kinds.infer(1) :: kinds.descriptor, 1)
 	registry.announce()
@@ -91,6 +98,7 @@ return table.freeze {
 	snapshot = snapshot,
 	variant = variant,
 
+	declare_buttons = declare_buttons,
 	add_extra = add_extra,
 	edit_all = edit_all,
 

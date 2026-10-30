@@ -13,9 +13,6 @@ const filter = require(ReplicatedStorage.backstage.ui.utils.filter)
 const fixtures = require(ReplicatedStorage.bench.fixtures)
 const harness = require(ReplicatedStorage.bench.harness)
 
---// Constants
-const SEARCH_SIZES = { 100, 1000 }
-
 --// Functions
 const function mount(): () -> ()
 	if not workspace.CurrentCamera then workspace.CurrentCamera = Instance.new "Camera" end
@@ -61,8 +58,22 @@ return {
 		end
 	end,
 
-	search_opens_every_group = harness.within(SEARCH_SIZES, function(size)
+	search_opens_every_group = function(size)
 		const destroy = mounted(size)
+
+		return function()
+			filter.query "g"
+		end, function()
+			release(destroy)
+		end
+	end,
+
+	search_opens_groups_with_buttons = harness.deferred(function(size)
+		fixtures.fresh()
+		fixtures.declare(size, true)
+
+		fixtures.declare_buttons(size)
+		const destroy = mount()
 
 		return function()
 			filter.query "g"
@@ -105,7 +116,7 @@ return {
 	confirm_all = harness.deferred(function(size)
 		const destroy = mounted(size)
 		fixtures.edit_all(size)
-		
+
 		task.wait()
 		return function()
 			registry.commit()

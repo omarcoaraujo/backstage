@@ -70,10 +70,6 @@ const function deferred(prepare: prepare): case
 	return { prepare = prepare, deferred = true }
 end
 
-const function within(sizes: { number }, prepare: prepare): case
-	return { prepare = prepare, sizes = sizes }
-end
-
 const function normalized(entry: prepare | case): case
 	if type(entry) == "function" then return { prepare = entry } end
 	return entry
@@ -111,5 +107,4 @@ end
 return table.freeze {
 	run = run,
 	deferred = deferred,
-	within = within,
 }
