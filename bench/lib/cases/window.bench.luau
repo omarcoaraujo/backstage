@@ -13,12 +13,17 @@ const filter = require(ReplicatedStorage.backstage.ui.utils.filter)
 const fixtures = require(ReplicatedStorage.bench.fixtures)
 const harness = require(ReplicatedStorage.bench.harness)
 
+--// Constants
+const SCROLL_STEPS = 40
+const SCROLL_STRIDE = 360
+const SCROLL_PASSES = 3
+
 --// Functions
-const function mount(): () -> ()
+const function mount(): (() -> (), Instance)
 	if not workspace.CurrentCamera then workspace.CurrentCamera = Instance.new "Camera" end
 	const app = require(ReplicatedStorage.backstage.ui.app)
 
-	const destroy = vide.root(function()
+	const destroy, root = vide.root(function()
 		return app {
 			title = "bench",
 			visible = function()
@@ -28,7 +33,7 @@ const function mount(): () -> ()
 		}
 	end)
 
-	return destroy
+	return destroy, root
 end
 
 const function release(destroy: () -> ())
@@ -77,6 +82,29 @@ return {
 
 		return function()
 			filter.query "g"
+		end, function()
+			release(destroy)
+		end
+	end),
+
+	scroll_through_rows = harness.deferred(function(size)
+		fixtures.fresh()
+		fixtures.declare(size, true)
+
+		const destroy, root = mount()
+		filter.query "g"
+		task.wait()
+
+		const list = assert(root:FindFirstChild("list", true)) :: ScrollingFrame
+		const reach = math.max(list.CanvasSize.Y.Offset - SCROLL_STRIDE, SCROLL_STRIDE)
+
+		return function()
+			for pass = 1, SCROLL_PASSES do
+				for step = 1, SCROLL_STEPS do
+					list.CanvasPosition = Vector2.new(0, (step * SCROLL_STRIDE * pass) % reach)
+					task.wait()
+				end
+			end
 		end, function()
 			release(destroy)
 		end
