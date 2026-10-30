@@ -91,7 +91,7 @@ return {
 		const receive = client_remote()
 		fixtures.declare(size, false)
 		fixtures.edit_all(size)
-		
+
 		return function()
 			receive("committed", "")
 		end

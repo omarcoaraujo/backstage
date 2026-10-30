@@ -74,7 +74,7 @@ end
 const function render(report: parse.report, width: number, cell_of: (row: parse.row) -> string)
 	const areas = areas_of(report)
 	const sizes = sizes_of(report)
-	
+
 	const label_width = widest(areas)
 	const wall = tint.gray "│"
 	const missing = tint.dim(string.format(`%{width}s`, MISSING))
