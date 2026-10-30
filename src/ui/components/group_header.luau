@@ -22,7 +22,9 @@ const ADD_ICON = "rbxassetid://78158808810563"
 
 --// Types
 type props = {
-	name: string,
+	name: string | () -> string,
+	active: (() -> boolean)?,
+
 	expanded: () -> boolean,
 	on_toggle: () -> (),
 
@@ -48,6 +50,10 @@ return function(props: props)
 	const function on_leave()
 		hovered(false)
 	end
+
+	vide.effect(function()
+		if props.active and not props.active() then on_leave() end
+	end)
 
 	const function reset_visible()
 		return hovered() and props.dirty ~= nil and props.dirty()

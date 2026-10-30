@@ -16,7 +16,7 @@ type props = {
 	row: () -> flatten.row,
 	ticked: boolean,
 
-	owner: string?,
+	owner: (() -> string)?,
 	on_body: ((body: Frame) -> ())?,
 	content: Instance,
 }
@@ -70,6 +70,7 @@ end
 return function(props: props)
 	const depth = props.row().depth
 	const marks = {} :: { Instance }
+	const owner = props.owner
 
 	for level = 1, depth do
 		table.insert(marks, trunk(props.row, level))
@@ -88,9 +89,11 @@ return function(props: props)
 		props.content,
 	}
 
-	if props.owner then body:SetAttribute(pointer_target.owner_attribute, props.owner) end
-	if props.on_body then props.on_body(body :: Frame) end
+	if owner then vide.effect(function()
+		body:SetAttribute(pointer_target.owner_attribute, owner())
+	end) end
 
+	if props.on_body then props.on_body(body :: Frame) end
 	return vide.create "Frame" {
 		Name = "tree_row",
 		BackgroundTransparency = 1,

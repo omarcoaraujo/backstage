@@ -72,7 +72,7 @@ return function(props: props)
 		outline = tree,
 		anchors = anchors,
 
-		build = row_builder { outline = tree, live = live, anchors = anchors },
+		builder = row_builder { outline = tree, live = live, anchors = anchors },
 		on_list = on_list,
 
 		cursors = props.cursors,

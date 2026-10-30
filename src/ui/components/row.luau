@@ -21,11 +21,12 @@ const LOCKED_TRANSPARENCY = 0.45
 
 --// Types
 type props = {
-	label: string,
+	label: string | () -> string,
 	content: unknown?,
 
-	hint: string?,
+	hint: (string | () -> string?)?,
 	node: filter.node?,
+	active: (() -> boolean)?,
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
@@ -64,6 +65,10 @@ return function(props: props)
 		hovered(false)
 		tip.on_leave()
 	end
+
+	vide.effect(function()
+		if props.active and not props.active() then on_leave() end
+	end)
 
 	const function removable()
 		return hovered() and not reset_visible()

@@ -13,9 +13,15 @@ const HINT_DELAY = 0.5
 
 --// Types
 type props = {
-	text: string?,
+	text: (string | () -> string?)?,
 	anchor: () -> GuiObject?,
 }
+
+--// Functions
+const function resolve(text: (string | () -> string?)?): string?
+	if type(text) == "function" then return text() end
+	return text
+end
 
 --// Component
 return function(props: props)
@@ -46,9 +52,10 @@ return function(props: props)
 	const function reveal(mine: number)
 		pending = nil
 		const anchor = props.anchor()
+		const text = resolve(props.text)
 
-		if not anchor or not props.text or overlay.active() then return end
-		const created = tooltip { anchor = anchor, text = props.text }
+		if not anchor or not text or overlay.active() then return end
+		const created = tooltip { anchor = anchor, text = text }
 
 		if not created then return end
 		if mine ~= visit then
@@ -61,7 +68,7 @@ return function(props: props)
 
 	const function on_enter()
 		const anchor = props.anchor()
-		if not props.text or not anchor then return end
+		if not resolve(props.text) or not anchor then return end
 		hide()
 
 		following = anchor:GetPropertyChangedSignal("AbsolutePosition"):Connect(hide)

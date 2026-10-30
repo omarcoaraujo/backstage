@@ -16,6 +16,7 @@ const viewport = require "../utils/viewport"
 --// Constants
 const SCROLLBAR_THICKNESS = 4
 const UNMEASURED_EXTENT = 800
+const POOL_LIMIT = 64
 
 --// Types
 type mounted = {
@@ -23,8 +24,11 @@ type mounted = {
 	destroy: () -> (),
 
 	source: vide.Source<flatten.row>,
+	parked: vide.Source<boolean>,
+
 	path: string,
 	index: number,
+	pool_key: string?,
 }
 
 type held = {
@@ -37,7 +41,9 @@ type props = {
 	layout: () -> viewport.layout,
 
 	key: (row: flatten.row) -> string,
-	build: (row: () -> flatten.row) -> Frame,
+	build: (row: () -> flatten.row, active: () -> boolean) -> Frame,
+
+	pool_key: (row: flatten.row) -> string?,
 	overscan: () -> number,
 }
 
@@ -69,6 +75,9 @@ end
 --// Component
 return function(props: props): handle
 	const mounted = {} :: { [string]: mounted }
+	const pool = {} :: { [string]: { mounted } }
+	const parked_order = {} :: { mounted }
+
 	local placed = nil :: viewport.layout?
 	local held = nil :: held?
 
@@ -102,34 +111,97 @@ return function(props: props): handle
 		current.frame.Size = UDim2.new(1, 0, 0, layout.heights[current.index])
 	end
 
+	const function destroy_mounted(current: mounted)
+		current.destroy()
+		current.frame:Destroy()
+	end
+
+	const function unpool(current: mounted)
+		const bucket = assert(pool[current.pool_key :: string])
+		table.remove(bucket, table.find(bucket, current))
+		table.remove(parked_order, table.find(parked_order, current))
+	end
+
+	const function park(current: mounted)
+		const pool_key = current.pool_key :: string
+
+		if #parked_order >= POOL_LIMIT then
+			const oldest = parked_order[1]
+			unpool(oldest)
+			destroy_mounted(oldest)
+		end
+
+		current.parked(true)
+		current.frame.Parent = nil
+
+		pool[pool_key] = pool[pool_key] or {}
+		table.insert(pool[pool_key], current)
+		table.insert(parked_order, current)
+	end
+
 	const function release(key: string)
 		const current = mounted[key]
 		if not current then return end
 
 		mounted[key] = nil
-		current.destroy()
-		current.frame:Destroy()
+		if current.pool_key then
+			park(current)
+			return
+		end
+
+		destroy_mounted(current)
 	end
 
-	const function mount(row: flatten.row, key: string, index: number, layout: viewport.layout)
+	const function reuse(row: flatten.row, pool_key: string): mounted?
+		const bucket = pool[pool_key]
+		if not bucket or #bucket == 0 then return nil end
+
+		const current = bucket[#bucket]
+		unpool(current)
+
+		vide.batch(function()
+			current.source(row)
+			current.parked(false)
+		end)
+
+		current.path = row.path
+		return current
+	end
+
+	const function build_new(row: flatten.row, pool_key: string?): mounted
 		const source = vide.source(row)
+		const parked = vide.source(false)
+
+		const function active()
+			return not parked()
+		end
 
 		const destroy, built = vide.root(function()
 			return vide.untrack(function()
-				return props.build(source)
+				return props.build(source, active)
 			end)
 		end)
 
-		const current = {
+		return {
 			frame = built,
 			path = row.path,
 
 			destroy = destroy,
 			source = source,
-			index = index,
-		}
+			parked = parked,
 
-		built.Parent = frame
+			index = 0,
+			pool_key = pool_key,
+		}
+	end
+
+	const function mount(row: flatten.row, key: string, index: number, layout: viewport.layout)
+		const pool_key = props.pool_key(row)
+		const current = (pool_key and reuse(row, pool_key)) or build_new(row, pool_key)
+
+		current.index = index
+		current.frame.Parent = frame
+
 		mounted[key] = current
 		place(current, layout)
 	end
@@ -219,10 +291,19 @@ return function(props: props): handle
 
 	vide.effect(reconcile)
 	vide.cleanup(function()
-		for key in table.clone(mounted) do
-			release(key)
+		for key, current in table.clone(mounted) do
+			mounted[key] = nil
+			destroy_mounted(current)
+		end
+
+		for _, current in parked_order do
+			destroy_mounted(current)
 		end
 	end)
 
-	return { frame = frame, hold = hold, geometry = geometry }
+	return {
+		frame = frame,
+		hold = hold,
+		geometry = geometry,
+	}
 end

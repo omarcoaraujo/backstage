@@ -2,7 +2,6 @@
 const vide = require "../../../roblox_packages/vide"
 
 --// Utils
-const flatten = require "../utils/flatten"
 const outline = require "../utils/outline"
 const pointer_target = require "../utils/pointer_target"
 const px = require "../utils/px"
@@ -11,6 +10,7 @@ const theme = require "../constants/theme"
 
 --// Components
 const cursors = require "./cursors"
+const row_builder = require "./row_builder"
 const virtual_list = require "./virtual_list"
 
 --// Constants
@@ -21,7 +21,7 @@ type props = {
 	outline: outline.outline,
 	anchors: pointer_target.anchors,
 
-	build: (current: () -> flatten.row) -> Frame,
+	builder: row_builder.builder,
 	on_list: (handle: virtual_list.handle) -> (),
 
 	cursors: boolean?,
@@ -39,7 +39,9 @@ return function(props: props)
 		layout = props.outline.layout,
 
 		key = props.outline.key,
-		build = props.build,
+		build = props.builder.build,
+
+		pool_key = props.builder.pool_key,
 		overscan = overscan,
 	}
 
