@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- The window now draws only the rows you can see, so it opens and updates in a few milliseconds even with thousands of values, and a search that opens every group no longer hangs.
+
 ## 0.16.1
 
 - Searching in a window with thousands of text values no longer freezes Studio or shows a script timeout, and the window no longer reads every text value until you type a search.

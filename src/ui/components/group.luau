@@ -6,25 +6,19 @@ const appearance = require "../stores/appearance"
 
 --// Utils
 const arrow = require "../constants/arrow"
+const branch_style = require "../constants/branch"
 const filter = require "../utils/filter"
-const motion = require "../utils/motion"
-const overlay = require "../utils/overlay"
 const px = require "../utils/px"
 const theme = require "../constants/theme"
 
 --// Components
-const confirm_button = require "./confirm_button"
-const header_action = require "./header_action"
+const group_header = require "./group_header"
 const new_entry = require "./new_entry"
-const remove_button = require "./remove_button"
-const reset_button = require "./reset_button"
 
 --// Constants
-const ADD_ICON = "rbxassetid://78158808810563"
-const BRANCH_TRANSPARENCY = 0.5
-
-const BRANCH_OFFSET = theme.padding + arrow.size / 2
-const TICK_GAP = 2
+const BRANCH_TRANSPARENCY = branch_style.transparency
+const BRANCH_OFFSET = branch_style.offset
+const TICK_GAP = branch_style.tick_gap
 
 --// Types
 type props = {
@@ -35,8 +29,6 @@ type props = {
 	content: unknown?,
 
 	build: (() -> { Instance })?,
-	descendants: { string }?,
-	text_paths: { string }?,
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
@@ -71,17 +63,15 @@ end
 
 --// Component
 return function(props: props)
-	const node = filter.branch(props.name, props.descendants or {}, props.text_paths or {})
+	const node = filter.branch(props.name, {}, {})
 	const built = vide.source(false)
 
 	const addable = props.on_add ~= nil or props.on_append ~= nil
-	const actions = (if addable then 1 else 0) + (if props.on_remove then 1 else 0)
 	local destroy_built = nil :: (() -> ())?
 
 	const open = vide.source(props.open == true)
 	const closed_in_search = vide.source(false)
 
-	const hovered = vide.source(false)
 	const last_height = vide.source(0)
 	const adding = vide.source(false)
 
@@ -102,26 +92,6 @@ return function(props: props)
 
 		open(not open())
 		if props.on_toggle then props.on_toggle(open()) end
-	end
-
-	const function on_enter()
-		hovered(true)
-	end
-
-	const function on_leave()
-		hovered(false)
-	end
-
-	const function reset_visible()
-		return hovered() and props.dirty ~= nil and props.dirty()
-	end
-
-	const function on_reset()
-		if props.on_reset then props.on_reset() end
-	end
-
-	const function on_confirm()
-		if props.on_confirm then props.on_confirm() end
 	end
 
 	const function on_add_pressed()
@@ -148,16 +118,6 @@ return function(props: props)
 	const function add_entry(key: string)
 		if not props.on_add then return false end
 		return props.on_add(key)
-	end
-
-	const function arrow_frame()
-		return if expanded() then arrow.down else arrow.right
-	end
-
-	const function header_transparency()
-		if overlay.active() then return 1 end
-		if hovered() then return 0.4 end
-		return 1
 	end
 
 	const content_frame = vide.create "Frame" {
@@ -224,83 +184,18 @@ return function(props: props)
 		end)
 	end)
 
-	const header = vide.create "TextButton" {
-		Name = "header",
-		LayoutOrder = 1,
+	const header = group_header {
+		name = props.name,
+		expanded = expanded,
+		on_toggle = toggle,
 
-		Size = px.udim2(1, 0, 0, theme.row_height),
-		AutoButtonColor = false,
+		dirty = props.dirty,
+		on_reset = props.on_reset,
+		on_confirm = props.on_confirm,
 
-		BackgroundColor3 = appearance.hover,
-		BackgroundTransparency = motion.ease(header_transparency),
-		BorderSizePixel = 0,
-
-		FontFace = theme.font,
-		Text = props.name,
-		TextColor3 = appearance.text,
-
-		TextSize = px(theme.text_size),
-		TextXAlignment = Enum.TextXAlignment.Left,
-
-		Activated = overlay.guard(toggle),
-		MouseEnter = on_enter,
-		MouseLeave = on_leave,
-
-		vide.create "UICorner" {
-			CornerRadius = px.udim(0, theme.radius),
-		},
-
-		vide.create "UIPadding" {
-			PaddingLeft = px.udim(0, theme.padding + arrow.size + arrow.gap),
-		},
-
-		vide.create "ImageLabel" {
-			Name = "arrow",
-			AnchorPoint = Vector2.new(0, 0.5),
-
-			Position = px.udim2(0, -(arrow.size + arrow.gap), 0.5, 0),
-			Size = px.udim2(0, arrow.size, 0, arrow.size),
-
-			BackgroundTransparency = 1,
-			Image = arrow.image,
-
-			ImageColor3 = appearance.text,
-			ImageRectSize = arrow.frame,
-			ImageRectOffset = arrow_frame,
-		},
-
-		reset_button {
-			right = theme.padding / 2 + theme.action_width * actions,
-			visible = reset_visible,
-			on_reset = on_reset,
-		},
-
-		confirm_button {
-			right = theme.padding / 2 + theme.action_width * (actions + 1),
-			visible = reset_visible,
-			on_confirm = on_confirm,
-		},
-
-		if addable
-			then header_action {
-				name = "add",
-				image = ADD_ICON,
-
-				position = px.udim2(1, -theme.padding / 2, 0.5, 0),
-				on_activated = on_add_pressed,
-
-				highlighted = adding,
-				shown = hovered,
-			}
-			else nil,
-
-		if props.on_remove
-			then remove_button {
-				position = px.udim2(1, -(theme.padding / 2 + (if addable then theme.action_width else 0)), 0.5, 0),
-				shown = hovered,
-				on_remove = props.on_remove,
-			}
-			else nil,
+		on_add = if addable then on_add_pressed else nil,
+		adding = adding,
+		on_remove = props.on_remove,
 	}
 
 	const frame = vide.create "Frame" {
@@ -345,6 +240,8 @@ return function(props: props)
 		if destroy_built then destroy_built() end
 	end)
 
+	header.LayoutOrder = 1
 	filter.track(frame, node)
+
 	return frame
 end

@@ -25,7 +25,7 @@ type props = {
 	content: unknown?,
 
 	hint: string?,
-	search_path: string?,
+	node: filter.node?,
 
 	dirty: (() -> boolean)?,
 	on_reset: (() -> ())?,
@@ -36,7 +36,7 @@ type props = {
 
 --// Component
 return function(props: props)
-	const node = filter.leaf({ props.label }, props.search_path)
+	const node = props.node
 	local root = nil :: Frame?
 
 	const hovered = vide.source(false)
@@ -77,7 +77,7 @@ return function(props: props)
 		Name = props.label,
 		BackgroundTransparency = 1,
 
-		Visible = node.shown,
+		Visible = if node then node.shown else true,
 		Size = px.udim2(1, 0, 0, theme.row_height),
 
 		MouseEnter = on_enter,
@@ -138,7 +138,7 @@ return function(props: props)
 	}
 
 	root = frame
-	filter.track(frame, node)
+	if node then filter.track(frame, node) end
 
 	return frame
 end

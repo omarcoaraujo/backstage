@@ -2,7 +2,6 @@
 const vide = require "../../../roblox_packages/vide"
 
 --// Utils
-const filter = require "../utils/filter"
 const px = require "../utils/px"
 const theme = require "../constants/theme"
 
@@ -15,7 +14,10 @@ const RIGHT_INSET = theme.padding + theme.reset_width
 
 --// Types
 export type item = { text: string, on_press: () -> (), hint: string? }
-type props = { items: { item } }
+type props = {
+	items: { item },
+	on_height: ((height: number) -> ())?,
+}
 
 --// Component
 return function(props: props)
@@ -23,15 +25,12 @@ return function(props: props)
 	const content = vide.source(Vector2.zero)
 	const items = {} :: { Instance }
 
-	const labels = {} :: { string }
-	for _, current in props.items do
-		table.insert(labels, current.text)
+	const function container_height(): number
+		return content().Y + px(theme.row_height - theme.field_height)()
 	end
 
-	const node = filter.leaf(labels)
-
 	const function container_size(): UDim2
-		return UDim2.new(1, 0, 0, content().Y + px(theme.row_height - theme.field_height)())
+		return UDim2.new(1, 0, 0, container_height())
 	end
 
 	const function inner_width(): number
@@ -61,11 +60,15 @@ return function(props: props)
 		)
 	end
 
+	vide.effect(function()
+		if content().Y <= 0 then return end
+		if props.on_height then props.on_height(container_height()) end
+	end)
+
 	const frame = vide.create "Frame" {
 		Name = "buttons",
 		BackgroundTransparency = 1,
 
-		Visible = node.shown,
 		Size = container_size,
 
 		vide.create "UIListLayout" {
@@ -89,6 +92,5 @@ return function(props: props)
 		vide.changed("AbsoluteSize", size),
 	}
 
-	filter.track(frame, node)
 	return frame
 end

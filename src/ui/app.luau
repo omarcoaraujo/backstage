@@ -3,29 +3,21 @@ const vide = require "../../roblox_packages/vide"
 
 --// Modules
 const coalesce = require "../core/coalesce"
-const kinds = require "../core/kinds"
 const registry = require "../core/registry"
 
---// Stores
-const locks = require "./stores/locks"
-
 --// Utils
-const branch = require "./utils/branch"
-const catalog = require "./utils/catalog"
 const export_text = require "./utils/export_text"
-const filter = require "./utils/filter"
-const pointer_target = require "./utils/pointer_target"
+const live_values = require "./utils/live_values"
+const outline = require "./utils/outline"
+const pointer_anchors = require "./utils/pointer_anchors"
 const px = require "./utils/px"
-const share_pointer = require "./utils/share_pointer"
+const search_index = require "./utils/search_index"
 
 --// Components
-const buttons = require "./components/buttons"
-const cursors = require "./components/cursors"
-const entry_control = require "./components/controls/entry_control"
-const group = require "./components/group"
-const list = require "./components/list"
 const notifications = require "./components/notifications"
-const row = require "./components/row"
+const outline_view = require "./components/outline_view"
+const row_builder = require "./components/row_builder"
+const virtual_list = require "./components/virtual_list"
 const window = require "./components/window"
 
 --// Types
@@ -46,251 +38,47 @@ type props = {
 return function(props: props)
 	px.use_px()
 
-	const appliers = {} :: { [string]: (value: kinds.value) -> () }
-	const texts = {} :: { [string]: boolean }
+	local list = nil :: virtual_list.handle?
 
-	const opened = {} :: { [string]: boolean }
-	const anchors = { rows = {}, groups = {} } :: pointer_target.anchors
-
-	const frame = list {}
-	const revision = vide.source(0)
-
-	local destroy_tree = nil :: (() -> ())?
-	local items = {} :: { Instance }
-	local indexed = false
-
-	const function bind(path: string, apply: (value: kinds.value) -> ())
-		appliers[path] = apply
+	const function hold(path: string)
+		if list then list.hold(path) end
 	end
 
-	const function index_texts()
-		const values = {} :: { [string]: string }
-		table.clear(texts)
-
-		for _, entry in registry.list() do
-			if entry.descriptor.kind ~= "string" then continue end
-			texts[entry.path] = true
-			values[entry.path] = entry.value :: string
-		end
-
-		filter.replace_texts(values)
-		indexed = true
+	const function geometry(): pointer_anchors.geometry?
+		if not list then return nil end
+		return list.geometry()
 	end
 
-	const function drop_texts()
-		filter.clear_texts()
-		table.clear(texts)
-		indexed = false
+	const function on_list(handle: virtual_list.handle)
+		list = handle
 	end
 
-	const function on_value_changed(path: string, value: kinds.value)
-		revision(revision() + 1)
-		if texts[path] and type(value) == "string" then filter.set_text(path, value) end
+	const index = search_index.create()
+	const live = live_values.create { on_change = index.update }
 
-		const apply = appliers[path]
-		if apply then apply(value) end
-	end
-
-	const function any_dirty()
-		revision()
-		return registry.dirty()
-	end
-
-	const function restore_all()
-		registry.restore_group()
-	end
-
-	const function confirm_all()
-		registry.commit()
-	end
-
-	const function entry_row(entry: registry.entry)
-		const path = entry.path
-
-		const function on_change(value: unknown)
-			registry.set(path, value)
-		end
-
-		const control = entry_control {
-			entry = entry,
-			bind = bind,
-
-			on_change = on_change,
-			locked = locks.of_path(path),
-		}
-
-		const frame = row {
-			label = entry.name,
-			search_path = path,
-
-			locked = locks.of_path(path),
-			content = control.content,
-			hint = entry.hint,
-
-			dirty = function()
-				revision()
-				return control.value() ~= entry.default
-			end,
-
-			on_reset = function()
-				registry.restore(path)
-			end,
-
-			on_remove = catalog.remover(entry.group, tostring(entry.name)),
-		}
-
-		frame:SetAttribute(pointer_target.owner_attribute, path)
-		anchors.rows[path] = { frame = frame, group = entry.group }
-		return frame
-	end
-
-	const function build_buttons(entries: { registry.button_entry })
-		const items = {}
-
-		for _, entry in entries do
-			const path = entry.path
-
-			table.insert(items, {
-				text = entry.name,
-				hint = entry.hint,
-
-				on_press = function()
-					registry.press(path)
-				end,
-			})
-		end
-
-		return buttons { items = items }
-	end
-
-	const function build_branch(source: branch.branch, name: string, path: string)
-		const parent = string.match(path, "^(.*)%.[^%.]+$")
-		const actions = catalog.actions(path, source)
-
-		const function dirty()
-			revision()
-			return registry.dirty(path)
-		end
-
-		const function on_reset()
-			registry.restore_group(path)
-		end
-
-		const function on_confirm()
-			registry.commit(path)
-		end
-
-		const function on_toggle(open: boolean)
-			opened[path] = open
-		end
-
-		const function build()
-			const content = {} :: { Instance }
-
-			for _, entry in source.entries do
-				table.insert(content, entry_row(entry))
-			end
-
-			if #source.buttons > 0 then table.insert(content, build_buttons(source.buttons)) end
-
-			for _, child_name in branch.sorted_names(source.groups) do
-				table.insert(content, build_branch(source.groups[child_name], child_name, `{path}.{child_name}`))
-			end
-
-			return content
-		end
-
-		const frame = group {
-			name = name,
-			open = opened[path],
-
-			descendants = branch.descendant_names(source),
-			text_paths = branch.text_paths(source),
-
-			build = build,
-			on_toggle = on_toggle,
-			dirty = dirty,
-
-			on_reset = on_reset,
-			on_confirm = on_confirm,
-			suggest = actions.suggest,
-
-			on_add = actions.on_add,
-			on_append = actions.on_append,
-			on_remove = if parent then catalog.remover(parent, name) else nil,
-		}
-
-		frame:SetAttribute(pointer_target.owner_attribute, path)
-		anchors.groups[path] = frame
-		return frame
-	end
-
-	const function tree()
-		const root = branch.collect()
-		const content = {} :: { Instance }
-
-		for _, name in branch.sorted_names(root.groups) do
-			table.insert(content, build_branch(root.groups[name], name, name))
-		end
-
-		return content
-	end
-
-	const function clear()
-		if destroy_tree then destroy_tree() end
-
-		for _, item in items do
-			item:Destroy()
-		end
-
-		table.clear(items)
-	end
+	const tree = outline.create { hold = hold }
+	const anchors = pointer_anchors.create { rows = tree.rows, layout = tree.layout, geometry = geometry }
 
 	const function rebuild()
-		revision(revision() + 1)
-		drop_texts()
-
-		if filter.searching() then index_texts() end
-		clear()
-
-		table.clear(appliers)
-		table.clear(anchors.rows)
-
-		table.clear(anchors.groups)
-		const destroy, content = vide.root(tree)
-
-		destroy_tree = destroy
-		items = content
-
-		for _, item in content do
-			item.Parent = frame
-		end
+		vide.batch(function()
+			index.reset()
+			tree.rebuild()
+		end)
 	end
 
-	vide.cleanup(registry.on_change(on_value_changed))
-	vide.cleanup(registry.on_commit(function()
-		revision(revision() + 1)
-	end))
-
 	vide.cleanup(registry.on_register(coalesce(rebuild)))
-	vide.cleanup(clear)
-	rebuild()
 
-	vide.effect(function()
-		if not filter.searching() or indexed then return end
-		index_texts()
-	end)
+	const content = outline_view {
+		outline = tree,
+		anchors = anchors,
 
-	const viewport = vide.create "Frame" {
-		Name = "viewport",
-		Size = UDim2.fromScale(1, 1),
-		BackgroundTransparency = 1,
+		build = row_builder { outline = tree, live = live, anchors = anchors },
+		on_list = on_list,
 
-		frame,
-		if props.cursors then cursors { anchors = anchors } else nil,
+		cursors = props.cursors,
+		visible = props.visible,
 	}
 
-	if props.cursors then vide.cleanup(share_pointer(anchors, viewport, props.visible)) end
 	return vide.create "Frame" {
 		Name = "backstage",
 		Size = UDim2.fromScale(1, 1),
@@ -307,12 +95,12 @@ return function(props: props)
 			size = props.size,
 
 			on_geometry = props.on_geometry,
-			content = viewport,
+			content = content,
 
-			dirty = any_dirty,
-			on_reset = restore_all,
+			dirty = live.dirty,
+			on_reset = live.restore,
 
-			on_confirm = confirm_all,
+			on_confirm = live.confirm,
 			export_text = export_text,
 		},
 

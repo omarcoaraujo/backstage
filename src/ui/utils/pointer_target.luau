@@ -3,16 +3,27 @@ const presence = require "../../core/presence"
 
 --// Utils
 const px = require "./px"
+const row_space = require "./row_space"
 
 --// Constants
 const OWNER_ATTRIBUTE = "backstage_owner"
 
 --// Types
-type row = { frame: GuiObject, group: string }
+type row = {
+	frame: GuiObject,
+	group: string,
+}
+
+export type canvas = {
+	space: row_space.space,
+	position: Vector2,
+	width: number,
+}
 
 export type anchors = {
 	rows: { [string]: row },
 	groups: { [string]: GuiObject },
+	canvas: () -> canvas?,
 }
 
 --// Functions
@@ -35,54 +46,21 @@ const function inside(frame: GuiObject, point: Vector2)
 		and point.Y < position.Y + size.Y
 end
 
-const function depth(path: string)
-	return #string.gsub(path, "[^%.]", "")
-end
-
-const function innermost_group(anchors: anchors, point: Vector2): string?
-	local found = nil :: string?
-
-	for path, frame in anchors.groups do
-		if not visible(frame) or not inside(frame, point) then continue end
-		if found and depth(found) >= depth(path) then continue end
-		found = path
-	end
-
-	return found
-end
-
-const function row_above(anchors: anchors, group: string, point: Vector2): string?
-	local found = nil :: string?
-	local found_y = -math.huge
-
-	for path, row in anchors.rows do
-		if row.group ~= group or not visible(row.frame) then continue end
-
-		const top = row.frame.AbsolutePosition.Y
-		if top > point.Y or top <= found_y then continue end
-
-		found = path
-		found_y = top
-	end
-
-	return found
-end
-
 const function locate(anchors: anchors, viewport: GuiObject, point: Vector2): presence.cursor?
 	if not inside(viewport, point) then return nil end
 
-	const group = innermost_group(anchors, point)
-	if not group then return nil end
+	const canvas = anchors.canvas()
+	if not canvas then return nil end
 
-	const row = row_above(anchors, group, point)
-	const frame = if row then anchors.rows[row].frame else anchors.groups[group]
+	const hit = canvas.space.hit(point.Y - canvas.position.Y)
+	if not hit then return nil end
 
 	return {
-		group = group,
-		row = row,
+		group = hit.group,
+		row = hit.row,
 
-		x = (point.X - frame.AbsolutePosition.X) / math.max(frame.AbsoluteSize.X, 1),
-		y = (point.Y - frame.AbsolutePosition.Y) / px.scale(),
+		x = (point.X - canvas.position.X) / math.max(canvas.width, 1),
+		y = (point.Y - canvas.position.Y - hit.top) / px.scale(),
 	}
 end
 
@@ -98,16 +76,15 @@ const function nearest_group(anchors: anchors, path: string): GuiObject?
 	return nil
 end
 
-const function anchor_of(anchors: anchors, cursor: presence.cursor): GuiObject?
-	const row = if cursor.row then anchors.rows[cursor.row] else nil
-	if row and visible(row.frame) then return row.frame end
-	return nearest_group(anchors, cursor.group)
-end
-
 const function place(anchors: anchors, cursor: presence.cursor): Vector2?
-	const frame = anchor_of(anchors, cursor)
-	if not frame then return nil end
-	return frame.AbsolutePosition + Vector2.new(cursor.x * frame.AbsoluteSize.X, cursor.y * px.scale())
+	const canvas = anchors.canvas()
+	if not canvas then return nil end
+
+	const row_top = if cursor.row then canvas.space.top_of_row(cursor.row) else nil
+	const top = row_top or canvas.space.nearest_group_top(cursor.group)
+
+	if not top then return nil end
+	return Vector2.new(canvas.position.X + cursor.x * canvas.width, canvas.position.Y + top + cursor.y * px.scale())
 end
 
 const function describe(element: GuiObject): presence.hold?
@@ -157,6 +134,6 @@ return table.freeze {
 	resolve = resolve,
 
 	inside = inside,
-	anchor_of = anchor_of,
+	visible = visible,
 	owner_attribute = OWNER_ATTRIBUTE,
 }

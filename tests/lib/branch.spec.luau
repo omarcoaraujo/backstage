@@ -85,37 +85,4 @@ return {
 		assert(registry.list()[1].leading == true)
 		registry.reset()
 	end,
-
-	descendant_names_lists_the_entries_and_groups_at_every_depth = function()
-		const root = branch.create()
-		table.insert(root.entries, { name = "size" } :: any)
-
-		const trail = branch.create()
-		table.insert(trail.entries, { name = "length" } :: any)
-		root.groups.trail = trail
-
-		const deep = branch.create()
-		table.insert(deep.entries, { name = "fade" } :: any)
-		trail.groups.tip = deep
-
-		const names = branch.descendant_names(root)
-		table.sort(names)
-		assert(table.concat(names, ",") == "fade,length,size,tip,trail")
-	end,
-
-	text_paths_lists_only_the_text_entries_at_every_depth = function()
-		const root = branch.create()
-		table.insert(root.entries, { name = "size", path = "p.size", descriptor = { kind = "number" } } :: any)
-		table.insert(root.entries, { name = "name", path = "p.name", descriptor = { kind = "string" } } :: any)
-
-		const deep = branch.create()
-		table.insert(deep.entries, { name = "tag", path = "p.deep.tag", descriptor = { kind = "string" } } :: any)
-
-		table.insert(deep.entries, { name = "mode", path = "p.deep.mode", descriptor = { kind = "choice" } } :: any)
-		root.groups.deep = deep
-
-		const paths = branch.text_paths(root)
-		table.sort(paths)
-		assert(table.concat(paths, ",") == "p.deep.tag,p.name")
-	end,
 }

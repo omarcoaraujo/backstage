@@ -1,3 +1,6 @@
+--// Utils
+const filter = require "../utils/filter"
+
 --// Components
 const group = require "./group"
 const readout = require "./controls/readout"
@@ -69,6 +72,7 @@ const function tree(props: props)
 			content,
 			row {
 				label = label,
+				node = filter.leaf { label },
 				content = readout { value = child_value },
 			}
 		)

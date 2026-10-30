@@ -132,6 +132,9 @@ return table.freeze {
 	clear_texts = clear_texts,
 	searching = searching,
 
+	matches = matches,
+	text_hit = text_hit,
+
 	leaf = leaf,
 	branch = branch,
 	track = track,
