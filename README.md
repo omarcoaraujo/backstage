@@ -284,6 +284,8 @@ backstage.start { key = Enum.KeyCode.F4, ctrl = false }
 
 The window is draggable and resizable, and it stays on screen when the screen gets smaller.
 
+**More than one window.** `Ctrl + Shift + B` opens another window, up to four. Each one has its own search, open groups, scroll and position, so you can edit in one and look something up in the other. They share the same values: a change in one shows in all of them, and a reset or confirm applies to everything. Closing the extra window removes it, while the main one is only hidden. In a shared session, a value another player is holding is locked in every window you have open; your own windows never lock each other.
+
 **Client and server.** A config declared in a shared module shows up once in the window. The server owns its value: an edit goes to the server, which validates it and tells every client. A config declared only on the server shows up in the window too, and its buttons run on the server. A value declared only on the client stays local to that client.
 
 ### 6. Keeping what you tuned

@@ -12,6 +12,7 @@ const MAX_DEPTH = 8
 --// Types
 type props = {
 	name: string,
+	search: filter.instance,
 	value: () -> { [unknown]: unknown },
 
 	open: boolean?,
@@ -60,6 +61,8 @@ const function tree(props: props)
 				content,
 				tree {
 					name = label,
+					search = props.search,
+
 					value = child_table,
 					depth = depth + 1,
 				}
@@ -72,13 +75,19 @@ const function tree(props: props)
 			content,
 			row {
 				label = label,
-				node = filter.leaf { label },
+				node = props.search.leaf { label },
 				content = readout { value = child_value },
 			}
 		)
 	end
 
-	return group { name = props.name, open = props.open, content = content }
+	return group {
+		name = props.name,
+		search = props.search,
+
+		open = props.open,
+		content = content,
+	}
 end
 
 --// End

@@ -13,6 +13,7 @@ const viewport = require "./viewport"
 --// Types
 export type props = {
 	hold: (path: string) -> (),
+	search: filter.instance,
 }
 
 export type outline = {
@@ -50,7 +51,7 @@ const function create(props: props): outline
 	end
 
 	const function flatten_state(): flatten.state
-		const query = filter.query()
+		const query = props.search.query()
 
 		if query ~= closed_for then
 			table.clear(closed)
@@ -63,9 +64,9 @@ const function create(props: props): outline
 			adding = adding,
 
 			search = {
-				active = filter.searching(),
-				name = filter.matches,
-				text = filter.text_hit,
+				active = props.search.searching(),
+				name = props.search.matches,
+				text = props.search.text_hit,
 			},
 		}
 	end
@@ -94,7 +95,7 @@ const function create(props: props): outline
 
 	const function is_expanded(path: string)
 		structure()
-		if filter.searching() then return not closed[path] end
+		if props.search.searching() then return not closed[path] end
 		return opened[path] == true
 	end
 
@@ -106,7 +107,7 @@ const function create(props: props): outline
 	const function toggle(path: string)
 		props.hold(path)
 
-		if filter.searching() then
+		if props.search.searching() then
 			closed[path] = not closed[path]
 		else
 			opened[path] = not opened[path]

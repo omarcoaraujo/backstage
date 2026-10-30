@@ -9,6 +9,7 @@ const notice = require(ReplicatedStorage.backstage.core.notice)
 const version = require(ReplicatedStorage.backstage.version)
 
 --// Utils
+const filter = require(ReplicatedStorage.backstage.ui.utils.filter)
 const px = require(ReplicatedStorage.backstage.ui.utils.px)
 
 --// Components
@@ -50,8 +51,10 @@ end
 --// Story
 return function(target: Instance)
 	return vide.mount(function()
-		const visible = vide.source(true)
 		px.use_px()
+
+		const visible = vide.source(true)
+		const search = filter.create()
 
 		const function close()
 			visible(false)
@@ -63,6 +66,7 @@ return function(target: Instance)
 
 			window {
 				title = "backstage",
+				query = search.query,
 				footer = `v{version}`,
 
 				visible = visible,

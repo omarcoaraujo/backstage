@@ -5,6 +5,7 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 const vide = require(ReplicatedStorage.roblox_packages.vide)
 
 --// Utils
+const filter = require(ReplicatedStorage.backstage.ui.utils.filter)
 const px = require(ReplicatedStorage.backstage.ui.utils.px)
 
 --// Modules
@@ -48,8 +49,10 @@ end
 --// Story
 return function(target: Instance)
 	return vide.mount(function()
-		const visible = vide.source(true)
 		px.use_px()
+
+		const visible = vide.source(true)
+		const search = filter.create()
 
 		const function close()
 			visible(false)
@@ -59,13 +62,14 @@ return function(target: Instance)
 			title = "backstage",
 			footer = `v{version}`,
 
+			query = search.query,
 			visible = visible,
 			on_close = close,
 
 			content = list {
 				content = {
 					row { label = "slots left", content = readout { value = slots_left } },
-					tree { name = "profile", value = profile_value, open = false },
+					tree { name = "profile", search = search, value = profile_value, open = false },
 				},
 			},
 		}

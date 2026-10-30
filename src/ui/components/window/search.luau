@@ -5,7 +5,6 @@ const vide = require "../../../../roblox_packages/vide"
 const appearance = require "../../stores/appearance"
 
 --// Utils
-const filter = require "../../utils/filter"
 const motion = require "../../utils/motion"
 const px = require "../../utils/px"
 const theme = require "../../constants/theme"
@@ -13,8 +12,11 @@ const theme = require "../../constants/theme"
 --// Constants
 const PADDING = 4
 
+--// Types
+type props = { query: vide.Source<string> }
+
 --// Component
-return function()
+return function(props: props)
 	const focused = vide.source(false)
 
 	const function on_focused()
@@ -84,7 +86,7 @@ return function()
 				Thickness = px(1),
 			},
 
-			vide.changed("Text", filter.query),
+			vide.changed("Text", props.query),
 		},
 	}
 end

@@ -40,6 +40,8 @@ type drag = {
 
 type props = {
 	title: string,
+	query: vide.Source<string>,
+
 	on_close: () -> (),
 	visible: (() -> boolean)?,
 
@@ -56,6 +58,8 @@ type props = {
 
 	on_confirm: (() -> ())?,
 	export_text: (() -> string)?,
+
+	on_focus: (() -> ())?,
 }
 
 --// Functions
@@ -206,6 +210,10 @@ return function(props: props)
 		props.on_close()
 	end
 
+	const function on_press(input: InputObject)
+		if props.on_focus and pointer.is_press(input) then props.on_focus() end
+	end
+
 	const function toggle_export()
 		if exporting() then
 			exporting(false)
@@ -218,6 +226,8 @@ return function(props: props)
 
 	root = vide.create "Frame" {
 		Name = "backstage_window",
+		InputBegan = on_press,
+
 		Visible = props.visible,
 		BackgroundColor3 = appearance.background,
 
@@ -251,7 +261,7 @@ return function(props: props)
 			props.content,
 		},
 
-		search(),
+		search { query = props.query },
 
 		export_panel {
 			visible = exporting,

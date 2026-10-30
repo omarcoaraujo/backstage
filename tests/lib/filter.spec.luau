@@ -5,7 +5,10 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 const vide = require(ReplicatedStorage.roblox_packages.vide)
 
 --// Utils
-const filter = require(ReplicatedStorage.backstage.ui.utils.filter)
+const filters = require(ReplicatedStorage.backstage.ui.utils.filter)
+
+--// Variables
+const filter = filters.create()
 
 --// Functions
 const function search(text: string)
@@ -118,5 +121,26 @@ return {
 		const row = filter.leaf({ "name" }, "petals.1.name")
 		const group = filter.branch("1", {}, {})
 		assert(row.shown() and group.shown())
+	end,
+
+	two_searches_keep_their_own_query_and_texts = function()
+		reset()
+		const other = filters.create()
+
+		filter.set_text("petals.1.name", "Dew Petal")
+		other.set_text("petals.1.name", "Sun Petal")
+
+		const mine = filter.leaf({ "name" }, "petals.1.name")
+		const theirs = other.leaf({ "name" }, "petals.1.name")
+
+		search "sun"
+		assert(not mine.shown() and theirs.shown())
+		assert(filter.searching() and not other.searching())
+
+		other.query "dew"
+		assert(not mine.shown() and not theirs.shown())
+
+		assert(filter.query() == "sun" and other.query() == "dew")
+		reset()
 	end,
 }

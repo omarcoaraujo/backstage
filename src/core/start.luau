@@ -8,9 +8,6 @@ const mode = require "./mode"
 const shortcut = require "./shortcut"
 const sync = require "./sync"
 
---// Constants
-const DISPLAY_ORDER = 1000
-
 --// Types
 export type options = {
 	key: Enum.KeyCode?,
@@ -46,45 +43,14 @@ const function start(options: options?)
 	if not RunService:IsClient() then return end
 	if not sync.connect() then return end
 
-	const vide = require "../../roblox_packages/vide"
-	const app = require "../ui/app"
-
+	const windows = require "../ui/windows"
 	const appearance = require "../ui/stores/appearance"
-	const version = require "../version"
 	if options and options.theme then appearance.light(options.theme == "light") end
 
 	const player_gui = Players.LocalPlayer:WaitForChild "PlayerGui"
-	const visible = vide.source(false)
+	const handle = windows.create(player_gui)
 
-	const function close()
-		visible(false)
-	end
-
-	const function toggle()
-		visible(not visible())
-	end
-
-	vide.mount(function()
-		return vide.create "ScreenGui" {
-			Name = "backstage",
-			DisplayOrder = DISPLAY_ORDER,
-
-			ResetOnSpawn = false,
-			IgnoreGuiInset = true,
-			ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-
-			app {
-				title = "backstage",
-				footer = `v{version}`,
-
-				visible = visible,
-				on_close = close,
-				cursors = true,
-			},
-		}
-	end, player_gui)
-
-	shortcut.listen(options, toggle)
+	shortcut.listen(options, handle.toggle, handle.open_another)
 end
 
 --// End

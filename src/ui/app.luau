@@ -7,6 +7,7 @@ const registry = require "../core/registry"
 
 --// Utils
 const export_text = require "./utils/export_text"
+const filter = require "./utils/filter"
 const live_values = require "./utils/live_values"
 const outline = require "./utils/outline"
 const pointer_anchors = require "./utils/pointer_anchors"
@@ -27,7 +28,14 @@ type props = {
 
 	visible: () -> boolean,
 	on_close: () -> (),
+
 	cursors: boolean?,
+	toasts: boolean?,
+
+	search: filter.instance?,
+	layer: (() -> number)?,
+
+	on_focus: (() -> ())?,
 
 	position: Vector2?,
 	size: Vector2?,
@@ -53,10 +61,11 @@ return function(props: props)
 		list = handle
 	end
 
-	const index = search_index.create()
+	const search = props.search or filter.create()
+	const index = search_index.create(search)
 	const live = live_values.create { on_change = index.update }
 
-	const tree = outline.create { hold = hold }
+	const tree = outline.create { hold = hold, search = search }
 	const anchors = pointer_anchors.create { rows = tree.rows, layout = tree.layout, geometry = geometry }
 
 	const function rebuild()
@@ -81,11 +90,14 @@ return function(props: props)
 
 	return vide.create "Frame" {
 		Name = "backstage",
+		ZIndex = props.layer,
+
 		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
 
 		window {
 			title = props.title,
+			query = search.query,
 			footer = props.footer,
 
 			visible = props.visible,
@@ -96,6 +108,7 @@ return function(props: props)
 
 			on_geometry = props.on_geometry,
 			content = content,
+			on_focus = props.on_focus,
 
 			dirty = live.dirty,
 			on_reset = live.restore,
@@ -104,6 +117,6 @@ return function(props: props)
 			export_text = export_text,
 		},
 
-		notifications(),
+		if props.toasts ~= false then notifications() else nil,
 	}
 end

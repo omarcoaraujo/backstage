@@ -14,7 +14,7 @@ export type index = {
 }
 
 --// Functions
-const function create(): index
+const function create(search: filter.instance): index
 	const texts = {} :: { [string]: boolean }
 	local indexed = false
 
@@ -28,27 +28,27 @@ const function create(): index
 			values[entry.path] = entry.value :: string
 		end
 
-		filter.replace_texts(values)
+		search.replace_texts(values)
 		indexed = true
 	end
 
 	const function drop_texts()
-		filter.clear_texts()
+		search.clear_texts()
 		table.clear(texts)
 		indexed = false
 	end
 
 	const function update(path: string, value: unknown)
-		if texts[path] and type(value) == "string" then filter.set_text(path, value) end
+		if texts[path] and type(value) == "string" then search.set_text(path, value) end
 	end
 
 	const function reset()
 		drop_texts()
-		if filter.searching() then index_texts() end
+		if search.searching() then index_texts() end
 	end
 
 	vide.effect(function()
-		if not filter.searching() or indexed then return end
+		if not search.searching() or indexed then return end
 		index_texts()
 	end)
 
