@@ -141,9 +141,14 @@ return function(props: props)
 				name = "add",
 				image = ADD_ICON,
 
-				position = px.udim2(1, -theme.padding / 2, 0.5, 0),
-				on_activated = props.on_add,
+				position = px.udim2(
+					1,
+					-(theme.padding / 2 + (if props.on_remove then theme.action_width else 0)),
+					0.5,
+					0
+				),
 
+				on_activated = props.on_add,
 				highlighted = highlighted,
 				shown = hovered,
 			}
@@ -151,7 +156,7 @@ return function(props: props)
 
 		if props.on_remove
 			then remove_button {
-				position = px.udim2(1, -(theme.padding / 2 + (if addable then theme.action_width else 0)), 0.5, 0),
+				position = px.udim2(1, -theme.padding / 2, 0.5, 0),
 				shown = hovered,
 				on_remove = props.on_remove,
 			}
