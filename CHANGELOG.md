@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- You can open more than one window at the same time with `Ctrl + Shift + B`, each with its own search, open groups and scroll, so one can edit while another is used to look things up.
+## 0.17.0
 
+- You can open more than one window at the same time with `Ctrl + Shift + B`, each with its own search, open groups and scroll, so one can edit while another is used to look things up.
 - The window now draws only the rows you can see, so it opens and updates in a few milliseconds even with thousands of values, and a search that opens every group no longer hangs.
 
 ## 0.16.1
