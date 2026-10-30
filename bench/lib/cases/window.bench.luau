@@ -9,7 +9,7 @@ const backstage = require(ReplicatedStorage.backstage)
 const registry = require(ReplicatedStorage.backstage.core.registry)
 
 --// Utils
-const filter = require(ReplicatedStorage.backstage.ui.utils.filter)
+const filter = require(ReplicatedStorage.backstage.ui.utils.filter).create()
 const fixtures = require(ReplicatedStorage.bench.fixtures)
 const harness = require(ReplicatedStorage.bench.harness)
 
@@ -26,9 +26,12 @@ const function mount(): (() -> (), Instance)
 	const destroy, root = vide.root(function()
 		return app {
 			title = "bench",
+			search = filter,
+
 			visible = function()
 				return true
 			end,
+
 			on_close = function() end,
 		}
 	end)

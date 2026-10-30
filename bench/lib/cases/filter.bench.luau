@@ -5,7 +5,7 @@ const ReplicatedStorage = game:GetService "ReplicatedStorage"
 const vide = require(ReplicatedStorage.roblox_packages.vide)
 
 --// Utils
-const filter = require(ReplicatedStorage.backstage.ui.utils.filter)
+const filter = require(ReplicatedStorage.backstage.ui.utils.filter).create()
 const fixtures = require(ReplicatedStorage.bench.fixtures)
 const harness = require(ReplicatedStorage.bench.harness)
 
